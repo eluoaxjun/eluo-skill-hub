@@ -1,0 +1,22 @@
+{
+  "feature_name": "root-page",
+  "created_at": "2026-02-27T00:00:00.000Z",
+  "updated_at": "2026-02-27T08:00:00.000Z",
+  "language": "ko",
+  "phase": "implementation-complete",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true
+    },
+    "tasks": {
+      "generated": true,
+      "approved": true
+    }
+  },
+  "ready_for_implementation": true
+}

@@ -1,5 +1,5 @@
 import type { SkillCatalogError, Result } from '@/skill-catalog/domain/errors';
-import { ok, fail } from '@/skill-catalog/domain/errors';
+import { ok, err } from '@/skill-catalog/domain/errors';
 
 describe('SkillCatalogError 타입', () => {
   it('INVALID_SKILL_NAME 에러를 생성할 수 있다', () => {
@@ -120,12 +120,12 @@ describe('Result 타입', () => {
     }
   });
 
-  it('fail 헬퍼로 실패 결과를 생성할 수 있다', () => {
+  it('err 헬퍼로 실패 결과를 생성할 수 있다', () => {
     const error: SkillCatalogError = {
       type: 'INVALID_SKILL_NAME',
       message: '이름이 비어있습니다',
     };
-    const result: Result<string> = fail(error);
+    const result: Result<string> = err(error);
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.error.type).toBe('INVALID_SKILL_NAME');

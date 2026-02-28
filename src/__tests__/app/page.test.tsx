@@ -1,28 +1,51 @@
 import { render, screen } from "@testing-library/react";
-import Home from "@/app/page";
+import type { SkillSummary } from "@/shared/ui/types/dashboard";
 
 // createSupabaseServerClient 모킹
 const mockGetUser = jest.fn();
+const mockFrom = jest.fn();
+
 jest.mock("@/shared/infrastructure/supabase/server", () => ({
   createSupabaseServerClient: jest.fn().mockResolvedValue({
     auth: {
       getUser: () => mockGetUser(),
     },
+    from: (...args: unknown[]) => mockFrom(...args),
   }),
 }));
 
 // DashboardShell을 모킹하여 전달된 props를 검증한다
 jest.mock("@/shared/ui/components/dashboard-shell", () => ({
-  DashboardShell: ({ userEmail }: { userEmail?: string }) => (
-    <div data-testid="dashboard-shell" data-user-email={userEmail ?? ""}>
+  DashboardShell: ({
+    userEmail,
+    skills,
+  }: {
+    userEmail?: string;
+    skills?: SkillSummary[];
+  }) => (
+    <div
+      data-testid="dashboard-shell"
+      data-user-email={userEmail ?? ""}
+      data-skills-count={skills?.length ?? 0}
+    >
       DashboardShell
     </div>
   ),
 }));
 
+// SupabaseSkillRepository 모킹 - findAll이 호출되도록 설정
+const mockFindAll = jest.fn();
+jest.mock("@/skill-catalog/infrastructure/SupabaseSkillRepository", () => ({
+  SupabaseSkillRepository: jest.fn().mockImplementation(() => ({
+    findAll: mockFindAll,
+  })),
+}));
+
 describe("Home (page.tsx) - 서버 컴포넌트 인증 정보 전달", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // 기본 findAll 반환값 설정
+    mockFindAll.mockResolvedValue([]);
   });
 
   it("createSupabaseServerClient를 호출하여 사용자 정보를 조회한다", async () => {
@@ -40,6 +63,7 @@ describe("Home (page.tsx) - 서버 컴포넌트 인증 정보 전달", () => {
       error: null,
     });
 
+    const Home = (await import("@/app/page")).default;
     const Page = await Home();
     render(Page);
 
@@ -61,6 +85,7 @@ describe("Home (page.tsx) - 서버 컴포넌트 인증 정보 전달", () => {
       error: null,
     });
 
+    const Home = (await import("@/app/page")).default;
     const Page = await Home();
     render(Page);
 
@@ -85,6 +110,7 @@ describe("Home (page.tsx) - 서버 컴포넌트 인증 정보 전달", () => {
       error: null,
     });
 
+    const Home = (await import("@/app/page")).default;
     const Page = await Home();
     render(Page);
 
@@ -102,6 +128,7 @@ describe("Home (page.tsx) - 서버 컴포넌트 인증 정보 전달", () => {
       error: { message: "Auth error" },
     });
 
+    const Home = (await import("@/app/page")).default;
     const Page = await Home();
     render(Page);
 

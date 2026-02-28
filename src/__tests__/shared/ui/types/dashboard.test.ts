@@ -2,7 +2,6 @@
  * @file dashboard.test.ts
  * @description 대시보드 공유 타입 정의에 대한 컴파일 타임 + 런타임 타입 검증 테스트
  *
- * TDD RED phase: 이 테스트는 src/shared/ui/types/dashboard.ts가 존재하기 전에 작성되었다.
  * 모든 타입이 올바르게 정의되고 export 되는지 검증한다.
  */
 
@@ -81,49 +80,32 @@ describe("Dashboard 공유 타입 정의", () => {
   });
 
   describe("SkillSummary", () => {
-    it("id, name, description, category, tags, icon 속성을 가져야 한다", () => {
+    it("id, title, category, createdAt, markdownFilePath 속성을 가져야 한다", () => {
       const skill: SkillSummary = {
         id: "skill-1",
-        name: "테스트 스킬",
-        description: "테스트 설명",
+        title: "테스트 스킬",
         category: "개발",
-        tags: ["태그1", "태그2"],
-        icon: "code-icon",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        markdownFilePath: "test.md",
       };
 
       expect(skill.id).toBe("skill-1");
-      expect(skill.name).toBe("테스트 스킬");
-      expect(skill.description).toBe("테스트 설명");
+      expect(skill.title).toBe("테스트 스킬");
       expect(skill.category).toBe("개발");
-      expect(skill.tags).toEqual(["태그1", "태그2"]);
-      expect(skill.icon).toBe("code-icon");
+      expect(skill.createdAt).toBe("2026-01-01T00:00:00.000Z");
+      expect(skill.markdownFilePath).toBe("test.md");
     });
 
     it("category는 JobCategory 타입이어야 한다", () => {
       const skill: SkillSummary = {
         id: "skill-2",
-        name: "디자인 스킬",
-        description: "디자인 설명",
+        title: "디자인 스킬",
         category: "디자인",
-        tags: [],
-        icon: "palette",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        markdownFilePath: "design.md",
       };
 
       expect(skill.category).toBe("디자인");
-    });
-
-    it("tags는 readonly string[] 타입이어야 한다", () => {
-      const tags: readonly string[] = ["태그A", "태그B"];
-      const skill: SkillSummary = {
-        id: "skill-3",
-        name: "스킬",
-        description: "설명",
-        category: "기획",
-        tags,
-        icon: "icon",
-      };
-
-      expect(skill.tags).toEqual(["태그A", "태그B"]);
     });
   });
 
@@ -132,11 +114,10 @@ describe("Dashboard 공유 타입 정의", () => {
       const mockSkills: readonly SkillSummary[] = [
         {
           id: "1",
-          name: "스킬1",
-          description: "설명1",
+          title: "스킬1",
           category: "개발",
-          tags: ["태그"],
-          icon: "icon",
+          createdAt: "2026-01-01T00:00:00.000Z",
+          markdownFilePath: "1.md",
         },
       ];
 

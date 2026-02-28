@@ -22,14 +22,13 @@ export interface CategoryItem {
   readonly icon: LucideIcon;
 }
 
-/** 스킬 카드 데이터 */
+/** 스킬 카드 데이터 (DB 모델 기반) */
 export interface SkillSummary {
   readonly id: string;
-  readonly name: string;
-  readonly description: string;
+  readonly title: string;
   readonly category: JobCategory;
-  readonly tags: readonly string[];
-  readonly icon: string;
+  readonly createdAt: string;
+  readonly markdownFilePath: string;
 }
 
 /** 대시보드 상태 */

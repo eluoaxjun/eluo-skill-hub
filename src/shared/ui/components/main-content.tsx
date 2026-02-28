@@ -5,12 +5,14 @@ interface MainContentProps {
   readonly filteredSkills: readonly SkillSummary[];
   readonly selectedCategory: CategorySelection;
   readonly isLoading: boolean;
+  readonly onSkillClick?: (skill: SkillSummary) => void;
 }
 
 export function MainContent({
   filteredSkills,
   selectedCategory,
   isLoading,
+  onSkillClick,
 }: MainContentProps) {
   if (isLoading) {
     return (
@@ -35,7 +37,7 @@ export function MainContent({
           </p>
         </div>
       )}
-      <SkillCardGrid skills={filteredSkills} />
+      <SkillCardGrid skills={filteredSkills} onSkillClick={onSkillClick} />
     </main>
   );
 }

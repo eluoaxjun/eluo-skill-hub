@@ -1,15 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import { useDashboardState } from "../hooks/use-dashboard-state";
 import { AppSidebar } from "./app-sidebar";
 import { AppHeader } from "./app-header";
 import { MainContent } from "./main-content";
+import { MarkdownViewDialog } from "./markdown-view-dialog";
+import type { SkillSummary } from "../types/dashboard";
 
 interface DashboardShellProps {
   readonly userEmail: string;
+  readonly skills?: readonly SkillSummary[];
 }
 
-export function DashboardShell({ userEmail }: DashboardShellProps) {
+export function DashboardShell({ userEmail, skills = [] }: DashboardShellProps) {
   const {
     selectedCategory,
     searchQuery,
@@ -21,7 +25,19 @@ export function DashboardShell({ userEmail }: DashboardShellProps) {
     setSearchQuery,
     toggleMobileMenu,
     closeMobileMenu,
-  } = useDashboardState();
+  } = useDashboardState(skills);
+
+  const [selectedSkill, setSelectedSkill] = useState<SkillSummary | null>(null);
+
+  const handleSkillClick = (skill: SkillSummary) => {
+    setSelectedSkill(skill);
+  };
+
+  const handleDialogClose = (open: boolean) => {
+    if (!open) {
+      setSelectedSkill(null);
+    }
+  };
 
   return (
     <div className="flex h-screen bg-background">
@@ -57,8 +73,20 @@ export function DashboardShell({ userEmail }: DashboardShellProps) {
           filteredSkills={filteredSkills}
           selectedCategory={selectedCategory}
           isLoading={false}
+          onSkillClick={handleSkillClick}
         />
       </div>
+
+      {/* Markdown View Dialog */}
+      {selectedSkill && (
+        <MarkdownViewDialog
+          open={!!selectedSkill}
+          onOpenChange={handleDialogClose}
+          skillId={selectedSkill.id}
+          skillTitle={selectedSkill.title}
+          markdownFilePath={selectedSkill.markdownFilePath}
+        />
+      )}
     </div>
   );
 }

@@ -4,34 +4,17 @@ import type { SkillSummary } from "@/shared/ui/types/dashboard";
 
 const mockSkill: SkillSummary = {
   id: "test-skill-1",
-  name: "PRD 자동 생성기",
-  description: "요구사항 문서를 기반으로 PRD를 자동 생성하는 스킬입니다.",
+  title: "PRD 자동 생성기",
   category: "기획",
-  tags: ["PRD", "문서화"],
-  icon: "\uD83D\uDCDD",
+  createdAt: "2026-02-15T09:30:00.000Z",
+  markdownFilePath: "test.md",
 };
 
 describe("SkillCard", () => {
-  it("스킬 이름을 렌더링한다", () => {
+  it("스킬 제목을 렌더링한다", () => {
     render(<SkillCard skill={mockSkill} />);
 
     expect(screen.getByText("PRD 자동 생성기")).toBeInTheDocument();
-  });
-
-  it("스킬 설명을 렌더링한다", () => {
-    render(<SkillCard skill={mockSkill} />);
-
-    expect(
-      screen.getByText(
-        "요구사항 문서를 기반으로 PRD를 자동 생성하는 스킬입니다."
-      )
-    ).toBeInTheDocument();
-  });
-
-  it("스킬 아이콘을 렌더링한다", () => {
-    render(<SkillCard skill={mockSkill} />);
-
-    expect(screen.getByText("\uD83D\uDCDD")).toBeInTheDocument();
   });
 
   it("카테고리 태그를 렌더링한다", () => {
@@ -40,10 +23,16 @@ describe("SkillCard", () => {
     expect(screen.getByText("기획")).toBeInTheDocument();
   });
 
-  it("스킬 태그를 렌더링한다", () => {
+  it("생성일을 렌더링한다", () => {
     render(<SkillCard skill={mockSkill} />);
 
-    expect(screen.getByText("PRD")).toBeInTheDocument();
-    expect(screen.getByText("문서화")).toBeInTheDocument();
+    expect(screen.getByText("2026.02.15")).toBeInTheDocument();
+  });
+
+  it("제목이 h3 태그로 렌더링된다", () => {
+    render(<SkillCard skill={mockSkill} />);
+
+    const heading = screen.getByRole("heading", { level: 3 });
+    expect(heading).toHaveTextContent("PRD 자동 생성기");
   });
 });

@@ -1,24 +1,28 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useMediaQuery } from "./use-media-query";
-import { mockSkills } from "../data/mock-skills";
 import type {
   DashboardState,
   DashboardActions,
   CategorySelection,
+  SkillSummary,
 } from "../types/dashboard";
 
 /**
  * 대시보드 레이아웃의 모든 클라이언트 상태를 관리하고, 파생 상태(pageTitle, filteredSkills)를 계산한다.
  *
+ * - skills 파라미터로 외부에서 스킬 데이터를 주입받는다 (서버 컴포넌트에서 전달)
  * - selectedCategory, searchQuery, isMobileMenuOpen 3개의 원시 상태를 관리한다
  * - pageTitle을 selectedCategory로부터 파생한다 ("전체" -> "대시보드", 그 외 -> 카테고리명)
  * - filteredSkills를 selectedCategory와 searchQuery로부터 useMemo로 계산한다
  * - useMediaQuery를 사용하여 isMobile 상태를 판별한다
  * - 데스크톱으로 전환 시 isMobileMenuOpen을 자동으로 false로 설정한다
  *
+ * @param skills - 서버에서 조회한 스킬 목록 데이터
  * @returns DashboardState & DashboardActions
  */
-export function useDashboardState(): DashboardState & DashboardActions {
+export function useDashboardState(
+  skills: readonly SkillSummary[] = []
+): DashboardState & DashboardActions {
   const [selectedCategory, setSelectedCategory] =
     useState<CategorySelection>("전체");
   const [searchQuery, setSearchQuery] = useState("");
@@ -29,7 +33,7 @@ export function useDashboardState(): DashboardState & DashboardActions {
     selectedCategory === "전체" ? "대시보드" : selectedCategory;
 
   const filteredSkills = useMemo(() => {
-    let result = [...mockSkills];
+    let result = [...skills];
 
     if (selectedCategory !== "전체") {
       result = result.filter((skill) => skill.category === selectedCategory);
@@ -37,16 +41,13 @@ export function useDashboardState(): DashboardState & DashboardActions {
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (skill) =>
-          skill.name.toLowerCase().includes(query) ||
-          skill.description.toLowerCase().includes(query) ||
-          skill.tags.some((tag) => tag.toLowerCase().includes(query))
+      result = result.filter((skill) =>
+        skill.title.toLowerCase().includes(query)
       );
     }
 
     return result;
-  }, [selectedCategory, searchQuery]);
+  }, [skills, selectedCategory, searchQuery]);
 
   // 데스크톱으로 전환 시 모바일 메뉴를 자동으로 닫는다
   useEffect(() => {

@@ -16,19 +16,17 @@ jest.mock("@/shared/ui/components/skill-card-grid", () => ({
 const mockSkills: readonly SkillSummary[] = [
   {
     id: "skill-1",
-    name: "PRD 자동 생성기",
-    description: "요구사항 문서를 기반으로 PRD를 자동 생성하는 스킬입니다.",
+    title: "PRD 자동 생성기",
     category: "기획",
-    tags: ["PRD", "문서화"],
-    icon: "\uD83D\uDCDD",
+    createdAt: "2026-01-01T00:00:00.000Z",
+    markdownFilePath: "1.md",
   },
   {
     id: "skill-2",
-    name: "디자인 토큰 추출기",
-    description: "피그마 파일에서 디자인 토큰을 자동 추출합니다.",
+    title: "디자인 토큰 추출기",
     category: "디자인",
-    tags: ["Figma", "토큰"],
-    icon: "\uD83C\uDFA8",
+    createdAt: "2026-01-02T00:00:00.000Z",
+    markdownFilePath: "2.md",
   },
 ];
 

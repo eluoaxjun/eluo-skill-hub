@@ -11,7 +11,19 @@ jest.mock("@/shared/infrastructure/supabase/server", () => ({
     auth: {
       getUser: () => mockGetUser(),
     },
+    from: jest.fn().mockReturnValue({
+      select: jest.fn().mockReturnValue({
+        order: jest.fn().mockResolvedValue({ data: [], error: null }),
+      }),
+    }),
   }),
+}));
+
+// SupabaseSkillRepository 모킹
+jest.mock("@/skill-catalog/infrastructure/SupabaseSkillRepository", () => ({
+  SupabaseSkillRepository: jest.fn().mockImplementation(() => ({
+    findAll: jest.fn().mockResolvedValue([]),
+  })),
 }));
 
 // useDashboardState 훅 모킹 (DashboardShell 내부 상태)
@@ -28,6 +40,11 @@ jest.mock("@/shared/ui/hooks/use-dashboard-state", () => ({
     toggleMobileMenu: jest.fn(),
     closeMobileMenu: jest.fn(),
   }),
+}));
+
+// MarkdownViewDialog를 모킹하여 react-markdown ESM 이슈를 방지한다
+jest.mock("@/shared/ui/components/markdown-view-dialog", () => ({
+  MarkdownViewDialog: () => null,
 }));
 
 // UserProfilePopover를 간소화하여 렌더링 (Radix Portal 문제 회피)

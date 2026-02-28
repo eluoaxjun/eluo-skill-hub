@@ -57,6 +57,11 @@ jest.mock("@/shared/ui/components/main-content", () => ({
   ),
 }));
 
+// MarkdownViewDialog를 모킹하여 react-markdown ESM 이슈를 방지한다
+jest.mock("@/shared/ui/components/markdown-view-dialog", () => ({
+  MarkdownViewDialog: () => null,
+}));
+
 const mockUseDashboardState = useDashboardState as jest.MockedFunction<
   typeof useDashboardState
 >;

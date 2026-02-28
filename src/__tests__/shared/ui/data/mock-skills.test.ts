@@ -28,27 +28,19 @@ describe("mockSkills", () => {
     }
   });
 
-  it("각 스킬이 필수 필드(id, name, description, category, tags, icon)를 모두 가진다", () => {
+  it("각 스킬이 필수 필드(id, title, category, createdAt, markdownFilePath)를 모두 가진다", () => {
     for (const skill of mockSkills) {
       expect(skill).toHaveProperty("id");
-      expect(skill).toHaveProperty("name");
-      expect(skill).toHaveProperty("description");
+      expect(skill).toHaveProperty("title");
       expect(skill).toHaveProperty("category");
-      expect(skill).toHaveProperty("tags");
-      expect(skill).toHaveProperty("icon");
+      expect(skill).toHaveProperty("createdAt");
+      expect(skill).toHaveProperty("markdownFilePath");
     }
   });
 
   it("모든 스킬의 category가 유효한 JobCategory 값이다", () => {
     for (const skill of mockSkills) {
       expect(JOB_CATEGORIES).toContain(skill.category);
-    }
-  });
-
-  it("모든 스킬의 tags가 비어있지 않은 배열이다", () => {
-    for (const skill of mockSkills) {
-      expect(Array.isArray(skill.tags)).toBe(true);
-      expect(skill.tags.length).toBeGreaterThan(0);
     }
   });
 
@@ -65,24 +57,24 @@ describe("mockSkills", () => {
     expect(uniqueIds.size).toBe(ids.length);
   });
 
-  it("모든 스킬의 name이 비어있지 않은 문자열이다", () => {
+  it("모든 스킬의 title이 비어있지 않은 문자열이다", () => {
     for (const skill of mockSkills) {
-      expect(typeof skill.name).toBe("string");
-      expect(skill.name.length).toBeGreaterThan(0);
+      expect(typeof skill.title).toBe("string");
+      expect(skill.title.length).toBeGreaterThan(0);
     }
   });
 
-  it("모든 스킬의 description이 비어있지 않은 문자열이다", () => {
+  it("모든 스킬의 createdAt이 비어있지 않은 문자열이다", () => {
     for (const skill of mockSkills) {
-      expect(typeof skill.description).toBe("string");
-      expect(skill.description.length).toBeGreaterThan(0);
+      expect(typeof skill.createdAt).toBe("string");
+      expect(skill.createdAt.length).toBeGreaterThan(0);
     }
   });
 
-  it("모든 스킬의 icon이 비어있지 않은 문자열이다", () => {
+  it("모든 스킬의 markdownFilePath가 비어있지 않은 문자열이다", () => {
     for (const skill of mockSkills) {
-      expect(typeof skill.icon).toBe("string");
-      expect(skill.icon.length).toBeGreaterThan(0);
+      expect(typeof skill.markdownFilePath).toBe("string");
+      expect(skill.markdownFilePath.length).toBeGreaterThan(0);
     }
   });
 

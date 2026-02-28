@@ -144,3 +144,70 @@
   - 회원가입 폼의 렌더링, 도메인 제한 에러, 패스워드 정책 에러, 가입 성공 안내 화면 전환을 검증한다
   - 로그인에서 회원가입, 회원가입에서 로그인 네비게이션 링크 동작을 검증한다
   - _Requirements: 1.2, 1.5, 1.6, 1.7, 1.8, 1.9, 2.2, 2.3, 2.4, 2.5, 2.6, 2.8, 2.9, 3.1, 3.2, 5.1, 5.2, 5.3_
+
+- [x] 9. 사용자 프로필 DB 스키마 및 트리거 구성
+- [x] 9.1 (P) `public.profiles` 테이블 생성 SQL 마이그레이션을 작성한다
+  - `id`(UUID, PK, `auth.users.id` 외래 키 참조, ON DELETE CASCADE), `email`(text, NOT NULL), `created_at`(timestamptz, NOT NULL, DEFAULT now()) 컬럼을 포함하는 테이블을 정의한다
+  - RLS(Row Level Security)를 활성화한다
+  - 마이그레이션 파일을 `supabase/migrations/` 디렉터리에 생성한다
+  - _Requirements: 6.1_
+
+- [x] 9.2 프로필 자동 생성 트리거 함수와 트리거를 정의한다
+  - `auth.users` 테이블에 새 레코드가 INSERT 될 때 `public.profiles`에 프로필 레코드를 자동 생성하는 `handle_new_user()` 함수를 작성한다
+  - `SECURITY DEFINER`와 `SET search_path = ''`를 설정하여 보안 컨텍스트를 명시한다
+  - `AFTER INSERT` 트리거를 `auth.users` 테이블에 등록한다
+  - 트리거 함수 실패 시 `auth.users` INSERT 트랜잭션도 롤백되어 데이터 정합성이 보장됨을 확인한다
+  - 9.1에서 생성한 마이그레이션 파일에 포함하거나 별도 마이그레이션으로 작성한다
+  - _Requirements: 6.2, 6.7, 6.8_
+
+- [x] 9.3 RLS 정책을 정의하여 프로필 접근을 제어한다
+  - 인증된 사용자가 본인의 프로필만 읽을 수 있는 SELECT 정책을 생성한다(`auth.uid() = id` 조건, `TO authenticated`)
+  - 인증된 사용자가 본인의 프로필만 수정할 수 있는 UPDATE 정책을 생성한다(`USING` + `WITH CHECK` 조건)
+  - INSERT 정책은 트리거가 `SECURITY DEFINER`로 RLS를 우회하므로 정의하지 않는다
+  - DELETE 정책은 `ON DELETE CASCADE`로 처리되므로 정의하지 않는다
+  - 9.1 마이그레이션 파일에 포함한다
+  - _Requirements: 6.3_
+
+- [x] 10. 사용자 프로필 도메인 모델 구현
+- [x] 10.1 (P) UserProfile 도메인 엔티티를 구현한다
+  - `id`(UUID), `email`, `createdAt` 속성을 포함하는 사용자 프로필 엔티티를 생성한다
+  - 기존 shared 모듈의 `Entity<T>` 기반 클래스를 상속하여 일관된 도메인 모델 패턴을 유지한다
+  - `private constructor` + `static create` + `static reconstruct` 패턴을 적용한다
+  - `id`는 `auth.users.id`와 동일한 UUID 문자열이다
+  - 도메인 엔티티이므로 외부 라이브러리를 직접 참조하지 않는다
+  - _Requirements: 6.4_
+
+- [x] 10.2 (P) UserRepository 인터페이스를 도메인 계층에 정의한다
+  - 프로필 조회(`findById`)와 수정(`update`) 메서드를 갖는 리포지토리 인터페이스를 정의한다
+  - 프로필 생성은 DB 트리거가 담당하므로 `save`/`create` 메서드를 포함하지 않는다
+  - `findById`는 존재하지 않는 프로필에 대해 `null`을 반환한다
+  - 도메인 계층에 위치하여 인프라 의존성을 역전시킨다
+  - _Requirements: 6.5_
+
+- [x] 11. SupabaseUserRepository 인프라 구현체를 작성한다
+  - UserRepository 인터페이스를 구현하여 `public.profiles` 테이블에 대한 조회 및 수정 기능을 제공한다
+  - Supabase 클라이언트를 주입받아 RLS가 적용된 쿼리를 수행한다
+  - 조회 결과를 `UserProfile` 도메인 엔티티의 `reconstruct` 메서드로 변환하여 반환한다
+  - `findById`에서 조회 결과가 없으면 `null`을 반환하고, `update`에서 존재하지 않는 프로필을 수정하려 하면 에러를 발생시킨다
+  - 프로필 INSERT 로직은 DB 트리거가 담당하므로 포함하지 않는다
+  - _Requirements: 6.6_
+
+- [x] 12. 프로필 도메인 및 인프라 테스트
+- [x] 12.1 (P) UserProfile 엔티티 단위 테스트를 작성한다
+  - 유효한 id, email, createdAt으로 프로필이 정상 생성되는지 검증한다
+  - 빈 id 또는 빈 email이 전달되면 거부되는지 검증한다
+  - `reconstruct`로 기존 프로필을 복원할 수 있는지 검증한다
+  - _Requirements: 6.4_
+
+- [x] 12.2 (P) SupabaseUserRepository 단위 테스트를 작성한다
+  - Supabase 클라이언트를 모킹하여 `findById` 호출 시 프로필을 조회하고 UserProfile 엔티티로 변환하는지 검증한다
+  - 존재하지 않는 id로 `findById` 호출 시 `null`을 반환하는지 검증한다
+  - `update` 호출 시 프로필 데이터가 올바르게 전달되는지 검증한다
+  - _Requirements: 6.6_
+
+- [ ]* 12.3 (P) DB 트리거 및 RLS 정책 통합 테스트 시나리오를 정의한다
+  - `auth.users` INSERT 시 `public.profiles`에 프로필이 자동 생성되는지 검증하는 테스트 시나리오를 작성한다
+  - 인증된 사용자가 본인의 프로필만 SELECT/UPDATE 가능한지 검증하는 테스트 시나리오를 작성한다
+  - 비인증 사용자의 프로필 접근이 차단되는지 검증하는 테스트 시나리오를 작성한다
+  - 트리거 실패 시 `auth.users` INSERT가 롤백되는지 검증하는 테스트 시나리오를 작성한다
+  - _Requirements: 6.2, 6.3, 6.7, 6.8_

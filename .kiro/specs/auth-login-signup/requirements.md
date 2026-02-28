@@ -80,3 +80,20 @@
 1. While 로그인 요청이 진행 중일 때, the Auth System shall 로딩 인디케이터를 표시하고 중복 요청을 방지한다.
 2. While 회원가입 요청이 진행 중일 때, the Auth System shall 로딩 인디케이터를 표시하고 중복 제출을 방지한다.
 3. If Supabase Auth 서비스와의 통신에 실패하면, the Auth System shall 네트워크 오류 메시지를 표시하고 재시도 옵션을 제공한다.
+
+---
+
+### Requirement 6: 회원가입 시 유저 프로필 DB 저장
+
+**Objective:** 시스템으로서, 회원가입 시 사용자의 프로필 정보를 `public.profiles` 테이블에 자동 저장해야 한다. 이를 통해 인증 데이터와 별도로 사용자 프로필을 도메인 수준에서 관리하고, 향후 프로필 조회/수정 기능을 지원할 수 있다.
+
+#### Acceptance Criteria
+
+1. The Auth System shall `public.profiles` 테이블에 `id` (UUID, `auth.users.id` 참조), `email` (text), `created_at` (timestamptz) 컬럼을 포함하는 스키마를 정의한다.
+2. When `auth.users` 테이블에 새로운 레코드가 INSERT 되면, the Auth System shall PostgreSQL 트리거를 통해 `public.profiles` 테이블에 해당 사용자의 프로필 레코드를 자동으로 생성한다.
+3. The Auth System shall `public.profiles` 테이블에 RLS(Row Level Security) 정책을 적용하여, 인증된 사용자가 본인의 프로필 데이터만 읽기(SELECT) 및 수정(UPDATE)할 수 있도록 한다.
+4. The Auth System shall `UserProfile` 도메인 엔티티를 정의하여 `id`, `email`, `createdAt` 속성을 포함하는 프로필 데이터를 표현한다.
+5. The Auth System shall `UserRepository` 인터페이스를 도메인 계층에 정의하여 프로필 조회(`findById`) 및 수정(`update`) 계약을 명세한다.
+6. The Auth System shall `SupabaseUserRepository` 구현체를 인프라 계층에 제공하여, `public.profiles` 테이블을 대상으로 프로필 조회 및 수정 기능을 수행한다.
+7. When 회원가입이 완료되면, the Auth System shall DB 트리거에 의해 프로필이 자동 생성되므로 기존 `SignUpUseCase`의 변경 없이 프로필 저장을 보장한다.
+8. If DB 트리거가 실패하여 프로필 레코드가 생성되지 않으면, the Auth System shall `auth.users` INSERT 트랜잭션도 롤백되어 데이터 정합성을 보장한다.

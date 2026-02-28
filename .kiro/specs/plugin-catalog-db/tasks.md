@@ -1,233 +1,163 @@
 # Implementation Plan
 
-- [x] 1. 공유 도메인 기반 타입 확인 및 Skill Catalog 모듈 초기화
-- [x] 1.1 공유 계층의 Entity, ValueObject 베이스 클래스가 Skill Catalog에서 사용할 수 있는 상태인지 확인하고, 부족한 부분이 있으면 보완한다
-  - Entity 베이스 클래스에 도메인 이벤트 수집/발행 기능이 포함되어 있는지 확인한다
-  - ValueObject 베이스 클래스에 동등성 비교(equals) 메서드가 포함되어 있는지 확인한다
-  - DomainEvent 인터페이스가 정의되어 있는지 확인하고, 없으면 생성한다
-  - _Requirements: 9.1, 9.2_
+- [x] 1. 기존 Skill Catalog 도메인 코드 정리 및 단순화된 도메인 모델 구축
+- [x] 1.1 기존 7-테이블 기반의 Skill Catalog 도메인 코드를 제거하고 단순화된 구조로 교체한다
+  - 기존 값 객체(SkillId, SemanticVersion, SkillSlug, SkillStatus), 엔티티(Skill, SkillVersion, Category, Tag), 이벤트(SkillCreated, SkillPublished, SkillArchived)를 제거한다
+  - 기존 리포지토리 인터페이스(SkillRepository, CategoryRepository, TagRepository) 및 Supabase 구현체를 제거한다
+  - 기존 도메인 에러 타입과 Result 타입을 제거한다
+  - _Requirements: 6.1, 6.3_
 
-- [x] 1.2 Skill Catalog 바운디드 컨텍스트의 디렉토리 구조를 생성한다
-  - domain, application, infrastructure 3계층 디렉토리를 생성한다
-  - domain 하위에 entities, value-objects, repositories, events 디렉토리를 구성한다
-  - infrastructure 하위에 repositories 디렉토리를 구성한다
-  - _Requirements: 9.1, 9.3_
+- [x] 1.2 스킬 카테고리를 5개 허용 값으로 제한하는 값 객체를 구현한다
+  - 기획, 디자인, 퍼블리싱, 개발, QA 중 하나만 생성 가능하도록 검증한다
+  - 유효하지 않은 값으로 생성 시도 시 에러를 반환한다
+  - 불변 속성을 보장하고 동등성 비교를 지원한다
+  - 공유 계층의 ValueObject 베이스 클래스를 상속한다
+  - _Requirements: 1.5, 2.3, 6.5_
 
-- [x] 2. 값 객체(Value Objects) 구현
-- [x] 2.1 (P) SkillId 값 객체를 구현한다
-  - UUID v4 형식 검증 로직을 포함한다
-  - 새로운 ID를 생성하는 팩토리 메서드와 기존 문자열로부터 생성하는 메서드를 제공한다
-  - 유효하지 않은 UUID 형식에 대해 에러를 반환한다
-  - _Requirements: 7.5, 9.2_
+- [x] 1.3 Skill 엔티티를 Aggregate Root로 구현한다
+  - 제목, 카테고리, 마크다운 파일 경로, 작성자 ID, 생성일시를 캡슐화한다
+  - 팩토리 메서드에서 제목 NOT NULL 및 카테고리 유효성을 검증하고, 생성일시를 현재 시각으로 자동 설정한다
+  - DB 레코드로부터 엔티티를 복원하는 정적 메서드를 제공한다
+  - 공유 계층의 Entity 베이스 클래스를 상속하며, 도메인 계층에서 외부 라이브러리에 대한 직접 의존을 금지한다
+  - _Requirements: 1.6, 2.4, 2.5, 6.1, 6.3_
 
-- [x] 2.2 (P) SemanticVersion 값 객체를 구현한다
-  - major.minor.patch 형식의 문자열을 파싱하여 각 숫자 컴포넌트로 분리한다
-  - 음수 값이나 형식에 맞지 않는 문자열에 대해 에러를 반환한다
-  - 문자열 변환 메서드를 제공한다
-  - _Requirements: 3.2, 9.2_
+- [x] 1.4 스킬 리포지토리 인터페이스와 Storage 어댑터 인터페이스를 정의한다
+  - 스킬 리포지토리는 단건 조회(ID), 목록 조회(카테고리 필터링), 저장, 삭제 메서드를 선언한다
+  - Storage 어댑터는 마크다운 파일의 업로드, 다운로드(텍스트 문자열 반환), 삭제 메서드를 선언한다
+  - 두 인터페이스 모두 도메인 계층에 위치하며 외부 의존성을 갖지 않는다
+  - _Requirements: 3.1, 3.2, 6.2_
 
-- [x] 2.3 (P) SkillSlug 값 객체를 구현한다
-  - 소문자 영숫자와 하이픈만 허용하는 정규식 검증을 수행한다
-  - 유효하지 않은 슬러그 형식에 대해 에러를 반환한다
-  - _Requirements: 1.3, 9.2_
+- [x] 1.5 도메인 모델 단위 테스트를 작성한다
+  - SkillCategory 값 객체: 유효한 5개 카테고리 생성 성공, 잘못된 값 생성 실패 검증
+  - Skill 엔티티: 유효한 입력으로 생성 성공, 빈 제목으로 생성 실패, 잘못된 카테고리로 생성 실패, reconstruct 복원 검증, 생성일시 자동 설정 확인
+  - 1.2~1.3 태스크의 완료 결과물에 의존한다
+  - _Requirements: 1.5, 1.6, 2.3, 2.4, 2.5, 6.1, 6.3, 6.5_
 
-- [x] 2.4 (P) SkillStatus 값 객체를 구현한다
-  - draft, published, archived 세 가지 상태를 정의한다
-  - 허용된 상태 전이 규칙(draft->published, published->archived, archived->published)을 검증하는 메서드를 제공한다
-  - 허용되지 않는 상태 전이 시도 시 에러를 반환한다
-  - _Requirements: 1.6, 9.2_
+- [x] 2. SQL 마이그레이션: skills 테이블 및 Storage 버킷 생성
+- [x] 2.1 skills 테이블을 생성하는 마이그레이션을 작성한다
+  - id(UUID, PK, gen_random_uuid), title(text, NOT NULL), category(text, NOT NULL, CHECK 제약으로 5개 값 제한), markdown_file_path(text, NOT NULL), author_id(UUID, NOT NULL, auth.users FK), created_at(timestamptz, NOT NULL, DEFAULT now()) 컬럼을 포함한다
+  - category, author_id, created_at DESC 인덱스를 생성한다
+  - 테이블 및 컬럼 이름을 snake_case로 작성한다
+  - _Requirements: 1.6, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 6.4_
 
-- [x] 2.5 (P) 도메인 에러 타입과 Result 타입을 정의한다
-  - Skill Catalog 컨텍스트에서 발생할 수 있는 비즈니스 에러 타입을 discriminated union으로 정의한다
-  - 성공/실패를 표현하는 Result 타입을 정의한다
-  - 이름 길이 위반, 버전 형식 위반, 슬러그 형식 위반, 상태 전이 위반, 중복 슬러그, 중복 버전, 중복 태그 등의 에러를 포함한다
-  - _Requirements: 1.2, 3.2, 1.3, 1.6_
+- [x] 2.2 (P) skill-markdowns Storage 버킷을 생성하는 마이그레이션을 작성한다
+  - 프라이빗 버킷으로 생성하여 RLS 기반 접근 제어를 적용한다
+  - 마크다운(.md) 파일만 저장하며, 파일 경로는 UUID.md 형식을 사용한다
+  - _Requirements: 3.1_
 
-- [x] 2.6 값 객체 단위 테스트를 작성한다
-  - SkillId: 유효한 UUID 생성, 무효한 형식 거부 테스트
-  - SemanticVersion: 유효한 버전 파싱, 무효한 형식 거부, 음수 거부 테스트
-  - SkillSlug: 유효한 슬러그 검증, 대문자/특수문자 거부 테스트
-  - SkillStatus: 허용/거부 상태 전이 테스트
-  - 2.1~2.4 태스크의 완료 결과물에 의존한다
-  - _Requirements: 9.2_
+- [x] 3. SQL 마이그레이션: RLS 정책 설정
+- [x] 3.1 skills 테이블의 RLS 정책을 생성하는 마이그레이션을 작성한다
+  - skills 테이블에 RLS를 활성화한다
+  - 인증된 사용자에게 모든 레코드에 대해 SELECT 접근을 허용하는 정책을 설정한다
+  - 관리자(is_admin 함수 활용)에게만 INSERT, UPDATE, DELETE 접근을 허용하는 정책을 설정한다
+  - 비관리자의 등록/수정/삭제 요청을 자동으로 거부한다
+  - 2.1 태스크에 의존한다
+  - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
-- [x] 3. 도메인 엔티티 구현
-- [x] 3.1 Skill 엔티티(Aggregate Root)를 구현한다
-  - 스킬의 이름, 슬러그, 요약, 상세 설명, 작성자 ID, 상태, 생성/수정일시를 캡슐화한다
-  - 팩토리 메서드에서 이름 길이(1-100자) 불변식을 검증한다
-  - 메타데이터 수정 시에도 이름 길이 불변식을 강제하고 수정일시를 갱신한다
-  - 상태 전이 메서드(publish, archive, republish)에서 SkillStatus의 전이 규칙을 활용한다
-  - 도메인 이벤트(SkillCreated, SkillPublished, SkillArchived)를 수집한다
-  - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 9.1_
+- [x] 3.2 (P) skill-markdowns Storage 버킷의 RLS 정책을 생성하는 마이그레이션을 작성한다
+  - 인증된 사용자에게 마크다운 파일 읽기(SELECT) 접근을 허용하는 정책을 설정한다
+  - 관리자(is_admin 함수 활용)에게만 마크다운 파일 업로드(INSERT) 및 삭제(DELETE) 접근을 허용하는 정책을 설정한다
+  - storage.objects 테이블에 bucket_id 조건을 포함한다
+  - 2.2 태스크에 의존한다
+  - _Requirements: 3.3, 3.4_
 
-- [x] 3.2 (P) SkillVersion 엔티티를 구현한다
-  - 스킬 ID, 시맨틱 버전, 변경 로그, 다운로드 URL, 활성 버전 플래그, 생성일시를 캡슐화한다
-  - 팩토리 메서드에서 SemanticVersion 값 객체를 활용하여 버전 형식을 검증한다
-  - 활성 버전 플래그를 설정/해제하는 메서드를 제공한다
-  - _Requirements: 3.1, 3.2, 3.4, 3.5_
+- [x] 4. 인프라 계층 구현
+- [x] 4.1 (P) Supabase 기반 스킬 리포지토리 구현체를 작성한다
+  - Supabase 클라이언트를 생성자 주입으로 받아 테스트 시 모킹 가능하게 설계한다
+  - DB 레코드(snake_case)와 도메인 엔티티(camelCase) 간 매핑을 담당한다
+  - findById, findAll(카테고리 필터링), save, delete 메서드를 구현한다
+  - DB 레코드에서 도메인 엔티티로 변환 시 SkillCategory 유효성을 재검증한다
+  - _Requirements: 6.2, 6.4_
 
-- [x] 3.3 (P) Category 엔티티를 구현한다
-  - 이름, 슬러그, 설명, 표시 순서를 캡슐화한다
-  - 슬러그의 고유성은 리포지토리 수준에서 보장하되, 엔티티 내부에서 기본 유효성을 검증한다
-  - 정보 수정 메서드를 제공한다
-  - _Requirements: 2.1, 2.5_
+- [x] 4.2 (P) Supabase Storage 기반 어댑터 구현체를 작성한다
+  - skill-markdowns 버킷을 대상으로 파일 업로드, 다운로드, 삭제를 수행한다
+  - upload 전 파일 확장자가 .md인지 검증하고, contentType을 text/markdown으로 설정한다
+  - download 시 Blob을 텍스트 문자열로 변환하여 반환한다
+  - 네트워크 오류 등 실패 시 적절한 에러 메시지를 반환한다
+  - _Requirements: 3.1, 3.2, 3.3, 3.4_
 
-- [x] 3.4 (P) Tag 엔티티를 구현한다
-  - 이름(최대 50자)을 캡슐화하고 길이 제한 불변식을 검증한다
-  - 태그 이름의 고유성은 리포지토리 수준에서 보장한다
-  - _Requirements: 4.1, 4.3, 4.4_
+- [x] 5. 애플리케이션 계층 유스케이스 구현
+- [x] 5.1 스킬 등록 유스케이스를 구현한다
+  - Storage에 마크다운 파일을 먼저 업로드하고, 성공 시에만 skills 테이블에 레코드를 저장한다
+  - 파일 경로를 UUID.md 형식으로 생성하여 파일명 충돌을 방지한다
+  - Storage 업로드 실패 시 스킬 레코드를 생성하지 않고 오류를 반환한다
+  - Storage 업로드 성공 후 DB 저장 실패 시 Storage 파일 삭제를 시도한다
+  - 도메인 엔티티 생성 단계에서 제목과 카테고리 유효성을 검증한다
+  - _Requirements: 1.1, 1.2, 3.2, 3.5_
 
-- [x] 3.5 (P) 도메인 이벤트(SkillCreated, SkillPublished, SkillArchived)를 정의한다
-  - 각 이벤트에 스킬 ID, 발생 시각 등 필요한 속성을 포함한다
-  - DomainEvent 인터페이스를 구현한다
-  - _Requirements: 9.1_
+- [x] 5.2 (P) 스킬 목록 조회 유스케이스를 구현한다
+  - 스킬 리포지토리를 통해 전체 목록을 조회하고, 카테고리별 필터링을 지원한다
+  - 성공/실패를 Result 패턴으로 반환한다
+  - _Requirements: 4.1, 4.4, 4.5_
 
-- [x] 3.6 도메인 엔티티 단위 테스트를 작성한다
-  - Skill: 생성 시 기본 상태(draft) 확인, 이름 길이 위반 거부, 상태 전이 성공/실패, 메타데이터 수정 시 수정일시 갱신, 도메인 이벤트 수집 확인
-  - SkillVersion: 유효한 버전 생성, 활성 버전 플래그 전환
-  - Category: 생성 및 수정
-  - Tag: 이름 길이 제한 검증
-  - 3.1~3.5 태스크의 완료 결과물에 의존한다
-  - _Requirements: 1.1, 1.2, 1.4, 1.6, 3.1, 3.2, 3.4, 4.4, 9.1_
+- [x] 5.3 (P) 스킬 삭제 유스케이스를 구현한다
+  - 먼저 findById로 스킬을 조회하여 마크다운 파일 경로를 획득한다
+  - Storage에서 마크다운 파일을 삭제한 후, DB에서 스킬 레코드를 삭제한다
+  - _Requirements: 5.5_
 
-- [x] 4. 리포지토리 인터페이스 정의
-- [x] 4.1 (P) SkillRepository 인터페이스를 정의한다
-  - 스킬 CRUD, 버전 관리, 카테고리/태그 매핑 관리, 통계 조회/증가 메서드를 선언한다
-  - 상태별, 카테고리별, 태그별, 검색어 기반 필터링과 정렬을 지원하는 조회 메서드를 포함한다
-  - 페이지네이션(offset, limit)을 지원한다
-  - _Requirements: 9.3, 5.1, 5.2, 5.3, 5.4, 5.5, 6.1, 6.2, 6.3_
+- [x] 5.4 (P) 마크다운 콘텐츠 조회 유스케이스를 구현한다
+  - Storage 어댑터를 통해 특정 스킬의 마크다운 파일 내용을 문자열로 조회하여 반환한다
+  - 파일 조회 실패 시 적절한 에러 메시지를 반환한다
+  - _Requirements: 4.2_
 
-- [x] 4.2 (P) CategoryRepository 인터페이스를 정의한다
-  - 카테고리 CRUD 및 정렬 조회 메서드를 선언한다
-  - ID 또는 슬러그로 단건 조회하는 메서드를 포함한다
-  - _Requirements: 9.3_
+- [x] 6. 마크다운 렌더링 의존성 설치 및 설정
+- [x] 6.1 react-markdown, remark-gfm, @tailwindcss/typography 패키지를 설치하고 프로젝트에 설정한다
+  - react-markdown v10과 remark-gfm 패키지를 신규 의존성으로 추가한다
+  - @tailwindcss/typography 플러그인을 추가하여 prose 클래스 기반 마크다운 스타일링을 활성화한다
+  - _Requirements: 4.3_
 
-- [x] 4.3 (P) TagRepository 인터페이스를 정의한다
-  - 태그 CRUD, 이름 검색, 페이지네이션 조회 메서드를 선언한다
-  - 이름으로 단건 조회하는 메서드를 포함한다
-  - _Requirements: 9.3_
+- [x] 7. 관리자 스킬 관리 페이지 구현
+- [x] 7.1 관리자 레이아웃에 스킬 관리 네비게이션 항목을 추가한다
+  - 기존 관리자 사이드바에 /admin/skills 경로로 이동하는 "스킬 관리" 항목을 추가한다
+  - _Requirements: 1.1_
 
-- [x] 5. SQL 마이그레이션: 기본 테이블 및 함수 생성
-- [x] 5.1 pg_trgm 확장 활성화와 유틸리티 함수를 생성하는 마이그레이션을 작성한다
-  - pg_trgm 확장을 활성화한다
-  - tsvector용 immutable 래핑 함수를 생성한다
-  - updated_at 자동 갱신 트리거 함수를 생성한다
-  - 마이그레이션은 멱등성을 갖춘다(CREATE IF NOT EXISTS 패턴)
-  - _Requirements: 5.1, 1.5, 9.5_
+- [x] 7.2 관리자 스킬 관리 페이지를 구현한다
+  - /admin/skills 라우트의 서버 컴포넌트로 등록된 스킬 목록을 테이블 형태로 표시한다
+  - 스킬 제목, 카테고리, 작성자, 생성일을 표시한다
+  - 스킬 삭제 버튼을 제공하고, 삭제 유스케이스를 호출한다
+  - _Requirements: 1.1, 5.5_
 
-- [x] 5.2 skills 테이블을 생성하는 마이그레이션을 작성한다
-  - UUID 기본 키, 이름(1-100자 CHECK), 슬러그(UNIQUE), 요약, 상세 설명, 작성자 ID(FK), 상태(CHECK), 생성/수정일시, 전문 검색용 Generated Column을 포함한다
-  - updated_at 자동 갱신 트리거를 적용한다
-  - 슬러그, 상태, 작성자 ID, 생성일시, 수정일시, FTS GIN, trigram GiST 인덱스를 생성한다
-  - 모든 컬럼과 테이블 이름을 snake_case로 작성한다
-  - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 5.1, 5.3, 5.4, 7.5, 9.4, 9.5_
+- [x] 7.3 스킬 등록 폼 컴포넌트를 구현한다
+  - 스킬 제목(텍스트 입력), 카테고리(5개 드롭다운 선택), 마크다운 파일(파일 업로드) 입력을 받는다
+  - 클라이언트 측에서 accept=".md" 속성으로 파일 형식을 제한하고, 서버 측에서도 확장자를 검증한다
+  - 마크다운 파일이 아닌 파일 업로드 시 오류 메시지를 표시한다
+  - Server Action 또는 API Route를 통해 등록 유스케이스를 호출한다
+  - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-- [x] 5.3 (P) categories 테이블을 생성하는 마이그레이션을 작성한다
-  - UUID 기본 키, 이름, 슬러그(UNIQUE), 설명, 표시 순서를 포함한다
-  - _Requirements: 2.1, 2.5, 7.5, 9.4, 9.5_
+- [x] 8. 메인 대시보드 통합
+- [x] 8.1 대시보드의 목업(mockSkills) 데이터를 실제 데이터베이스 조회로 대체한다
+  - 기존 SkillSummary 타입과 mockSkills 정적 데이터를 마크다운 기반 스킬 모델에 맞게 교체한다
+  - useDashboardState 훅 또는 서버 컴포넌트에서 스킬 목록 조회 유스케이스를 호출하여 실제 데이터를 가져온다
+  - SkillCard, SkillCardGrid 컴포넌트를 새로운 데이터 모델에 맞게 수정한다
+  - 대시보드에서 스킬 목록(제목, 카테고리, 작성자, 생성일)을 표시한다
+  - _Requirements: 4.1, 4.5_
 
-- [x] 5.4 (P) tags 테이블을 생성하는 마이그레이션을 작성한다
-  - UUID 기본 키, 이름(UNIQUE, 1-50자 CHECK)을 포함한다
-  - _Requirements: 4.1, 4.3, 4.4, 7.5, 9.4, 9.5_
+- [x] 8.2 카테고리별 필터링 기능을 실제 데이터 기반으로 연결한다
+  - 기획, 디자인, 퍼블리싱, 개발, QA 카테고리로 스킬 목록을 필터링할 수 있도록 한다
+  - 기존 카테고리 네비게이션 컴포넌트와 연동한다
+  - _Requirements: 4.4_
 
-- [x] 5.5 skill_versions 테이블을 생성하는 마이그레이션을 작성한다
-  - UUID 기본 키, 스킬 FK(CASCADE), 시맨틱 버전(CHECK), 변경 로그, 다운로드 URL, 활성 버전 플래그, 생성일시를 포함한다
-  - 동일 스킬 내 버전 고유 제약(UNIQUE)을 적용한다
-  - 활성 버전 조회를 위한 부분 인덱스(partial index)를 생성한다
-  - skills 테이블 마이그레이션(5.2)에 의존한다
-  - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 7.1, 7.5, 7.6, 9.4, 9.5_
+- [x] 8.3 스킬 상세 뷰(마크다운 렌더링) 컴포넌트를 구현한다
+  - 스킬 카드 클릭 시 Dialog 형태로 마크다운 콘텐츠를 표시한다
+  - 마크다운 콘텐츠 조회 유스케이스를 호출하여 Storage에서 파일 내용을 가져온다
+  - react-markdown과 remark-gfm을 사용하여 마크다운을 HTML로 변환하고, prose 클래스로 스타일링한다
+  - 제목, 목록, 코드 블록, 링크 등의 서식이 올바르게 표시되도록 한다
+  - _Requirements: 4.2, 4.3_
 
-- [x] 5.6 (P) skill_categories 매핑 테이블을 생성하는 마이그레이션을 작성한다
-  - 스킬 FK(CASCADE)와 카테고리 FK(CASCADE)로 구성된 복합 기본 키를 정의한다
-  - 카테고리별 역방향 조회를 위한 인덱스를 생성한다
-  - skills(5.2)와 categories(5.3) 마이그레이션에 의존한다
-  - _Requirements: 2.2, 2.4, 5.2, 7.2, 7.5, 9.4, 9.5_
+- [x] 9. 인프라 계층 통합 테스트
+- [x] 9.1 스킬 리포지토리 구현체의 CRUD 통합 테스트를 작성한다
+  - 스킬 저장, 단건 조회(ID), 목록 조회, 카테고리 필터링, 삭제 동작을 검증한다
+  - 도메인 엔티티와 DB 레코드 간 매핑 정합성을 확인한다
+  - _Requirements: 6.2_
 
-- [x] 5.7 (P) skill_tags 매핑 테이블을 생성하는 마이그레이션을 작성한다
-  - 스킬 FK(CASCADE)와 태그 FK(CASCADE)로 구성된 복합 기본 키를 정의한다
-  - 태그별 역방향 조회를 위한 인덱스를 생성한다
-  - skills(5.2)와 tags(5.4) 마이그레이션에 의존한다
-  - _Requirements: 4.2, 4.5, 5.5, 7.3, 7.5, 9.4, 9.5_
+- [x] 9.2 (P) Storage 어댑터 구현체의 파일 조작 통합 테스트를 작성한다
+  - 마크다운 파일 업로드, 다운로드(텍스트 반환), 삭제 동작을 검증한다
+  - .md 확장자 검증 동작을 확인한다
+  - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-- [x] 5.8 skill_stats 테이블을 생성하는 마이그레이션을 작성한다
-  - UUID 기본 키, 스킬 FK(CASCADE, UNIQUE), 설치 수(기본값 0, 음수 불가 CHECK), 조회 수(기본값 0, 음수 불가 CHECK)를 포함한다
-  - 설치 수 및 조회 수 기준 정렬을 위한 내림차순 인덱스를 생성한다
-  - skills 테이블 마이그레이션(5.2)에 의존한다
-  - _Requirements: 6.1, 6.4, 7.5, 9.4, 9.5_
-
-- [x] 6. SQL 마이그레이션: RLS 정책 설정
-- [x] 6.1 모든 테이블에 RLS를 활성화하고 skills 테이블의 접근 제어 정책을 생성하는 마이그레이션을 작성한다
-  - 7개 모든 테이블에 RLS를 활성화한다
-  - 미인증 사용자는 published 상태 스킬만 읽기 허용하는 정책을 설정한다
-  - 인증된 사용자는 본인 스킬에 대해 CRUD를 허용하는 정책을 설정한다
-  - 관리자(app_metadata.user_role = 'admin')는 모든 스킬에 대해 전체 접근을 허용하는 정책을 설정한다
-  - INSERT 시 author_id가 auth.uid()와 일치하는지 검증하는 정책을 포함한다
-  - _Requirements: 8.1, 8.2, 8.3, 8.4_
-
-- [x] 6.2 categories, tags 테이블의 접근 제어 정책을 생성하는 마이그레이션을 작성한다
-  - 모든 역할에 대해 SELECT을 허용한다
-  - INSERT, UPDATE, DELETE는 관리자 역할만 허용하는 정책을 설정한다
-  - _Requirements: 8.1, 8.5_
-
-- [x] 6.3 skill_versions, skill_categories, skill_tags, skill_stats 테이블의 접근 제어 정책을 생성하는 마이그레이션을 작성한다
-  - 부모 skills 테이블의 소유자 또는 관리자만 변경할 수 있도록 정책을 설정한다
-  - 공개 스킬의 관련 데이터에 대해서는 SELECT을 허용한다
-  - _Requirements: 8.1, 8.2, 8.3, 8.4_
-
-- [x] 7. SQL 마이그레이션: 시드 데이터 및 CASCADE 삭제 검증
-- [x] 7.1 기본 카테고리 시드 데이터를 삽입하는 마이그레이션을 작성한다
-  - 기획, 디자인, 퍼블리싱, 개발, QA 5개 카테고리를 삽입한다
-  - 이미 존재하는 경우 중복 삽입을 방지한다(ON CONFLICT DO NOTHING)
-  - _Requirements: 2.3_
-
-- [ ] 7.2 CASCADE 삭제 동작을 검증한다
-  - 스킬 삭제 시 연관된 버전, 카테고리 매핑, 태그 매핑, 통계 데이터가 함께 삭제되는지 확인한다
-  - 카테고리 삭제 시 매핑만 제거되고 스킬 자체는 유지되는지 확인한다
-  - 태그 삭제 시 매핑만 제거되고 스킬 자체는 유지되는지 확인한다
-  - 외래 키 참조 대상이 없는 레코드 삽입이 거부되는지 확인한다
-  - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.6, 2.4, 4.5_
-
-- [x] 8. 인프라 계층 리포지토리 구현체
-- [x] 8.1 SupabaseSkillRepository를 구현한다
-  - Supabase 클라이언트를 생성자 주입으로 받아 테스트 시 모킹이 가능하도록 설계한다
-  - 스킬 CRUD 메서드를 구현하고, 도메인 엔티티와 데이터베이스 레코드 간 매핑(hydration/dehydration)을 수행한다
-  - 전문 검색 시 tsvector 쿼리와 pg_trgm ILIKE 쿼리를 병행하여 검색한다
-  - 상태별, 카테고리별, 태그별 필터링과 생성일시/수정일시/설치수/조회수 기준 정렬을 지원한다
-  - 버전 관리, 카테고리/태그 매핑, 통계 증가 메서드를 구현한다
-  - 통계 증가는 원자적 UPDATE(SET count = count + 1)로 구현한다
-  - _Requirements: 9.3, 5.1, 5.2, 5.3, 5.4, 5.5, 6.1, 6.2, 6.3_
-
-- [x] 8.2 (P) SupabaseCategoryRepository를 구현한다
-  - 카테고리 CRUD 및 정렬 조회를 구현한다
-  - 도메인 엔티티와 데이터베이스 레코드 간 매핑을 수행한다
-  - _Requirements: 9.3_
-
-- [x] 8.3 (P) SupabaseTagRepository를 구현한다
-  - 태그 CRUD, 이름 검색, 페이지네이션 조회를 구현한다
-  - 도메인 엔티티와 데이터베이스 레코드 간 매핑을 수행한다
-  - _Requirements: 9.3_
-
-- [ ] 9. 통합 테스트
-- [ ] 9.1 리포지토리 구현체의 CRUD 통합 테스트를 작성한다
-  - SupabaseSkillRepository: 스킬 생성, 조회, 수정, 삭제 및 엔티티-레코드 매핑 정합성을 검증한다
-  - SupabaseCategoryRepository: 카테고리 CRUD를 검증한다
-  - SupabaseTagRepository: 태그 CRUD를 검증한다
-  - _Requirements: 9.3_
-
-- [ ] 9.2 전문 검색 및 필터링 통합 테스트를 작성한다
-  - tsvector 기반 전문 검색과 pg_trgm 기반 부분 문자열 검색 결과를 검증한다
-  - 카테고리별, 태그별, 상태별 필터링을 검증한다
-  - 정렬(생성일시, 수정일시, 설치수, 조회수) 결과를 검증한다
-  - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
-
-- [ ] 9.3 통계 및 CASCADE 통합 테스트를 작성한다
-  - 설치 수, 조회 수 증가의 원자성을 검증한다
-  - 스킬 삭제 시 연관 데이터 CASCADE 삭제를 검증한다
-  - _Requirements: 6.1, 6.2, 6.3, 7.4_
-
-- [ ]* 9.4 RLS 정책 통합 테스트를 작성한다
-  - 미인증 사용자: published 스킬만 읽기 가능한지 검증한다
-  - 인증된 사용자: 본인 스킬만 수정/삭제 가능한지 검증한다
-  - 관리자: 모든 스킬에 전체 접근 가능한지 검증한다
-  - 카테고리/태그 테이블에 대해 관리자만 수정 가능한지 검증한다
-  - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
+- [ ]* 9.3 RLS 정책 통합 테스트를 작성한다
+  - 인증된 사용자가 skills 테이블의 모든 레코드를 읽을 수 있는지 검증한다
+  - 관리자만 INSERT, UPDATE, DELETE를 수행할 수 있는지 검증한다
+  - 비관리자의 등록/수정/삭제 시도가 거부되는지 검증한다
+  - Storage 버킷에 대해 인증 사용자 읽기, 관리자 업로드/삭제 정책을 검증한다
+  - _Requirements: 5.1, 5.2, 5.3, 5.4, 3.3, 3.4_

@@ -109,11 +109,12 @@ team approval.
 |-------|-----------|-------|
 | Frontend framework | Next.js (App Router) | Server and Client Components |
 | Language | TypeScript (strict) | `any` PROHIBITED (see Principle I) |
+| Styling | Tailwind CSS v4 | CSS-based `@theme` config; no `tailwind.config.js` |
+| Component library | Shadcn UI | Radix-based primitives; customise via CSS variables |
 | Database | Supabase (via MCP) | RLS required on all user tables |
 | Unit/component tests | Jest + React Testing Library | Co-located `__tests__/` directories |
 | E2E tests | Playwright | `src/__tests__/e2e/` |
 | Deployment | Vercel | Environment variables via Vercel dashboard |
-| Styling | Tailwind CSS + shadcn/ui components | No inline style props for layout |
 
 **New dependencies** MUST be justified in the PR description. Avoid duplicating
 capabilities already provided by the stack above.
@@ -189,4 +190,4 @@ Compliance is mandatory for every PR merged into `main`.
 - Violations discovered post-merge MUST be tracked as `fix:` or `refactor:` tasks and
   resolved before the next feature is started.
 
-**Version**: 1.0.0 | **Ratified**: 2026-03-03 | **Last Amended**: 2026-03-03
+**Version**: 1.0.1 | **Ratified**: 2026-03-03 | **Last Amended**: 2026-03-03

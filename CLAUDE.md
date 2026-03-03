@@ -8,6 +8,8 @@
 ## Tech Stack
 - Frontend Framework: NextJS
 - Language: TypeScript
+- Styling: Tailwind CSS
+- Shadcn UI
 - Database:  Supabase MCP
 - Test: Playwright + React Testing Library
 - Deploy: Vercel
@@ -31,3 +33,10 @@
 - Caching 전략을 잘 세워서 배포 속도를 빠르게 합니다.
 - Supabase MCP를 사용하여 데이터베이스를 관리합니다. 
 - 전략을 잘 세워서 데이터 비동기 통신 속도를 빠르게 합니다.
+
+## Active Technologies
+- TypeScript (strict) — `any` 금지 (헌법 원칙 I) + Next.js (App Router), Tailwind CSS v4, Shadcn UI, `next/font/local` (003-landing-page-redesign)
+- N/A (순수 UI 변경) (003-landing-page-redesign)
+
+## Recent Changes
+- 003-landing-page-redesign: Added TypeScript (strict) — `any` 금지 (헌법 원칙 I) + Next.js (App Router), Tailwind CSS v4, Shadcn UI, `next/font/local`

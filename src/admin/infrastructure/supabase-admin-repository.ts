@@ -186,7 +186,7 @@ export class SupabaseAdminRepository implements AdminRepository {
     return mapToMemberRow(data as ProfileRow);
   }
 
-  async getSkills(page: number, pageSize: number, search?: string, status?: SkillStatusFilter): Promise<PaginatedResult<SkillRow>> {
+  async getSkills(page: number, pageSize: number, search?: string, status?: SkillStatusFilter, categoryId?: string): Promise<PaginatedResult<SkillRow>> {
     const supabase = await createClient();
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
@@ -201,6 +201,9 @@ export class SupabaseAdminRepository implements AdminRepository {
     }
     if (status && status !== 'all') {
       query = query.eq('status', status);
+    }
+    if (categoryId) {
+      query = query.eq('category_id', categoryId);
     }
 
     const { data, count } = await query.range(from, to);

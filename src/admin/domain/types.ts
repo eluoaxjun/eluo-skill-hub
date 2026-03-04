@@ -119,7 +119,7 @@ export interface AdminRepository {
   getRecentMembers(limit: number): Promise<RecentMember[]>;
   getMembers(page: number, pageSize: number, search?: string, currentUserId?: string): Promise<PaginatedResult<MemberRow>>;
   getMemberById(id: string): Promise<MemberRow | null>;
-  getSkills(page: number, pageSize: number, search?: string, status?: SkillStatusFilter): Promise<PaginatedResult<SkillRow>>;
+  getSkills(page: number, pageSize: number, search?: string, status?: SkillStatusFilter, categoryId?: string): Promise<PaginatedResult<SkillRow>>;
   getSkillStatusCounts(): Promise<SkillStatusCounts>;
   getFeedbacks(page: number, pageSize: number): Promise<PaginatedResult<FeedbackRow>>;
   getAllRoles(): Promise<Role[]>;

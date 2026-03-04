@@ -6,7 +6,7 @@ import SkillsCardGrid from '@/features/admin/SkillsCardGrid';
 import SkillSearch from '@/features/admin/SkillSearch';
 
 interface SkillsPageProps {
-  searchParams: Promise<{ page?: string; q?: string; status?: string }>;
+  searchParams: Promise<{ page?: string; q?: string; status?: string; category?: string }>;
 }
 
 function parseStatus(raw: string | undefined): SkillStatusFilter {
@@ -15,16 +15,18 @@ function parseStatus(raw: string | undefined): SkillStatusFilter {
 }
 
 export default async function SkillsPage({ searchParams }: SkillsPageProps) {
-  const { page: pageParam, q, status: statusParam } = await searchParams;
+  const { page: pageParam, q, status: statusParam, category: categoryParam } = await searchParams;
   const page = Math.max(1, parseInt(pageParam ?? '1', 10) || 1);
   const search = q?.trim() || undefined;
   const status = parseStatus(statusParam);
+  const categoryId = categoryParam?.trim() || undefined;
 
   const repository = new SupabaseAdminRepository();
   const useCase = new GetSkillsUseCase(repository);
-  const [result, statusCounts] = await Promise.all([
-    useCase.execute(page, 10, search, status),
+  const [result, statusCounts, categories] = await Promise.all([
+    useCase.execute(page, 10, search, status, categoryId),
     repository.getSkillStatusCounts(),
+    repository.getCategories(),
   ]);
 
   return (
@@ -32,6 +34,8 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
       <SkillsCardGrid
         result={result}
         currentStatus={status}
+        currentCategoryId={categoryId}
+        categories={categories}
         searchQuery={search}
         statusCounts={statusCounts}
         searchInput={

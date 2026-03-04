@@ -1,26 +1,30 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import type { PaginatedResult, SkillRow, SkillStatusCounts, SkillStatusFilter } from '@/admin/domain/types';
+import type { CategoryOption, PaginatedResult, SkillRow, SkillStatusCounts, SkillStatusFilter } from '@/admin/domain/types';
 import SkillCard from './SkillCard';
 import SkillStatusFilterTabs from './SkillStatusFilter';
+import SkillCategoryFilter from './SkillCategoryFilter';
 
 interface SkillsCardGridProps {
   result: PaginatedResult<SkillRow>;
   currentStatus: SkillStatusFilter;
+  currentCategoryId?: string;
+  categories: CategoryOption[];
   searchQuery?: string;
   searchInput: ReactNode;
   statusCounts: SkillStatusCounts;
 }
 
-function buildPageUrl(pageNum: number, searchQuery?: string, currentStatus?: SkillStatusFilter): string {
+function buildPageUrl(pageNum: number, searchQuery?: string, currentStatus?: SkillStatusFilter, categoryId?: string): string {
   const params = new URLSearchParams();
   params.set('page', String(pageNum));
   if (searchQuery) params.set('q', searchQuery);
   if (currentStatus && currentStatus !== 'all') params.set('status', currentStatus);
+  if (categoryId) params.set('category', categoryId);
   return `?${params.toString()}`;
 }
 
-export default function SkillsCardGrid({ result, currentStatus, searchQuery, searchInput, statusCounts }: SkillsCardGridProps) {
+export default function SkillsCardGrid({ result, currentStatus, currentCategoryId, categories, searchQuery, searchInput, statusCounts }: SkillsCardGridProps) {
   const { data, page, totalPages, totalCount } = result;
 
   return (
@@ -41,7 +45,12 @@ export default function SkillsCardGrid({ result, currentStatus, searchQuery, sea
       </div>
 
       {/* Search input */}
-      <div className="mb-6">{searchInput}</div>
+      <div className="mb-4">{searchInput}</div>
+
+      {/* Category filter */}
+      <div className="mb-6">
+        <SkillCategoryFilter categories={categories} currentCategoryId={currentCategoryId} />
+      </div>
 
       {/* Card grid */}
       {data.length === 0 ? (
@@ -92,7 +101,7 @@ export default function SkillsCardGrid({ result, currentStatus, searchQuery, sea
           <div className="flex items-center gap-2">
             {page > 1 && (
               <Link
-                href={buildPageUrl(page - 1, searchQuery, currentStatus)}
+                href={buildPageUrl(page - 1, searchQuery, currentStatus, currentCategoryId)}
                 className="px-3 py-1.5 text-xs font-semibold text-[#000080] border border-[#000080]/20 rounded-lg hover:bg-[#000080]/5 transition-colors"
               >
                 이전
@@ -103,7 +112,7 @@ export default function SkillsCardGrid({ result, currentStatus, searchQuery, sea
               return (
                 <Link
                   key={pageNum}
-                  href={buildPageUrl(pageNum, searchQuery, currentStatus)}
+                  href={buildPageUrl(pageNum, searchQuery, currentStatus, currentCategoryId)}
                   className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${pageNum === page
                     ? 'bg-[#000080] text-white'
                     : 'text-[#000080] border border-[#000080]/20 hover:bg-[#000080]/5'
@@ -115,7 +124,7 @@ export default function SkillsCardGrid({ result, currentStatus, searchQuery, sea
             })}
             {page < totalPages && (
               <Link
-                href={buildPageUrl(page + 1, searchQuery, currentStatus)}
+                href={buildPageUrl(page + 1, searchQuery, currentStatus, currentCategoryId)}
                 className="px-3 py-1.5 text-xs font-semibold text-[#000080] border border-[#000080]/20 rounded-lg hover:bg-[#000080]/5 transition-colors"
               >
                 다음

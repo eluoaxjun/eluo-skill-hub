@@ -54,6 +54,7 @@ export interface SkillRow {
   readonly id: string;
   readonly title: string;
   readonly description: string | null;
+  readonly icon: string;
   readonly categoryName: string;
   readonly categoryIcon: string;
   readonly status: 'published' | 'drafted';
@@ -107,6 +108,11 @@ export interface PaginatedResult<T> {
   readonly totalPages: number;
 }
 
+export interface SkillStatusCounts {
+  readonly published: number;
+  readonly drafted: number;
+}
+
 export interface AdminRepository {
   getDashboardStats(): Promise<DashboardStats>;
   getRecentSkills(limit: number): Promise<RecentSkill[]>;
@@ -114,6 +120,7 @@ export interface AdminRepository {
   getMembers(page: number, pageSize: number, search?: string, currentUserId?: string): Promise<PaginatedResult<MemberRow>>;
   getMemberById(id: string): Promise<MemberRow | null>;
   getSkills(page: number, pageSize: number, search?: string, status?: SkillStatusFilter): Promise<PaginatedResult<SkillRow>>;
+  getSkillStatusCounts(): Promise<SkillStatusCounts>;
   getFeedbacks(page: number, pageSize: number): Promise<PaginatedResult<FeedbackRow>>;
   getAllRoles(): Promise<Role[]>;
   updateMemberRole(memberId: string, roleId: string): Promise<void>;

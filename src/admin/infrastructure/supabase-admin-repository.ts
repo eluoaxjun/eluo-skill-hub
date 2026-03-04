@@ -14,6 +14,7 @@ import type {
   RecentSkill,
   Role,
   SkillRow,
+  SkillStatusCounts,
   SkillStatusFilter,
 } from '@/admin/domain/types';
 
@@ -192,7 +193,7 @@ export class SupabaseAdminRepository implements AdminRepository {
 
     let query = supabase
       .from('skills')
-      .select('id, title, description, status, created_at, categories(name, icon)', { count: 'exact' })
+      .select('id, title, description, icon, status, created_at, categories(name, icon)', { count: 'exact' })
       .order('created_at', { ascending: false });
 
     if (search) {
@@ -209,6 +210,7 @@ export class SupabaseAdminRepository implements AdminRepository {
       id: row.id as string,
       title: row.title as string,
       description: (row.description as string | null) ?? null,
+      icon: (row.icon as string) ?? '⚡',
       categoryName: extractCategoryName(row.categories as JoinedCategory),
       categoryIcon: extractCategoryIcon(row.categories as JoinedCategory),
       status: ((row.status as string) === 'drafted' ? 'drafted' : 'published') as 'published' | 'drafted',
@@ -221,6 +223,20 @@ export class SupabaseAdminRepository implements AdminRepository {
       page,
       pageSize,
       totalPages: Math.ceil(totalCount / pageSize),
+    };
+  }
+
+  async getSkillStatusCounts(): Promise<SkillStatusCounts> {
+    const supabase = await createClient();
+
+    const [publishedResult, draftedResult] = await Promise.all([
+      supabase.from('skills').select('id', { count: 'exact', head: true }).eq('status', 'published'),
+      supabase.from('skills').select('id', { count: 'exact', head: true }).eq('status', 'drafted'),
+    ]);
+
+    return {
+      published: publishedResult.count ?? 0,
+      drafted: draftedResult.count ?? 0,
     };
   }
 

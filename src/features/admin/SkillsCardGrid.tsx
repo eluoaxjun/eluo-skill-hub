@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import type { PaginatedResult, SkillRow, SkillStatusFilter } from '@/admin/domain/types';
+import type { PaginatedResult, SkillRow, SkillStatusCounts, SkillStatusFilter } from '@/admin/domain/types';
 import SkillCard from './SkillCard';
 import SkillStatusFilterTabs from './SkillStatusFilter';
 
@@ -9,6 +9,7 @@ interface SkillsCardGridProps {
   currentStatus: SkillStatusFilter;
   searchQuery?: string;
   searchInput: ReactNode;
+  statusCounts: SkillStatusCounts;
 }
 
 function buildPageUrl(pageNum: number, searchQuery?: string, currentStatus?: SkillStatusFilter): string {
@@ -19,7 +20,7 @@ function buildPageUrl(pageNum: number, searchQuery?: string, currentStatus?: Ski
   return `?${params.toString()}`;
 }
 
-export default function SkillsCardGrid({ result, currentStatus, searchQuery, searchInput }: SkillsCardGridProps) {
+export default function SkillsCardGrid({ result, currentStatus, searchQuery, searchInput, statusCounts }: SkillsCardGridProps) {
   const { data, page, totalPages, totalCount } = result;
 
   return (
@@ -28,7 +29,13 @@ export default function SkillsCardGrid({ result, currentStatus, searchQuery, sea
       <div className="flex justify-between items-end mb-6">
         <div>
           <h2 className="text-3xl font-black text-slate-900 tracking-tight">스킬 관리</h2>
-          <p className="text-slate-500 mt-1">기업 내 등록된 모든 AI 스킬 및 에이전트 현황입니다.</p>
+          <div className="flex items-center gap-3 mt-1">
+            <p className="text-slate-500">기업 내 등록된 모든 AI 스킬 및 에이전트 현황입니다.</p>
+            <div className="flex items-center gap-2 text-xs font-bold">
+              <span className="px-2.5 py-1 bg-green-100 text-green-700 rounded-full">배포 {statusCounts.published}</span>
+              <span className="px-2.5 py-1 bg-slate-200 text-slate-600 rounded-full">초안 {statusCounts.drafted}</span>
+            </div>
+          </div>
         </div>
         <SkillStatusFilterTabs currentStatus={currentStatus} />
       </div>

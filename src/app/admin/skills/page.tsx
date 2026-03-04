@@ -22,7 +22,10 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
 
   const repository = new SupabaseAdminRepository();
   const useCase = new GetSkillsUseCase(repository);
-  const result = await useCase.execute(page, 10, search, status);
+  const [result, statusCounts] = await Promise.all([
+    useCase.execute(page, 10, search, status),
+    repository.getSkillStatusCounts(),
+  ]);
 
   return (
     <div className="p-8">
@@ -30,6 +33,7 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
         result={result}
         currentStatus={status}
         searchQuery={search}
+        statusCounts={statusCounts}
         searchInput={
           <Suspense fallback={null}>
             <SkillSearch defaultValue={q ?? ''} />

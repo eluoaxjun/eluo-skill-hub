@@ -1,27 +1,96 @@
 import Link from 'next/link';
-import type { MemberRow, PaginatedResult } from '@/admin/domain/types';
+import type { MemberRow, PaginatedResult, Role } from '@/admin/domain/types';
+import type { ReactNode } from 'react';
+import RoleSelect from './RoleSelect';
 
 interface MembersTableProps {
   result: PaginatedResult<MemberRow>;
+  roles: Role[];
+  currentUserId: string;
+  pinnedMember?: MemberRow;
+  searchQuery?: string;
+  searchInput?: ReactNode;
 }
 
-export default function MembersTable({ result }: MembersTableProps) {
-  const { data, page, totalPages } = result;
+function MemberRow({ member, roles, isCurrentUser, pinned = false }: {
+  member: MemberRow;
+  roles: Role[];
+  isCurrentUser: boolean;
+  pinned?: boolean;
+}) {
+  return (
+    <tr className={`transition-colors ${pinned ? 'bg-[#000080]/3 hover:bg-[#000080]/5' : 'hover:bg-[#000080]/3'}`}>
+      <td className="px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="size-8 rounded-full bg-[#000080]/10 flex items-center justify-center shrink-0">
+            <span className="text-xs font-bold text-[#000080]">
+              {(member.name ?? member.email).charAt(0).toUpperCase()}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-[#000080]">
+              {member.name ?? '-'}
+            </span>
+            {pinned && (
+              <span className="px-1.5 py-0.5 bg-[#000080] text-white rounded text-[9px] font-black">나</span>
+            )}
+          </div>
+        </div>
+      </td>
+      <td className="px-6 py-4 text-sm text-[#000080]/70">{member.email}</td>
+      <td className="px-6 py-4">
+        <RoleSelect
+          memberId={member.id}
+          currentRoleId={member.roleId}
+          currentRoleName={member.roleName}
+          roles={roles}
+          isCurrentUser={isCurrentUser}
+        />
+      </td>
+      <td className="px-6 py-4 text-sm text-[#000080]/60">
+        {new Date(member.createdAt).toLocaleDateString('ko-KR')}
+      </td>
+      <td className="px-6 py-4">
+        {member.status === 'active' ? (
+          <span className="px-2 py-1 bg-green-100 text-green-700 rounded-lg text-[10px] font-black uppercase">
+            Active
+          </span>
+        ) : (
+          <span className="px-2 py-1 bg-[#000080]/10 text-[#000080]/40 rounded-lg text-[10px] font-black uppercase">
+            Pending
+          </span>
+        )}
+      </td>
+    </tr>
+  );
+}
 
-  if (data.length === 0) {
+export default function MembersTable({ result, roles, currentUserId, pinnedMember, searchQuery, searchInput }: MembersTableProps) {
+  const { data, page, totalPages } = result;
+  const totalCount = result.totalCount + (pinnedMember ? 1 : 0);
+
+  if (data.length === 0 && !pinnedMember) {
     return (
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#000080]/5">
-        <h3 className="text-lg font-bold text-[#000080] mb-4">회원 목록</h3>
-        <p className="text-sm text-[#000080]/40 text-center py-8">데이터가 없습니다</p>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-[#000080]">회원 목록</h3>
+          {searchInput}
+        </div>
+        <p className="text-sm text-[#000080]/40 text-center py-8">
+          {searchQuery ? '검색 결과가 없습니다' : '데이터가 없습니다'}
+        </p>
       </div>
     );
   }
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-[#000080]/5 overflow-hidden">
-      <div className="p-6 border-b border-[#000080]/5">
-        <h3 className="text-lg font-bold text-[#000080]">회원 목록</h3>
-        <p className="text-xs text-[#000080]/40 mt-1">전체 {result.totalCount.toLocaleString()}명</p>
+      <div className="p-6 border-b border-[#000080]/5 flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-bold text-[#000080]">회원 목록</h3>
+          <p className="text-xs text-[#000080]/40 mt-1">전체 {totalCount.toLocaleString()}명</p>
+        </div>
+        {searchInput}
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-left">
@@ -35,40 +104,30 @@ export default function MembersTable({ result }: MembersTableProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-[#000080]/5">
+            {pinnedMember && (
+              <MemberRow
+                key={pinnedMember.id}
+                member={pinnedMember}
+                roles={roles}
+                isCurrentUser={true}
+                pinned={true}
+              />
+            )}
             {data.map((member) => (
-              <tr key={member.id} className="hover:bg-[#000080]/3 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="size-8 rounded-full bg-[#000080]/10 flex items-center justify-center shrink-0">
-                      <span className="text-xs font-bold text-[#000080]">
-                        {(member.displayName ?? member.email).charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <span className="text-sm font-semibold text-[#000080]">
-                      {member.displayName ?? '-'}
-                    </span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-sm text-[#000080]/70">{member.email}</td>
-                <td className="px-6 py-4 text-sm text-[#000080]/70">{member.roleName}</td>
-                <td className="px-6 py-4 text-sm text-[#000080]/60">
-                  {new Date(member.createdAt).toLocaleDateString('ko-KR')}
-                </td>
-                <td className="px-6 py-4">
-                  {member.status === 'active' ? (
-                    <span className="px-2 py-1 bg-green-100 text-green-700 rounded-lg text-[10px] font-black uppercase">
-                      Active
-                    </span>
-                  ) : (
-                    <span className="px-2 py-1 bg-[#000080]/10 text-[#000080]/40 rounded-lg text-[10px] font-black uppercase">
-                      Pending
-                    </span>
-                  )}
-                </td>
-              </tr>
+              <MemberRow
+                key={member.id}
+                member={member}
+                roles={roles}
+                isCurrentUser={member.id === currentUserId}
+              />
             ))}
           </tbody>
         </table>
+        {data.length === 0 && pinnedMember && (
+          <p className="text-sm text-[#000080]/40 text-center py-8">
+            {searchQuery ? '검색 결과가 없습니다' : '다른 회원이 없습니다'}
+          </p>
+        )}
       </div>
 
       {/* Pagination */}
@@ -79,7 +138,7 @@ export default function MembersTable({ result }: MembersTableProps) {
         <div className="flex items-center gap-2">
           {page > 1 && (
             <Link
-              href={`?page=${page - 1}`}
+              href={`?${new URLSearchParams({ ...(searchQuery ? { q: searchQuery } : {}), page: String(page - 1) }).toString()}`}
               className="px-3 py-1.5 text-xs font-semibold text-[#000080] border border-[#000080]/20 rounded-lg hover:bg-[#000080]/5 transition-colors"
             >
               이전
@@ -90,7 +149,7 @@ export default function MembersTable({ result }: MembersTableProps) {
             return (
               <Link
                 key={pageNum}
-                href={`?page=${pageNum}`}
+                href={`?${new URLSearchParams({ ...(searchQuery ? { q: searchQuery } : {}), page: String(pageNum) }).toString()}`}
                 className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
                   pageNum === page
                     ? 'bg-[#000080] text-white'
@@ -103,7 +162,7 @@ export default function MembersTable({ result }: MembersTableProps) {
           })}
           {page < totalPages && (
             <Link
-              href={`?page=${page + 1}`}
+              href={`?${new URLSearchParams({ ...(searchQuery ? { q: searchQuery } : {}), page: String(page + 1) }).toString()}`}
               className="px-3 py-1.5 text-xs font-semibold text-[#000080] border border-[#000080]/20 rounded-lg hover:bg-[#000080]/5 transition-colors"
             >
               다음

@@ -4,9 +4,11 @@ import type {
   DashboardStats,
   FeedbackRow,
   MemberRow,
+  Permission,
   PaginatedResult,
   RecentMember,
   RecentSkill,
+  Role,
   SkillRow,
 } from '@/admin/domain/types';
 
@@ -16,6 +18,14 @@ function extractName(joined: JoinedName): string {
   if (!joined) return '';
   if (Array.isArray(joined)) return joined[0]?.name ?? '';
   return joined.name;
+}
+
+type JoinedId = { id: string } | { id: string }[] | null;
+
+function extractId(joined: JoinedId): string {
+  if (!joined) return '';
+  if (Array.isArray(joined)) return joined[0]?.id ?? '';
+  return joined.id;
 }
 
 type JoinedEmail = { email: string } | { email: string }[] | null;
@@ -32,6 +42,27 @@ function extractTitle(joined: JoinedTitle): string {
   if (!joined) return '';
   if (Array.isArray(joined)) return joined[0]?.title ?? '';
   return joined.title;
+}
+
+type ProfileRow = {
+  id: unknown;
+  email: unknown;
+  name: unknown;
+  created_at: unknown;
+  roles: unknown;
+};
+
+function mapToMemberRow(row: ProfileRow): MemberRow {
+  const roles = row.roles as { id: string; name: string } | { id: string; name: string }[] | null;
+  return {
+    id: row.id as string,
+    email: row.email as string,
+    name: (row.name as string | null) ?? null,
+    roleName: extractName(roles as JoinedName),
+    roleId: extractId(roles as JoinedId),
+    createdAt: row.created_at as string,
+    status: 'active' as const,
+  };
 }
 
 export class SupabaseAdminRepository implements AdminRepository {
@@ -76,7 +107,7 @@ export class SupabaseAdminRepository implements AdminRepository {
 
     const { data } = await supabase
       .from('profiles')
-      .select('id, email, created_at, roles(name)')
+      .select('id, email, name, created_at, roles(name)')
       .order('created_at', { ascending: false })
       .limit(limit);
 
@@ -85,32 +116,33 @@ export class SupabaseAdminRepository implements AdminRepository {
     return data.map((row) => ({
       id: row.id as string,
       email: row.email as string,
-      displayName: null,
+      name: (row.name as string | null) ?? null,
       roleName: extractName(row.roles as JoinedName),
       createdAt: row.created_at as string,
     }));
   }
 
-  async getMembers(page: number, pageSize: number): Promise<PaginatedResult<MemberRow>> {
+  async getMembers(page: number, pageSize: number, search?: string, currentUserId?: string): Promise<PaginatedResult<MemberRow>> {
     const supabase = await createClient();
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
-    const { data, count } = await supabase
+    let query = supabase
       .from('profiles')
-      .select('id, email, created_at, roles(name)', { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .range(from, to);
+      .select('id, email, name, created_at, roles(id, name)', { count: 'exact' })
+      .order('created_at', { ascending: false });
+
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%`);
+    }
+    if (currentUserId) {
+      query = query.neq('id', currentUserId);
+    }
+
+    const { data, count } = await query.range(from, to);
 
     const totalCount = count ?? 0;
-    const rows: MemberRow[] = (data ?? []).map((row) => ({
-      id: row.id as string,
-      email: row.email as string,
-      displayName: null,
-      roleName: extractName(row.roles as JoinedName),
-      createdAt: row.created_at as string,
-      status: 'active' as const,
-    }));
+    const rows: MemberRow[] = (data ?? []).map((row) => mapToMemberRow(row as ProfileRow));
 
     return {
       data: rows,
@@ -119,6 +151,19 @@ export class SupabaseAdminRepository implements AdminRepository {
       pageSize,
       totalPages: Math.ceil(totalCount / pageSize),
     };
+  }
+
+  async getMemberById(id: string): Promise<MemberRow | null> {
+    const supabase = await createClient();
+
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, email, name, created_at, roles(id, name)')
+      .eq('id', id)
+      .single();
+
+    if (!data) return null;
+    return mapToMemberRow(data as ProfileRow);
   }
 
   async getSkills(page: number, pageSize: number): Promise<PaginatedResult<SkillRow>> {
@@ -182,5 +227,87 @@ export class SupabaseAdminRepository implements AdminRepository {
       pageSize,
       totalPages: Math.ceil(totalCount / pageSize),
     };
+  }
+
+  // T009: getAllRoles
+  async getAllRoles(): Promise<Role[]> {
+    const supabase = await createClient();
+
+    const { data } = await supabase
+      .from('roles')
+      .select('id, name, description')
+      .order('name', { ascending: true });
+
+    if (!data) return [];
+
+    return data.map((row) => ({
+      id: row.id as string,
+      name: row.name as string,
+      description: (row.description as string | null) ?? null,
+    }));
+  }
+
+  // T010: updateMemberRole
+  async updateMemberRole(memberId: string, roleId: string): Promise<void> {
+    const supabase = await createClient();
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ role_id: roleId })
+      .eq('id', memberId);
+
+    if (error) throw new Error('역할 변경에 실패했습니다');
+  }
+
+  // T011: getAdminCount
+  async getAdminCount(): Promise<number> {
+    const supabase = await createClient();
+
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, roles!inner(name)')
+      .eq('roles.name', 'admin');
+
+    return data?.length ?? 0;
+  }
+
+  // T012: getMemberRole
+  async getMemberRole(memberId: string): Promise<string | null> {
+    const supabase = await createClient();
+
+    const { data } = await supabase
+      .from('profiles')
+      .select('roles(name)')
+      .eq('id', memberId)
+      .single();
+
+    if (!data) return null;
+    return extractName(data.roles as JoinedName) || null;
+  }
+
+  // T025: getPermissionsByRole
+  async getPermissionsByRole(roleId: string): Promise<Permission[]> {
+    const supabase = await createClient();
+
+    const { data } = await supabase
+      .from('role_permissions')
+      .select('permissions(id, name, description)')
+      .eq('role_id', roleId);
+
+    if (!data) return [];
+
+    return data.flatMap((row) => {
+      const perms = row.permissions as
+        | { id: string; name: string; description: string | null }
+        | { id: string; name: string; description: string | null }[]
+        | null;
+      if (!perms) return [];
+      const arr = Array.isArray(perms) ? perms : [perms];
+      return arr.map((p) => ({
+        id: p.id,
+        name: p.name,
+        description: p.description ?? null,
+      }));
+    });
   }
 }

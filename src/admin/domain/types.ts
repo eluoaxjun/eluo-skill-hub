@@ -15,7 +15,7 @@ export interface RecentSkill {
 export interface RecentMember {
   readonly id: string;
   readonly email: string;
-  readonly displayName: string | null;
+  readonly name: string | null;
   readonly roleName: string;
   readonly createdAt: string;
 }
@@ -23,10 +23,29 @@ export interface RecentMember {
 export interface MemberRow {
   readonly id: string;
   readonly email: string;
-  readonly displayName: string | null;
+  readonly name: string | null;
   readonly roleName: string;
+  readonly roleId: string;
   readonly createdAt: string;
   readonly status: 'active' | 'pending';
+}
+
+export interface Role {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string | null;
+}
+
+export interface Permission {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string | null;
+}
+
+export interface RolePermission {
+  readonly id: string;
+  readonly roleId: string;
+  readonly permissionId: string;
 }
 
 export interface SkillRow {
@@ -59,7 +78,13 @@ export interface AdminRepository {
   getDashboardStats(): Promise<DashboardStats>;
   getRecentSkills(limit: number): Promise<RecentSkill[]>;
   getRecentMembers(limit: number): Promise<RecentMember[]>;
-  getMembers(page: number, pageSize: number): Promise<PaginatedResult<MemberRow>>;
+  getMembers(page: number, pageSize: number, search?: string, currentUserId?: string): Promise<PaginatedResult<MemberRow>>;
+  getMemberById(id: string): Promise<MemberRow | null>;
   getSkills(page: number, pageSize: number): Promise<PaginatedResult<SkillRow>>;
   getFeedbacks(page: number, pageSize: number): Promise<PaginatedResult<FeedbackRow>>;
+  getAllRoles(): Promise<Role[]>;
+  updateMemberRole(memberId: string, roleId: string): Promise<void>;
+  getAdminCount(): Promise<number>;
+  getMemberRole(memberId: string): Promise<string | null>;
+  getPermissionsByRole(roleId: string): Promise<Permission[]>;
 }

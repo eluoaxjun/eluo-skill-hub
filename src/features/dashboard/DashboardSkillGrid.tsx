@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import type { DashboardSkillCard as SkillCardType } from '@/dashboard/domain/types';
+import { useIsViewer } from './DashboardLayoutClient';
 import DashboardSkillCard from './DashboardSkillCard';
 import LoadMoreButton from './LoadMoreButton';
 
@@ -19,7 +20,6 @@ interface DashboardSkillGridProps {
   categoryId?: string;
   currentLimit: number;
   bookmarkedSkillIds?: string[];
-  isViewer?: boolean;
 }
 
 export default function DashboardSkillGrid({
@@ -29,8 +29,8 @@ export default function DashboardSkillGrid({
   categoryId,
   currentLimit,
   bookmarkedSkillIds,
-  isViewer = false,
 }: DashboardSkillGridProps) {
+  const isViewer = useIsViewer();
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
   const isEmpty = skills.length === 0;
   const isSearchResult = !!searchQuery;

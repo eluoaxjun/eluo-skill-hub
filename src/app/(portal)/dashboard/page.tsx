@@ -25,37 +25,22 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   const repository = new SupabaseDashboardRepository();
   const getSkillsUseCase = new GetDashboardSkillsUseCase(repository);
-
-  const { skills, totalCount, hasMore } = await getSkillsUseCase.execute(
-    limit,
-    searchQuery || undefined,
-    categoryId
-  );
-
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+
+  // Step 1: getSkills와 getUser를 병렬 실행 (getSkills는 user.id 불필요)
+  const [skillsResult, { data: { user } }] = await Promise.all([
+    getSkillsUseCase.execute(limit, searchQuery || undefined, categoryId),
+    supabase.auth.getUser(),
+  ]);
+
+  const { skills, totalCount, hasMore } = skillsResult;
 
   let bookmarkedSkillIds: string[] = [];
-  let isViewer = false;
+
   if (user) {
     const bookmarkRepository = new SupabaseBookmarkRepository();
     const bookmarksUseCase = new GetUserBookmarksUseCase(bookmarkRepository);
-    bookmarkedSkillIds = await bookmarksUseCase.getBookmarkedSkillIds(user.id);
-
-    // Check if user is viewer role
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('roles(name)')
-      .eq('id', user.id)
-      .single();
-
-    if (profile) {
-      const roles = profile.roles as { name: string } | { name: string }[] | null;
-      const roleName = roles
-        ? Array.isArray(roles) ? roles[0]?.name : roles.name
-        : null;
-      isViewer = roleName === 'viewer';
-    }
+    bookmarkedSkillIds = await bookmarksUseCase.getBookmarkedSkillIds(user.id).catch(() => [] as string[]);
   }
 
   return (
@@ -70,7 +55,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         categoryId={categoryId}
         currentLimit={limit}
         bookmarkedSkillIds={bookmarkedSkillIds}
-        isViewer={isViewer}
       />
     </>
   );

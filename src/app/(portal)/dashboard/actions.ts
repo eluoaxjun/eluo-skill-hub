@@ -99,7 +99,9 @@ export async function submitFeedbackAction(
   try {
     const repository = new SupabaseSkillDetailRepository();
     const useCase = new SubmitFeedbackUseCase(repository);
-    return await useCase.execute(user.id, input);
+    const result = await useCase.execute(user.id, input);
+    revalidatePath('/dashboard');
+    return result;
   } catch {
     return { success: false, error: '피드백 저장에 실패했습니다.' };
   }
@@ -120,7 +122,9 @@ export async function submitFeedbackReplyAction(
   try {
     const repository = new SupabaseSkillDetailRepository();
     const useCase = new SubmitReplyUseCase(repository);
-    return await useCase.execute(user.id, input);
+    const result = await useCase.execute(user.id, input);
+    revalidatePath('/dashboard');
+    return result;
   } catch {
     return { success: false, error: '댓글 저장에 실패했습니다.' };
   }

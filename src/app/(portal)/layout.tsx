@@ -29,10 +29,29 @@ export default async function DashboardLayout({
 
   const repository = new SupabaseDashboardRepository();
   const getCategoriesUseCase = new GetCategoriesUseCase(repository);
-  const categories: CategoryItem[] = await getCategoriesUseCase.execute();
+
+  // 카테고리 조회와 역할 조회를 병렬 실행
+  const [categories, profileResult] = await Promise.all([
+    getCategoriesUseCase.execute(),
+    supabase
+      .from('profiles')
+      .select('roles(name)')
+      .eq('id', user.id)
+      .single()
+      .then(({ data }) => data, () => null),
+  ]);
+
+  let isViewer = false;
+  if (profileResult) {
+    const roles = profileResult.roles as { name: string } | { name: string }[] | null;
+    const roleName = roles
+      ? Array.isArray(roles) ? roles[0]?.name : roles.name
+      : null;
+    isViewer = roleName === 'viewer';
+  }
 
   return (
-    <DashboardLayoutClient userProfile={userProfile} categories={categories}>
+    <DashboardLayoutClient userProfile={userProfile} categories={categories} isViewer={isViewer}>
       {children}
     </DashboardLayoutClient>
   );

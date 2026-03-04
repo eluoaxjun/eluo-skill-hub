@@ -1,20 +1,28 @@
 'use client';
 
-import { useCallback } from 'react';
+import { createContext, useCallback, useContext } from 'react';
 import { useSearchParams, usePathname } from 'next/navigation';
 import type { UserProfile, CategoryItem, SidebarTab } from '@/dashboard/domain/types';
 import DashboardSidebar from './DashboardSidebar';
 import DashboardHeader from './DashboardHeader';
 
+const IsViewerContext = createContext<boolean>(false);
+
+export function useIsViewer(): boolean {
+  return useContext(IsViewerContext);
+}
+
 interface DashboardLayoutClientProps {
   userProfile: UserProfile;
   categories: CategoryItem[];
+  isViewer?: boolean;
   children: React.ReactNode;
 }
 
 export default function DashboardLayoutClient({
   userProfile,
   categories,
+  isViewer = false,
   children,
 }: DashboardLayoutClientProps) {
   const searchParams = useSearchParams();
@@ -44,18 +52,20 @@ export default function DashboardLayoutClient({
         : activeTab.categoryName;
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <DashboardSidebar
-        categories={categories}
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-      />
-      <main className="flex-1 flex flex-col min-w-0 bg-[#F0F0F0] overflow-hidden relative">
-        <DashboardHeader breadcrumb={breadcrumb} userProfile={userProfile} />
-        <div className="flex-1 overflow-y-auto p-10" style={{ scrollbarWidth: 'none' }}>
-          {children}
-        </div>
-      </main>
-    </div>
+    <IsViewerContext.Provider value={isViewer}>
+      <div className="flex h-screen overflow-hidden">
+        <DashboardSidebar
+          categories={categories}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+        />
+        <main className="flex-1 flex flex-col min-w-0 bg-[#F0F0F0] overflow-hidden relative">
+          <DashboardHeader breadcrumb={breadcrumb} userProfile={userProfile} />
+          <div className="flex-1 overflow-y-auto p-10" style={{ scrollbarWidth: 'none' }}>
+            {children}
+          </div>
+        </main>
+      </div>
+    </IsViewerContext.Provider>
   );
 }

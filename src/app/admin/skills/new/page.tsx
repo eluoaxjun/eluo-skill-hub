@@ -8,7 +8,7 @@ export default async function NewSkillPage() {
   const categories = result.success ? result.categories : [];
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
+    <div className="p-8 max-w-6xl mx-auto">
       <div className="mb-6">
         <Link
           href="/admin/skills"

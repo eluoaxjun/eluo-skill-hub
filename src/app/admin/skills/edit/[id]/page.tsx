@@ -16,7 +16,7 @@ export default async function EditSkillPage({ params }: EditSkillPageProps) {
 
   if (!skillResult.success) {
     return (
-      <div className="p-8 max-w-2xl mx-auto">
+      <div className="p-8 max-w-6xl mx-auto">
         <div className="mb-6">
           <Link
             href="/admin/skills"
@@ -43,7 +43,7 @@ export default async function EditSkillPage({ params }: EditSkillPageProps) {
   const categories = categoriesResult.success ? categoriesResult.categories : [];
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
+    <div className="p-8 max-w-6xl mx-auto">
       <div className="mb-6">
         <Link
           href="/admin/skills"

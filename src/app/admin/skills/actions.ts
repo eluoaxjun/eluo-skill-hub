@@ -3,9 +3,11 @@
 import { createClient } from '@/shared/infrastructure/supabase/server';
 import { SupabaseAdminRepository } from '@/admin/infrastructure/supabase-admin-repository';
 import { CreateSkillUseCase } from '@/admin/application/create-skill-use-case';
+import { DeleteSkillUseCase } from '@/admin/application/delete-skill-use-case';
 import { GetSkillByIdUseCase } from '@/admin/application/get-skill-by-id-use-case';
 import { UpdateSkillUseCase } from '@/admin/application/update-skill-use-case';
-import type { CategoryOption, CreateSkillResult, GetSkillResult, UpdateSkillResult } from '@/admin/domain/types';
+import type { CategoryOption, CreateSkillResult, DeleteSkillResult, GetSkillResult, UpdateSkillResult } from '@/admin/domain/types';
+import { revalidatePath } from 'next/cache';
 
 async function verifyAdmin(): Promise<boolean> {
   const supabase = await createClient();
@@ -197,6 +199,31 @@ export async function updateSkill(formData: FormData): Promise<UpdateSkillResult
     templateFiles: templateFiles.length > 0 ? templateFiles : undefined,
     removedTemplateIds,
   });
+}
+
+export async function deleteSkill(skillId: string): Promise<DeleteSkillResult> {
+  const isAdmin = await verifyAdmin();
+  if (!isAdmin) {
+    return { success: false, error: '권한이 없습니다' };
+  }
+
+  if (!skillId) {
+    return { success: false, error: '스킬 ID가 필요합니다' };
+  }
+
+  try {
+    const repository = new SupabaseAdminRepository();
+    const useCase = new DeleteSkillUseCase(repository);
+    const result = await useCase.execute(skillId);
+
+    if (result.success) {
+      revalidatePath('/admin/skills');
+    }
+
+    return result;
+  } catch {
+    return { success: false, error: '스킬 삭제 중 오류가 발생했습니다' };
+  }
 }
 
 export async function getCategories(): Promise<{ success: true; categories: CategoryOption[] } | { success: false; error: string }> {

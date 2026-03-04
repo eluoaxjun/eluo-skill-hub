@@ -150,6 +150,10 @@ export type GetSkillResult =
   | { success: true; skill: SkillDetail }
   | { success: false; error: string };
 
+export type DeleteSkillResult =
+  | { success: true }
+  | { success: false; error: string };
+
 export interface AdminRepository {
   getDashboardStats(): Promise<DashboardStats>;
   getRecentSkills(limit: number): Promise<RecentSkill[]>;
@@ -168,4 +172,5 @@ export interface AdminRepository {
   getSkillById(id: string): Promise<GetSkillResult>;
   updateSkill(input: UpdateSkillInput): Promise<UpdateSkillResult>;
   getCategories(): Promise<CategoryOption[]>;
+  deleteSkill(skillId: string): Promise<DeleteSkillResult>;
 }

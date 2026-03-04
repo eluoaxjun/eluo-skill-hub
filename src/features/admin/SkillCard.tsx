@@ -1,12 +1,38 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
-import type { SkillRow } from '@/admin/domain/types';
+import { toast } from 'sonner';
 import { Blocks, Clock } from 'lucide-react';
+import type { SkillRow } from '@/admin/domain/types';
+import { deleteSkill } from '@/app/admin/skills/actions';
+import SkillDeleteConfirmDialog from '@/features/admin/SkillDeleteConfirmDialog';
 
 interface SkillCardProps {
   skill: SkillRow;
 }
 
 export default function SkillCard({ skill }: SkillCardProps) {
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const result = await deleteSkill(skill.id);
+      if (result.success) {
+        toast.success('스킬이 삭제되었습니다');
+        setIsDeleteDialogOpen(false);
+      } else {
+        toast.error(result.error);
+      }
+    } catch {
+      toast.error('스킬 삭제 중 오류가 발생했습니다');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="bg-white/70 backdrop-blur-sm border border-white/30 shadow-lg shadow-[#000080]/5 rounded-2xl p-6 flex flex-col transition-all hover:-translate-y-1 hover:shadow-xl">
       <div className="flex justify-between items-start mb-4">
@@ -44,11 +70,20 @@ export default function SkillCard({ skill }: SkillCardProps) {
         </Link>
         <button
           type="button"
+          onClick={() => setIsDeleteDialogOpen(true)}
           className="flex-1 py-2 rounded-xl bg-red-50 text-red-600 text-sm font-bold hover:bg-red-100 transition-colors"
         >
           삭제
         </button>
       </div>
+
+      <SkillDeleteConfirmDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        skillTitle={skill.title}
+        onConfirm={handleDelete}
+        isDeleting={isDeleting}
+      />
     </div>
   );
 }

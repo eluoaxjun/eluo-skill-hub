@@ -6,6 +6,7 @@ import type {
   CreateSkillInput,
   CreateSkillResult,
   DashboardStats,
+  DeleteSkillResult,
   FeedbackRow,
   GetSkillResult,
   MemberRow,
@@ -644,5 +645,72 @@ export class SupabaseAdminRepository implements AdminRepository {
     }
 
     return { success: true, skillId };
+  }
+
+  async deleteSkill(skillId: string): Promise<DeleteSkillResult> {
+    const supabase = await createClient();
+
+    // 스킬 존재 여부 확인
+    const { data: skill, error: fetchError } = await supabase
+      .from('skills')
+      .select('id, markdown_file_path')
+      .eq('id', skillId)
+      .single();
+
+    if (fetchError || !skill) {
+      return { success: false, error: '스킬을 찾을 수 없습니다' };
+    }
+
+    try {
+      // 1. 피드백 로그 삭제
+      await supabase
+        .from('skill_feedback_logs')
+        .delete()
+        .eq('skill_id', skillId);
+
+      // 2. 템플릿 파일 조회 → Storage 삭제 → DB 삭제
+      const { data: templates } = await supabase
+        .from('skill_templates')
+        .select('id, file_path')
+        .eq('skill_id', skillId);
+
+      if (templates && templates.length > 0) {
+        for (const template of templates) {
+          try {
+            await deleteFile('skill-templates', template.file_path);
+          } catch {
+            // Storage 파일 삭제 실패 시에도 DB 삭제 계속 진행
+          }
+        }
+        await supabase
+          .from('skill_templates')
+          .delete()
+          .eq('skill_id', skillId);
+      }
+
+      // 3. 마크다운 파일 Storage 삭제
+      const markdownPath = skill.markdown_file_path as string | null;
+      if (markdownPath) {
+        try {
+          await deleteFile('skill-descriptions', markdownPath);
+        } catch {
+          // Storage 파일 삭제 실패 시에도 DB 삭제 계속 진행
+        }
+      }
+
+      // 4. 스킬 레코드 삭제
+      const { error: deleteError } = await supabase
+        .from('skills')
+        .delete()
+        .eq('id', skillId);
+
+      if (deleteError) {
+        return { success: false, error: '스킬 삭제 중 오류가 발생했습니다' };
+      }
+
+      return { success: true };
+    } catch {
+      return { success: false, error: '스킬 삭제 중 오류가 발생했습니다' };
+    }
   }
 }

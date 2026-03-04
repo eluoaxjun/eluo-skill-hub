@@ -1,5 +1,5 @@
 import { createClient } from '@/shared/infrastructure/supabase/server';
-import { uploadFile } from '@/shared/infrastructure/supabase/storage';
+import { uploadFile, deleteFile } from '@/shared/infrastructure/supabase/storage';
 import type {
   AdminRepository,
   CategoryOption,
@@ -7,6 +7,7 @@ import type {
   CreateSkillResult,
   DashboardStats,
   FeedbackRow,
+  GetSkillResult,
   MemberRow,
   Permission,
   PaginatedResult,
@@ -16,6 +17,9 @@ import type {
   SkillRow,
   SkillStatusCounts,
   SkillStatusFilter,
+  SkillTemplateRow,
+  UpdateSkillInput,
+  UpdateSkillResult,
 } from '@/admin/domain/types';
 
 type JoinedName = { name: string } | { name: string }[] | null;
@@ -193,7 +197,7 @@ export class SupabaseAdminRepository implements AdminRepository {
 
     let query = supabase
       .from('skills')
-      .select('id, title, description, icon, status, created_at, categories(name, icon)', { count: 'exact' })
+      .select('id, title, description, icon, status, created_at, updated_at, categories(name, icon)', { count: 'exact' })
       .order('created_at', { ascending: false });
 
     if (search) {
@@ -218,6 +222,7 @@ export class SupabaseAdminRepository implements AdminRepository {
       categoryIcon: extractCategoryIcon(row.categories as JoinedCategory),
       status: ((row.status as string) === 'drafted' ? 'drafted' : 'published') as 'published' | 'drafted',
       createdAt: row.created_at as string,
+      updatedAt: row.updated_at as string,
     }));
 
     return {
@@ -376,6 +381,192 @@ export class SupabaseAdminRepository implements AdminRepository {
     }));
   }
 
+  async getSkillById(id: string): Promise<GetSkillResult> {
+    const supabase = await createClient();
+
+    const { data: skill, error } = await supabase
+      .from('skills')
+      .select('id, title, description, icon, category_id, status, markdown_file_path, markdown_content, created_at, categories(id, name, icon)')
+      .eq('id', id)
+      .single();
+
+    if (error || !skill) {
+      return { success: false, error: '스킬을 찾을 수 없습니다.' };
+    }
+
+    const { data: templates } = await supabase
+      .from('skill_templates')
+      .select('id, skill_id, file_name, file_path, file_size, file_type, created_at')
+      .eq('skill_id', id)
+      .order('created_at', { ascending: true });
+
+    const category = skill.categories as { id: string; name: string; icon: string } | { id: string; name: string; icon: string }[] | null;
+    const catObj = Array.isArray(category) ? category[0] : category;
+
+    const templateRows: SkillTemplateRow[] = (templates ?? []).map((t) => ({
+      id: t.id as string,
+      skillId: t.skill_id as string,
+      fileName: t.file_name as string,
+      filePath: t.file_path as string,
+      fileSize: t.file_size as number,
+      fileType: t.file_type as string,
+      createdAt: t.created_at as string,
+    }));
+
+    return {
+      success: true,
+      skill: {
+        id: skill.id as string,
+        title: skill.title as string,
+        description: (skill.description as string) ?? '',
+        icon: (skill.icon as string) ?? '⚡',
+        categoryId: (skill.category_id as string) ?? '',
+        categoryName: catObj?.name ?? '',
+        categoryIcon: catObj?.icon ?? '',
+        status: ((skill.status as string) === 'drafted' ? 'drafted' : 'published') as 'published' | 'drafted',
+        markdownFilePath: (skill.markdown_file_path as string) ?? '',
+        markdownContent: (skill.markdown_content as string) ?? '',
+        templates: templateRows,
+        createdAt: skill.created_at as string,
+      },
+    };
+  }
+
+  async updateSkill(input: UpdateSkillInput): Promise<UpdateSkillResult> {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { success: false, error: '권한이 없습니다' };
+    }
+
+    const icon = input.icon.trim() || '⚡';
+    const status = input.isPublished ? 'published' : 'drafted';
+
+    // 스킬 기본 정보 업데이트
+    const { error: updateError } = await supabase
+      .from('skills')
+      .update({
+        icon,
+        category_id: input.categoryId,
+        title: input.title,
+        description: input.description,
+        status,
+      })
+      .eq('id', input.skillId);
+
+    if (updateError) {
+      return { success: false, error: '수정에 실패했습니다. 다시 시도해주세요' };
+    }
+
+    // 마크다운 파일 처리
+    const fileErrors: string[] = [];
+    if (input.removeMarkdown) {
+      // 기존 마크다운 삭제
+      const { data: existing } = await supabase
+        .from('skills')
+        .select('markdown_file_path')
+        .eq('id', input.skillId)
+        .single();
+
+      const existingPath = (existing?.markdown_file_path as string) ?? '';
+      if (existingPath) {
+        try {
+          await deleteFile('skill-descriptions', existingPath);
+        } catch {
+          // 기존 파일 삭제 실패는 무시 (이미 없을 수 있음)
+        }
+      }
+
+      if (input.markdownFile) {
+        // 새 마크다운 업로드
+        const mdPath = `${input.skillId}/${input.markdownFile.name}`;
+        try {
+          await uploadFile('skill-descriptions', mdPath, input.markdownFile);
+          const arrayBuffer = await input.markdownFile.arrayBuffer();
+          const content = new TextDecoder().decode(arrayBuffer);
+          await supabase
+            .from('skills')
+            .update({ markdown_file_path: mdPath, markdown_content: content })
+            .eq('id', input.skillId);
+        } catch (err) {
+          fileErrors.push(`마크다운 파일 업로드 실패: ${err instanceof Error ? err.message : String(err)}`);
+        }
+      } else {
+        // 마크다운 완전 제거
+        await supabase
+          .from('skills')
+          .update({ markdown_file_path: '', markdown_content: '' })
+          .eq('id', input.skillId);
+      }
+    } else if (input.markdownFile) {
+      // removeMarkdown이 false지만 새 파일이 있는 경우 (기존 없이 새로 추가)
+      const mdPath = `${input.skillId}/${input.markdownFile.name}`;
+      try {
+        await uploadFile('skill-descriptions', mdPath, input.markdownFile);
+        const arrayBuffer = await input.markdownFile.arrayBuffer();
+        const content = new TextDecoder().decode(arrayBuffer);
+        await supabase
+          .from('skills')
+          .update({ markdown_file_path: mdPath, markdown_content: content })
+          .eq('id', input.skillId);
+      } catch (err) {
+        fileErrors.push(`마크다운 파일 업로드 실패: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    }
+
+    // 삭제 대상 템플릿 파일 처리
+    if (input.removedTemplateIds.length > 0) {
+      // 삭제 대상 파일 경로 조회
+      const { data: toRemove } = await supabase
+        .from('skill_templates')
+        .select('id, file_path')
+        .in('id', input.removedTemplateIds);
+
+      for (const tmpl of toRemove ?? []) {
+        try {
+          await deleteFile('skill-templates', tmpl.file_path as string);
+        } catch {
+          // 기존 파일 삭제 실패는 무시 (이미 없을 수 있음)
+        }
+      }
+
+      await supabase
+        .from('skill_templates')
+        .delete()
+        .in('id', input.removedTemplateIds);
+    }
+
+    // 신규 템플릿 파일 업로드
+    if (input.templateFiles && input.templateFiles.length > 0) {
+      for (const file of input.templateFiles) {
+        const filePath = `${input.skillId}/${file.name}`;
+        const fileType = file.name.endsWith('.zip') ? '.zip' : '.md';
+        try {
+          await uploadFile('skill-templates', filePath, file);
+          await supabase.from('skill_templates').insert({
+            skill_id: input.skillId,
+            file_name: file.name,
+            file_path: filePath,
+            file_size: file.size,
+            file_type: fileType,
+          });
+        } catch (err) {
+          fileErrors.push(`템플릿 파일(${file.name}) 업로드 실패: ${err instanceof Error ? err.message : String(err)}`);
+        }
+      }
+    }
+
+    if (fileErrors.length > 0) {
+      return { success: false, error: `스킬은 수정되었으나 파일 업로드에 실패했습니다: ${fileErrors.join(', ')}` };
+    }
+
+    return { success: true, skillId: input.skillId };
+  }
+
   // T015: createSkill
   async createSkill(input: CreateSkillInput): Promise<CreateSkillResult> {
     const supabase = await createClient();
@@ -412,6 +603,7 @@ export class SupabaseAdminRepository implements AdminRepository {
     const skillId = skill.id as string;
 
     // 마크다운 파일 업로드
+    const fileErrors: string[] = [];
     if (input.markdownFile) {
       const mdPath = `${skillId}/${input.markdownFile.name}`;
       try {
@@ -422,8 +614,8 @@ export class SupabaseAdminRepository implements AdminRepository {
           .from('skills')
           .update({ markdown_file_path: mdPath, markdown_content: content })
           .eq('id', skillId);
-      } catch {
-        // 파일 업로드 실패해도 스킬은 생성됨
+      } catch (err) {
+        fileErrors.push(`마크다운 파일 업로드 실패: ${err instanceof Error ? err.message : String(err)}`);
       }
     }
 
@@ -441,10 +633,14 @@ export class SupabaseAdminRepository implements AdminRepository {
             file_size: file.size,
             file_type: fileType,
           });
-        } catch {
-          // 개별 파일 실패는 무시
+        } catch (err) {
+          fileErrors.push(`템플릿 파일(${file.name}) 업로드 실패: ${err instanceof Error ? err.message : String(err)}`);
         }
       }
+    }
+
+    if (fileErrors.length > 0) {
+      return { success: false, error: `스킬은 생성되었으나 파일 업로드에 실패했습니다: ${fileErrors.join(', ')}` };
     }
 
     return { success: true, skillId };

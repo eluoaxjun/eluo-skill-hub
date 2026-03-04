@@ -3,7 +3,9 @@
 import { createClient } from '@/shared/infrastructure/supabase/server';
 import { SupabaseAdminRepository } from '@/admin/infrastructure/supabase-admin-repository';
 import { CreateSkillUseCase } from '@/admin/application/create-skill-use-case';
-import type { CategoryOption, CreateSkillResult } from '@/admin/domain/types';
+import { GetSkillByIdUseCase } from '@/admin/application/get-skill-by-id-use-case';
+import { UpdateSkillUseCase } from '@/admin/application/update-skill-use-case';
+import type { CategoryOption, CreateSkillResult, GetSkillResult, UpdateSkillResult } from '@/admin/domain/types';
 
 async function verifyAdmin(): Promise<boolean> {
   const supabase = await createClient();
@@ -92,6 +94,108 @@ export async function createSkill(formData: FormData): Promise<CreateSkillResult
     isPublished,
     markdownFile,
     templateFiles: templateFiles.length > 0 ? templateFiles : undefined,
+  });
+}
+
+export async function getSkillById(id: string): Promise<GetSkillResult> {
+  const isAdmin = await verifyAdmin();
+  if (!isAdmin) {
+    return { success: false, error: '관리자 권한이 필요합니다.' };
+  }
+
+  try {
+    const repository = new SupabaseAdminRepository();
+    const useCase = new GetSkillByIdUseCase(repository);
+    return useCase.execute(id);
+  } catch {
+    return { success: false, error: '스킬 조회 중 오류가 발생했습니다.' };
+  }
+}
+
+export async function updateSkill(formData: FormData): Promise<UpdateSkillResult> {
+  const isAdmin = await verifyAdmin();
+  if (!isAdmin) {
+    return { success: false, error: '관리자 권한이 필요합니다.' };
+  }
+
+  const skillId = (formData.get('skillId') as string | null) ?? '';
+  const icon = (formData.get('icon') as string | null) ?? '';
+  const categoryId = (formData.get('categoryId') as string | null) ?? '';
+  const title = (formData.get('title') as string | null) ?? '';
+  const description = (formData.get('description') as string | null) ?? '';
+  const isPublished = formData.get('isPublished') === 'true';
+  const removeMarkdown = formData.get('removeMarkdown') === 'true';
+  const markdownFileRaw = formData.get('markdownFile');
+  const markdownFile = markdownFileRaw instanceof File && markdownFileRaw.size > 0 ? markdownFileRaw : undefined;
+  const removedTemplateIdsRaw = (formData.get('removedTemplateIds') as string | null) ?? '[]';
+
+  let removedTemplateIds: string[] = [];
+  try {
+    removedTemplateIds = JSON.parse(removedTemplateIdsRaw) as string[];
+  } catch {
+    removedTemplateIds = [];
+  }
+
+  if (!skillId) {
+    return { success: false, error: '스킬 ID가 필요합니다.' };
+  }
+
+  // 유효성 검사 (createSkill과 동일)
+  const fieldErrors: Record<string, string> = {};
+  if (!title.trim() || title.length > 100) {
+    fieldErrors.title = title.trim() ? '제목은 100자 이하여야 합니다' : '제목을 입력해주세요';
+  }
+  if (!description.trim() || description.length > 500) {
+    fieldErrors.description = description.trim() ? '설명은 500자 이하여야 합니다' : '설명을 입력해주세요';
+  }
+  if (!categoryId) {
+    fieldErrors.categoryId = '카테고리를 선택해주세요';
+  }
+
+  if (markdownFile) {
+    if (!markdownFile.name.endsWith('.md')) {
+      fieldErrors.markdownFile = '.md 파일만 업로드 가능합니다';
+    } else if (markdownFile.size > 1048576) {
+      fieldErrors.markdownFile = '파일 크기는 1MB 이하여야 합니다';
+    }
+  }
+
+  const templateFiles: File[] = [];
+  const templateFileEntries = formData.getAll('templateFiles');
+  for (const entry of templateFileEntries) {
+    if (!(entry instanceof File) || entry.size === 0) continue;
+    if (!entry.name.endsWith('.zip') && !entry.name.endsWith('.md')) {
+      fieldErrors.templateFiles = '.zip 또는 .md 파일만 업로드 가능합니다';
+      break;
+    }
+    if (entry.size > 102400) {
+      fieldErrors.templateFiles = '템플릿 파일 크기는 100KB 이하여야 합니다';
+      break;
+    }
+    templateFiles.push(entry);
+  }
+  if (templateFiles.length > 10) {
+    fieldErrors.templateFiles = '템플릿 파일은 최대 10개까지 업로드 가능합니다';
+  }
+
+  if (Object.keys(fieldErrors).length > 0) {
+    return { success: false, error: '입력값을 확인해주세요', fieldErrors };
+  }
+
+  const repository = new SupabaseAdminRepository();
+  const useCase = new UpdateSkillUseCase(repository);
+
+  return useCase.execute({
+    skillId,
+    icon,
+    categoryId,
+    title,
+    description,
+    isPublished,
+    markdownFile,
+    removeMarkdown,
+    templateFiles: templateFiles.length > 0 ? templateFiles : undefined,
+    removedTemplateIds,
   });
 }
 

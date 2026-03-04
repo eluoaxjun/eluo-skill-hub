@@ -6,15 +6,21 @@ import MarkdownPreview from './MarkdownPreview';
 interface MarkdownFileUploadProps {
   file: File | undefined;
   onFileChange: (file: File | undefined) => void;
+  existingFileName?: string;
+  existingContent?: string;
+  onExistingRemoved?: () => void;
 }
 
 const MAX_FILE_SIZE = 1048576; // 1MB
 
-export default function MarkdownFileUpload({ file, onFileChange }: MarkdownFileUploadProps) {
-  const [markdownContent, setMarkdownContent] = useState('');
+export default function MarkdownFileUpload({ file, onFileChange, existingFileName, existingContent, onExistingRemoved }: MarkdownFileUploadProps) {
+  const [markdownContent, setMarkdownContent] = useState(existingContent ?? '');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [existingRemoved, setExistingRemoved] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const hasExisting = !!existingFileName && !existingRemoved;
 
   const readFile = (f: File) => {
     setIsLoading(true);
@@ -74,32 +80,53 @@ export default function MarkdownFileUpload({ file, onFileChange }: MarkdownFileU
     }
   };
 
+  const handleRemoveExisting = () => {
+    setExistingRemoved(true);
+    setMarkdownContent('');
+    onExistingRemoved?.();
+  };
+
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-3">
-        <label className="cursor-pointer">
-          <span className="px-4 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-600 hover:border-slate-400 transition-colors">
-            {file ? '파일 교체' : '파일 선택'}
-          </span>
-          <input
-            ref={inputRef}
-            type="file"
-            accept=".md"
-            className="hidden"
-            onChange={handleFileSelect}
-          />
-        </label>
-        {file && (
+        {hasExisting && !file ? (
           <div className="flex items-center gap-2 text-sm text-slate-600">
-            <span>{file.name}</span>
+            <span className="px-3 py-1.5 bg-slate-100 rounded-lg">{existingFileName}</span>
             <button
               type="button"
               className="text-slate-400 hover:text-red-500 transition-colors"
-              onClick={handleRemove}
+              onClick={handleRemoveExisting}
             >
               ×
             </button>
           </div>
+        ) : (
+          <>
+            <label className="cursor-pointer">
+              <span className="px-4 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-600 hover:border-slate-400 transition-colors">
+                {file ? '파일 교체' : '파일 선택'}
+              </span>
+              <input
+                ref={inputRef}
+                type="file"
+                accept=".md"
+                className="hidden"
+                onChange={handleFileSelect}
+              />
+            </label>
+            {file && (
+              <div className="flex items-center gap-2 text-sm text-slate-600">
+                <span>{file.name}</span>
+                <button
+                  type="button"
+                  className="text-slate-400 hover:text-red-500 transition-colors"
+                  onClick={handleRemove}
+                >
+                  ×
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 

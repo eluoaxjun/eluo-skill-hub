@@ -3,12 +3,18 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useCallback, useState } from 'react';
 import { X } from 'lucide-react';
-import type { CreateSkillInput, UpdateSkillInput } from '@/admin/domain/types';
+import type { CategoryOption, CreateSkillInput, SkillDetail, UpdateSkillInput } from '@/admin/domain/types';
 import DraftSaveDialog from './DraftSaveDialog';
 import CloseConfirmDialog from './CloseConfirmDialog';
 import SkillAddForm from './SkillAddForm';
 
-export default function SkillAddModal() {
+interface SkillEditModalProps {
+  skillId: string;
+  initialData: SkillDetail;
+  categories: CategoryOption[];
+}
+
+export default function SkillEditModal({ skillId, initialData, categories }: SkillEditModalProps) {
   const router = useRouter();
   const [isDirty, setIsDirty] = useState(false);
   const [showDraftDialog, setShowDraftDialog] = useState(false);
@@ -53,13 +59,17 @@ export default function SkillAddModal() {
             <X size={20} />
           </button>
           <SkillAddForm
+            categories={categories}
             onDirtyChange={setIsDirty}
             onRequestDraftSave={handleDraftSaveRequest}
+            mode="edit"
+            skillId={skillId}
+            initialData={initialData}
           />
         </div>
       </div>
 
-      {/* 임시저장 다이얼로그 — 임시저장 버튼 전용 */}
+      {/* 임시저장 다이얼로그 */}
       {showDraftDialog && (
         <DraftSaveDialog
           pendingInput={pendingDraftInput}
@@ -67,10 +77,12 @@ export default function SkillAddModal() {
             setShowDraftDialog(false);
             setPendingDraftInput(null);
           }}
+          mode="edit"
+          skillId={skillId}
         />
       )}
 
-      {/* 닫기 확인 다이얼로그 — X 버튼 / ESC 전용 */}
+      {/* 닫기 확인 다이얼로그 */}
       <CloseConfirmDialog
         open={showCloseDialog}
         onClose={() => setShowCloseDialog(false)}

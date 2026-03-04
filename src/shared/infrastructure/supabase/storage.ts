@@ -1,5 +1,16 @@
 import { createClient } from '@/shared/infrastructure/supabase/server';
 
+function resolveContentType(fileName: string, browserType: string): string {
+  const ext = fileName.split('.').pop()?.toLowerCase();
+  const mimeMap: Record<string, string> = {
+    md: 'text/markdown',
+    zip: 'application/zip',
+    txt: 'text/plain',
+  };
+  if (ext && mimeMap[ext]) return mimeMap[ext];
+  return browserType || 'application/octet-stream';
+}
+
 export async function uploadFile(
   bucket: string,
   path: string,
@@ -10,8 +21,8 @@ export async function uploadFile(
   const buffer = Buffer.from(arrayBuffer);
 
   const { error } = await supabase.storage.from(bucket).upload(path, buffer, {
-    contentType: file.type || 'application/octet-stream',
-    upsert: false,
+    contentType: resolveContentType(file.name, file.type),
+    upsert: true,
   });
 
   if (error) throw new Error(`파일 업로드 실패: ${error.message}`);

@@ -59,6 +59,7 @@ export interface SkillRow {
   readonly categoryIcon: string;
   readonly status: 'published' | 'drafted';
   readonly createdAt: string;
+  readonly updatedAt: string;
 }
 
 export interface CategoryOption {
@@ -113,6 +114,42 @@ export interface SkillStatusCounts {
   readonly drafted: number;
 }
 
+export interface SkillDetail {
+  readonly id: string;
+  readonly title: string;
+  readonly description: string;
+  readonly icon: string;
+  readonly categoryId: string;
+  readonly categoryName: string;
+  readonly categoryIcon: string;
+  readonly status: 'published' | 'drafted';
+  readonly markdownFilePath: string;
+  readonly markdownContent: string;
+  readonly templates: SkillTemplateRow[];
+  readonly createdAt: string;
+}
+
+export interface UpdateSkillInput {
+  readonly skillId: string;
+  readonly icon: string;
+  readonly categoryId: string;
+  readonly title: string;
+  readonly description: string;
+  readonly isPublished: boolean;
+  readonly markdownFile?: File;
+  readonly removeMarkdown: boolean;
+  readonly templateFiles?: File[];
+  readonly removedTemplateIds: string[];
+}
+
+export type UpdateSkillResult =
+  | { success: true; skillId: string }
+  | { success: false; error: string; fieldErrors?: Record<string, string> };
+
+export type GetSkillResult =
+  | { success: true; skill: SkillDetail }
+  | { success: false; error: string };
+
 export interface AdminRepository {
   getDashboardStats(): Promise<DashboardStats>;
   getRecentSkills(limit: number): Promise<RecentSkill[]>;
@@ -128,5 +165,7 @@ export interface AdminRepository {
   getMemberRole(memberId: string): Promise<string | null>;
   getPermissionsByRole(roleId: string): Promise<Permission[]>;
   createSkill(input: CreateSkillInput): Promise<CreateSkillResult>;
+  getSkillById(id: string): Promise<GetSkillResult>;
+  updateSkill(input: UpdateSkillInput): Promise<UpdateSkillResult>;
   getCategories(): Promise<CategoryOption[]>;
 }

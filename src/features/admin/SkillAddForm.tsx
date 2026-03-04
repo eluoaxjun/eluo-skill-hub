@@ -7,8 +7,8 @@ import { Textarea } from '@/shared/ui/textarea';
 import { Switch } from '@/shared/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
 import { Button } from '@/shared/ui/button';
-import type { CategoryOption, CreateSkillInput } from '@/admin/domain/types';
-import { createSkill, getCategories } from '@/app/admin/skills/actions';
+import type { CategoryOption, CreateSkillInput, SkillDetail, UpdateSkillInput, SkillTemplateRow } from '@/admin/domain/types';
+import { createSkill, updateSkill as updateSkillAction, getCategories } from '@/app/admin/skills/actions';
 import TemplateFileUpload from './TemplateFileUpload';
 import MarkdownFileUpload from './MarkdownFileUpload';
 import CategoryIcon from './CategoryIcon';
@@ -16,7 +16,10 @@ import CategoryIcon from './CategoryIcon';
 interface SkillAddFormProps {
   categories?: CategoryOption[];
   onDirtyChange?: (isDirty: boolean) => void;
-  onRequestDraftSave?: (input: CreateSkillInput) => void;
+  onRequestDraftSave?: (input: CreateSkillInput | UpdateSkillInput) => void;
+  mode?: 'add' | 'edit';
+  skillId?: string;
+  initialData?: SkillDetail;
 }
 
 interface FormState {
@@ -42,7 +45,7 @@ const EMOJI_GROUPS = [
   { label: '디자인·창작', emojis: ['🎨', '✏️', '🖼️', '🎭', '🎬', '📸', '🖌️', '✨'] },
 ];
 
-function isDirtyState(state: FormState, markdownFile: File | undefined, templateFiles: File[]): boolean {
+function isDirtyStateAdd(state: FormState, markdownFile: File | undefined, templateFiles: File[]): boolean {
   return (
     state.icon !== '' ||
     state.categoryId !== '' ||
@@ -54,6 +57,27 @@ function isDirtyState(state: FormState, markdownFile: File | undefined, template
   );
 }
 
+function isDirtyStateEdit(
+  state: FormState,
+  initial: FormState,
+  markdownFile: File | undefined,
+  templateFiles: File[],
+  removeMarkdown: boolean,
+  removedTemplateIds: string[],
+): boolean {
+  return (
+    state.icon !== initial.icon ||
+    state.categoryId !== initial.categoryId ||
+    state.title !== initial.title ||
+    state.description !== initial.description ||
+    state.isPublished !== initial.isPublished ||
+    markdownFile !== undefined ||
+    removeMarkdown ||
+    templateFiles.length > 0 ||
+    removedTemplateIds.length > 0
+  );
+}
+
 interface FieldErrors {
   title?: string;
   description?: string;
@@ -62,13 +86,27 @@ interface FieldErrors {
   templateFiles?: string;
 }
 
-export default function SkillAddForm({ categories: initialCategories, onDirtyChange, onRequestDraftSave }: SkillAddFormProps) {
+export default function SkillAddForm({ categories: initialCategories, onDirtyChange, onRequestDraftSave, mode = 'add', skillId, initialData }: SkillAddFormProps) {
   const router = useRouter();
+  const isEditMode = mode === 'edit';
+
+  const editInitialState: FormState = initialData
+    ? {
+        icon: initialData.icon,
+        categoryId: initialData.categoryId,
+        title: initialData.title,
+        description: initialData.description,
+        isPublished: initialData.status === 'published',
+      }
+    : INITIAL_STATE;
+
   const [categories, setCategories] = useState<CategoryOption[]>(initialCategories ?? []);
   const [categoriesLoading, setCategoriesLoading] = useState(!initialCategories);
-  const [form, setForm] = useState<FormState>(INITIAL_STATE);
+  const [form, setForm] = useState<FormState>(isEditMode ? editInitialState : INITIAL_STATE);
   const [markdownFile, setMarkdownFile] = useState<File | undefined>(undefined);
   const [templateFiles, setTemplateFiles] = useState<File[]>([]);
+  const [removeMarkdown, setRemoveMarkdown] = useState(false);
+  const [removedTemplateIds, setRemovedTemplateIds] = useState<string[]>([]);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -95,8 +133,12 @@ export default function SkillAddForm({ categories: initialCategories, onDirtyCha
     });
   }, [initialCategories]);
 
-  const notifyDirty = (newForm: FormState, md: File | undefined, tmpl: File[]) => {
-    onDirtyChange?.(isDirtyState(newForm, md, tmpl));
+  const notifyDirty = (newForm: FormState, md: File | undefined, tmpl: File[], rmMd?: boolean, rmTmplIds?: string[]) => {
+    if (isEditMode) {
+      onDirtyChange?.(isDirtyStateEdit(newForm, editInitialState, md, tmpl, rmMd ?? removeMarkdown, rmTmplIds ?? removedTemplateIds));
+    } else {
+      onDirtyChange?.(isDirtyStateAdd(newForm, md, tmpl));
+    }
   };
 
   const updateField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
@@ -113,20 +155,46 @@ export default function SkillAddForm({ categories: initialCategories, onDirtyCha
     notifyDirty(form, file, templateFiles);
   };
 
+  const handleExistingMarkdownRemoved = () => {
+    setRemoveMarkdown(true);
+    notifyDirty(form, markdownFile, templateFiles, true, removedTemplateIds);
+  };
+
   const handleTemplateFilesChange = (files: File[]) => {
     setTemplateFiles(files);
     notifyDirty(form, markdownFile, files);
   };
 
-  const buildInput = (overridePublished?: boolean): CreateSkillInput => ({
-    icon: form.icon,
-    categoryId: form.categoryId,
-    title: form.title,
-    description: form.description,
-    isPublished: overridePublished ?? form.isPublished,
-    markdownFile,
-    templateFiles: templateFiles.length > 0 ? templateFiles : undefined,
-  });
+  const handleExistingTemplateRemoved = (ids: string[]) => {
+    setRemovedTemplateIds(ids);
+    notifyDirty(form, markdownFile, templateFiles, removeMarkdown, ids);
+  };
+
+  const buildInput = (overridePublished?: boolean): CreateSkillInput | UpdateSkillInput => {
+    if (isEditMode && skillId) {
+      return {
+        skillId,
+        icon: form.icon,
+        categoryId: form.categoryId,
+        title: form.title,
+        description: form.description,
+        isPublished: overridePublished ?? form.isPublished,
+        markdownFile,
+        removeMarkdown,
+        templateFiles: templateFiles.length > 0 ? templateFiles : undefined,
+        removedTemplateIds,
+      };
+    }
+    return {
+      icon: form.icon,
+      categoryId: form.categoryId,
+      title: form.title,
+      description: form.description,
+      isPublished: overridePublished ?? form.isPublished,
+      markdownFile,
+      templateFiles: templateFiles.length > 0 ? templateFiles : undefined,
+    };
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,16 +209,35 @@ export default function SkillAddForm({ categories: initialCategories, onDirtyCha
       if (markdownFile) formData.append('markdownFile', markdownFile);
       for (const f of templateFiles) formData.append('templateFiles', f);
 
-      const result = await createSkill(formData);
-      if (result.success) {
-        toast.success('스킬이 저장되었습니다');
-        router.back();
-        router.refresh();
-      } else {
-        if (result.fieldErrors) {
-          setFieldErrors(result.fieldErrors as FieldErrors);
+      if (isEditMode && skillId) {
+        formData.append('skillId', skillId);
+        formData.append('removeMarkdown', String(removeMarkdown));
+        formData.append('removedTemplateIds', JSON.stringify(removedTemplateIds));
+
+        const result = await updateSkillAction(formData);
+        if (result.success) {
+          toast.success('스킬이 수정되었습니다');
+          router.back();
+          router.refresh();
         } else {
-          toast.error(result.error);
+          if (result.fieldErrors) {
+            setFieldErrors(result.fieldErrors as FieldErrors);
+          } else {
+            toast.error(result.error);
+          }
+        }
+      } else {
+        const result = await createSkill(formData);
+        if (result.success) {
+          toast.success('스킬이 저장되었습니다');
+          router.back();
+          router.refresh();
+        } else {
+          if (result.fieldErrors) {
+            setFieldErrors(result.fieldErrors as FieldErrors);
+          } else {
+            toast.error(result.error);
+          }
         }
       }
     } finally {
@@ -254,6 +341,9 @@ export default function SkillAddForm({ categories: initialCategories, onDirtyCha
             <MarkdownFileUpload
               file={markdownFile}
               onFileChange={handleMarkdownFileChange}
+              existingFileName={isEditMode && !removeMarkdown && initialData?.markdownFilePath ? initialData.markdownFilePath.split('/').pop() : undefined}
+              existingContent={isEditMode && !removeMarkdown ? initialData?.markdownContent : undefined}
+              onExistingRemoved={handleExistingMarkdownRemoved}
             />
           </section>
         </div>
@@ -291,6 +381,8 @@ export default function SkillAddForm({ categories: initialCategories, onDirtyCha
             files={templateFiles}
             onChange={handleTemplateFilesChange}
             error={fieldErrors.templateFiles}
+            existingFiles={isEditMode ? initialData?.templates : undefined}
+            onExistingRemoved={handleExistingTemplateRemoved}
           />
         </section>
 
@@ -318,7 +410,7 @@ export default function SkillAddForm({ categories: initialCategories, onDirtyCha
             className="w-full flex items-center justify-center gap-3 bg-[#00007F] hover:brightness-120 text-white font-bold p-6 rounded-2xl shadow-lg shadow-[#00007F]/20 active:scale-[0.98] transition-all"
             disabled={isSubmitting}
           >
-            <span className="text-base tracking-wide">{isSubmitting ? '저장 중...' : '스킬 저장하기'}</span>
+            <span className="text-base tracking-wide">{isSubmitting ? '저장 중...' : isEditMode ? '수정 저장하기' : '스킬 저장하기'}</span>
           </Button>
           <button
             type="button"

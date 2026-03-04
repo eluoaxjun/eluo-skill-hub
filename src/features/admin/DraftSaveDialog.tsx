@@ -13,16 +13,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/shared/ui/alert-dialog';
-import { createSkill } from '@/app/admin/skills/actions';
-import type { CreateSkillInput } from '@/admin/domain/types';
+import { createSkill, updateSkill } from '@/app/admin/skills/actions';
+import type { CreateSkillInput, UpdateSkillInput } from '@/admin/domain/types';
 
 interface DraftSaveDialogProps {
-  pendingInput: CreateSkillInput | null;
+  pendingInput: CreateSkillInput | UpdateSkillInput | null;
   onClose: () => void;
   onSaved?: () => void;
+  mode?: 'add' | 'edit';
+  skillId?: string;
 }
 
-export default function DraftSaveDialog({ pendingInput, onClose, onSaved }: DraftSaveDialogProps) {
+export default function DraftSaveDialog({ pendingInput, onClose, onSaved, mode = 'add', skillId }: DraftSaveDialogProps) {
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
 
@@ -43,15 +45,33 @@ export default function DraftSaveDialog({ pendingInput, onClose, onSaved }: Draf
       if (pendingInput.markdownFile) formData.append('markdownFile', pendingInput.markdownFile);
       for (const f of pendingInput.templateFiles ?? []) formData.append('templateFiles', f);
 
-      const result = await createSkill(formData);
-      if (result.success) {
-        toast.success('임시저장되었습니다');
-        onSaved?.();
-        router.back();
-        router.refresh();
+      if (mode === 'edit' && skillId) {
+        formData.append('skillId', skillId);
+        const editInput = pendingInput as UpdateSkillInput;
+        formData.append('removeMarkdown', String(editInput.removeMarkdown));
+        formData.append('removedTemplateIds', JSON.stringify(editInput.removedTemplateIds));
+
+        const result = await updateSkill(formData);
+        if (result.success) {
+          toast.success('임시저장되었습니다');
+          onSaved?.();
+          router.back();
+          router.refresh();
+        } else {
+          toast.error(result.error);
+          onClose();
+        }
       } else {
-        toast.error(result.error);
-        onClose();
+        const result = await createSkill(formData);
+        if (result.success) {
+          toast.success('임시저장되었습니다');
+          onSaved?.();
+          router.back();
+          router.refresh();
+        } else {
+          toast.error(result.error);
+          onClose();
+        }
       }
     } finally {
       setIsSaving(false);

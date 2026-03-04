@@ -1,4 +1,6 @@
+import Link from 'next/link';
 import type { SkillRow } from '@/admin/domain/types';
+import { Blocks, Clock } from 'lucide-react';
 
 interface SkillCardProps {
   skill: SkillRow;
@@ -25,17 +27,21 @@ export default function SkillCard({ skill }: SkillCardProps) {
       <p className="text-sm text-slate-500 mb-4 line-clamp-2">{skill.description ?? ''}</p>
       <div className="mb-6">
         <div className="flex items-center gap-2 text-xs text-slate-400 font-medium">
-          <span className="text-sm">⊞</span>
+          <Blocks className='size-4' />
           <span>{skill.categoryName}</span>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-slate-400 font-medium mt-1">
+          <Clock className='size-4' />
+          <span>{new Date(skill.updatedAt).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
         </div>
       </div>
       <div className="mt-auto pt-4 border-t border-slate-100 flex gap-2">
-        <button
-          type="button"
-          className="flex-1 py-2 rounded-xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-slate-200 transition-colors"
+        <Link
+          href={`/admin/skills/edit/${skill.id}`}
+          className="flex-1 py-2 rounded-xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-slate-200 transition-colors text-center"
         >
           수정
-        </button>
+        </Link>
         <button
           type="button"
           className="flex-1 py-2 rounded-xl bg-red-50 text-red-600 text-sm font-bold hover:bg-red-100 transition-colors"

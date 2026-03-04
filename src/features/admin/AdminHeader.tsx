@@ -1,4 +1,3 @@
-import { Settings } from 'lucide-react';
 import LogoutButton from './LogoutButton';
 
 interface AdminHeaderProps {

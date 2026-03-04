@@ -5,7 +5,7 @@ export function LandingPage() {
     <main className="min-h-svh flex flex-col">
       {/* Hero — bg-brand-navy, 2단 레이아웃 */}
       <section className="bg-brand-navy text-white py-12 px-6 flex-1 flex">
-        <div className="max-w-5xl mx-auto flex flex-col lg:flex-row items-center min-h-[500px] gap-8">
+        <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center min-h-[500px] gap-16">
           {/* 좌측: 텍스트 + CTA */}
           <div className="flex-1 flex flex-col justify-center gap-6 text-center lg:text-left">
             <h1 className="text-6xl font-bold tracking-tight font-eluo">

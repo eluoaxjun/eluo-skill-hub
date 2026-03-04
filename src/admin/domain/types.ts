@@ -48,12 +48,45 @@ export interface RolePermission {
   readonly permissionId: string;
 }
 
+export type SkillStatusFilter = 'all' | 'published' | 'drafted';
+
 export interface SkillRow {
   readonly id: string;
   readonly title: string;
   readonly description: string | null;
   readonly categoryName: string;
-  readonly status: 'active' | 'inactive';
+  readonly categoryIcon: string;
+  readonly status: 'published' | 'drafted';
+  readonly createdAt: string;
+}
+
+export interface CategoryOption {
+  readonly id: string;
+  readonly name: string;
+  readonly icon: string;
+}
+
+export interface CreateSkillInput {
+  readonly icon: string;
+  readonly categoryId: string;
+  readonly title: string;
+  readonly description: string;
+  readonly isPublished: boolean;
+  readonly markdownFile?: File;
+  readonly templateFiles?: File[];
+}
+
+export type CreateSkillResult =
+  | { success: true; skillId: string }
+  | { success: false; error: string; fieldErrors?: Record<string, string> };
+
+export interface SkillTemplateRow {
+  readonly id: string;
+  readonly skillId: string;
+  readonly fileName: string;
+  readonly filePath: string;
+  readonly fileSize: number;
+  readonly fileType: string;
   readonly createdAt: string;
 }
 
@@ -80,11 +113,13 @@ export interface AdminRepository {
   getRecentMembers(limit: number): Promise<RecentMember[]>;
   getMembers(page: number, pageSize: number, search?: string, currentUserId?: string): Promise<PaginatedResult<MemberRow>>;
   getMemberById(id: string): Promise<MemberRow | null>;
-  getSkills(page: number, pageSize: number): Promise<PaginatedResult<SkillRow>>;
+  getSkills(page: number, pageSize: number, search?: string, status?: SkillStatusFilter): Promise<PaginatedResult<SkillRow>>;
   getFeedbacks(page: number, pageSize: number): Promise<PaginatedResult<FeedbackRow>>;
   getAllRoles(): Promise<Role[]>;
   updateMemberRole(memberId: string, roleId: string): Promise<void>;
   getAdminCount(): Promise<number>;
   getMemberRole(memberId: string): Promise<string | null>;
   getPermissionsByRole(roleId: string): Promise<Permission[]>;
+  createSkill(input: CreateSkillInput): Promise<CreateSkillResult>;
+  getCategories(): Promise<CategoryOption[]>;
 }

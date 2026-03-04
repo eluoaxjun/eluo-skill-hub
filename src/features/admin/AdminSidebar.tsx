@@ -35,9 +35,9 @@ export default function AdminSidebar({ userName, userRole }: AdminSidebarProps) 
             <Zap strokeWidth={2.5} className="size-4 text-[#FEFE01] fill-[#FEFE01]" />
           </div>
           <div>
-            <h1 className="text-[#000080] font-bold text-lg leading-none">AI Skills</h1>
+            <h1 className="text-[#000080] font-bold text-lg leading-none">Eluo Skill Hub</h1>
             <p className="text-[10px] text-[#000080]/60 uppercase tracking-widest font-semibold">
-              Admin Marketplace
+              Admin
             </p>
           </div>
         </div>
@@ -51,13 +51,12 @@ export default function AdminSidebar({ userName, userRole }: AdminSidebarProps) 
               <Link
                 key={href}
                 href={href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-[#000080] text-white shadow-lg shadow-[#000080]/20 font-semibold'
-                    : 'text-[#000080]/70 hover:bg-[#000080]/5'
-                }`}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium transition-colors ${isActive
+                  ? 'bg-[#000080] text-white shadow-lg shadow-[#000080]/20 font-semibold'
+                  : 'text-[#000080]/70 hover:bg-[#000080]/5'
+                  }`}
               >
-                <Icon strokeWidth={2.5} className={`size-5 ${isActive ? 'text-white' : 'text-[#000080]/60'}`} />
+                <Icon strokeWidth={2.5} className={`size-5 ${isActive ? 'text-brand-yellow' : 'text-[#000080]/60'}`} />
                 <span>{label}</span>
               </Link>
             );

@@ -32,6 +32,13 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
 
   return (
     <div className="p-8">
+      <div className="flex justify-between items-end mb-6">
+        <div>
+          <h2 className="text-3xl font-black text-slate-900 tracking-tight">회원 관리</h2>
+          <p className="text-slate-500 mt-1">기업 내 등록된 모든 회원 현황입니다.</p>
+        </div>
+
+      </div>
       <MembersTable
         result={result}
         roles={roles}

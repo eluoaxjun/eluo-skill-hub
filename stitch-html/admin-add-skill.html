@@ -1,0 +1,242 @@
+<html lang="ko">
+
+<head></head>
+
+<body class="bg-[#F0F0F0] font-sans text-black">```html
+
+
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Noto+Sans+KR:wght@400;500;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#00007F",
+                        "accent": "#FEFE01",
+                        "neutral-light": "#F0F0F0",
+                        "deep-blue": "#00007F",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "Noto Sans KR", "sans-serif"],
+                        "sans": ["Noto Sans KR", "Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.125rem", "lg": "0.375rem", "xl": "0.5rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        :root {
+            --deep-blue: #00007F;
+            --yellow: #FEFE01;
+            --light-gray: #F0F0F0;
+        }
+        body { font-family: 'Noto Sans KR', 'Inter', sans-serif; }
+        .notion-shadow { 
+            box-shadow: rgba(0, 0, 127, 0.04) 0px 0px 0px 1px, rgba(0, 0, 127, 0.08) 0px 10px 30px -5px; 
+        }
+        .glass-overlay {
+            background: rgba(0, 0, 127, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .modal-gradient {
+            background: linear-gradient(135deg, #ffffff 0%, #f9f9f9 100%);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+        .inner-glow {
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2);
+        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        h1, h2, h3, h4, h5, h6 { color: var(--deep-blue); }
+        .body-text { color: #1a1a1a; }
+        .action-button {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .action-button:hover {
+            transform: scale(1.02);
+            filter: brightness(1.2);
+        }
+        .input-container {
+            background-color: var(--light-gray);
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .input-container:focus-within {
+            background-color: white;
+            border-color: var(--deep-blue);
+            box-shadow: 0 0 0 4px rgba(0, 0, 127, 0.05);
+        }
+    </style>
+
+
+    <div class="relative flex h-screen w-full flex-col overflow-hidden">
+        <header class="flex items-center justify-between border-b border-slate-200 bg-white px-8 py-3 z-10">
+            <div class="flex items-center gap-8">
+                <div class="flex items-center gap-3">
+                    <div class="size-8 bg-[var(--deep-blue)] rounded flex items-center justify-center text-white">
+                        <span class="material-symbols-outlined">support_agent</span>
+                    </div>
+                    <h2 class="text-lg font-bold tracking-tight">AI 스킬 허브 관리자</h2>
+                </div>
+                <nav class="hidden md:flex items-center gap-6">
+                    <a class="text-sm font-medium text-slate-600 hover:text-[var(--deep-blue)]" href="#">대시보드</a>
+                    <a class="text-sm font-bold text-[var(--deep-blue)]" href="#">스킬 관리</a>
+                    <a class="text-sm font-medium text-slate-600 hover:text-[var(--deep-blue)]" href="#">사용자 통계</a>
+                </nav>
+            </div>
+            <div class="flex items-center gap-4">
+                <button class="p-2 text-slate-500 hover:bg-slate-100 rounded-lg">
+                    <span class="material-symbols-outlined">settings</span>
+                </button>
+                <div class="h-8 w-8 rounded-full bg-slate-300 overflow-hidden border border-slate-200">
+                    <img alt="Admin" class="h-full w-full object-cover"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuB16DT7K4w3us42B-ms4rnjAnEFAoRRP_s6yvsMGI0Ho8KmRaSruaf-dBndUuDN1fz1tA28PivT30PN9dAsBxOMLSRhW2MDVVUDMwWIfImdeXqyFePTD4Vy3y5rrU6L0ghlRQZf35YzXz52F2iRAjW1jRoQfQeS5zUOPT89xEkLGfAoS6EhECUNce2njerZ4lazbBNoXBoNG7itb5wx0OkBrtFdfTTAr2HfQrNCcFetfaYq-UqrqaThY4TGdTGzS5xjdJENAmfG_pOC" />
+                </div>
+            </div>
+        </header>
+        <main class="flex-1 p-8 overflow-y-auto bg-[#F0F0F0] relative">
+            <div class="max-w-7xl mx-auto opacity-20 pointer-events-none">
+                <div class="flex justify-between items-end mb-8">
+                    <div>
+                        <h1 class="text-3xl font-bold mb-2">스킬 라이브러리</h1>
+                        <p class="text-slate-500">사내에 등록된 모든 AI 스킬을 관리합니다.</p>
+                    </div>
+                    <button class="bg-[var(--deep-blue)] text-white px-6 py-3 rounded-xl font-bold">새 스킬 등록</button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="h-64 bg-white rounded-2xl border border-slate-200"></div>
+                    <div class="h-64 bg-white rounded-2xl border border-slate-200"></div>
+                    <div class="h-64 bg-white rounded-2xl border border-slate-200"></div>
+                </div>
+            </div>
+            <div class="fixed inset-0 glass-overlay flex items-center justify-center z-50 p-4">
+                <div
+                    class="modal-gradient w-full max-w-5xl max-h-[92vh] overflow-hidden rounded-3xl notion-shadow flex flex-col md:flex-row relative">
+                    <button
+                        class="absolute top-6 right-6 h-10 w-10 flex items-center justify-center rounded-full bg-white/80 hover:bg-white text-slate-500 hover:text-[var(--deep-blue)] transition-all z-20 border border-slate-200/50 shadow-sm active:scale-95">
+                        <span class="material-symbols-outlined text-2xl">close</span>
+                    </button>
+                    <div class="flex-1 overflow-y-auto p-10 md:p-14 scrollbar-hide">
+                        <div class="mb-10 flex items-start gap-8">
+                            <button
+                                class="group relative flex-shrink-0 size-32 bg-[var(--light-gray)] rounded-3xl flex flex-col items-center justify-center border-2 border-dashed border-slate-300 hover:border-[var(--deep-blue)] hover:bg-white transition-all overflow-hidden">
+                                <span
+                                    class="material-symbols-outlined text-4xl text-slate-400 group-hover:text-[var(--deep-blue)]">add_reaction</span>
+                                <span
+                                    class="text-[11px] font-bold text-slate-400 mt-2 group-hover:text-[var(--deep-blue)]">아이콘
+                                    선택</span>
+                                <div
+                                    class="absolute inset-0 bg-[var(--yellow)]/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                                </div>
+                            </button>
+                            <div class="flex-1 pt-2">
+                                <label
+                                    class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mb-3 ml-1">제목</label>
+                                <input
+                                    class="w-full text-3xl font-bold bg-transparent border-b-2 border-slate-100 focus:border-[var(--deep-blue)] focus:ring-0 placeholder:text-slate-300 transition-all pb-2 px-1"
+                                    placeholder="스킬 명칭을 입력하세요 (예: 법률 문서 요약기)" type="text" />
+                            </div>
+                        </div>
+                        <div class="space-y-10">
+                            <section>
+                                <label class="flex items-center gap-2 text-sm font-bold body-text mb-4">
+                                    <span
+                                        class="material-symbols-outlined text-[var(--deep-blue)]/40 text-lg">subject</span>
+                                    상세 설명
+                                </label>
+                                <!-- 설명서 마크다운 업로드 section -->
+                            </section>
+
+                        </div>
+                    </div>
+                    <div
+                        class="w-full md:w-96 bg-[var(--light-gray)]/50 border-t md:border-t-0 md:border-l border-slate-200/50 p-10 flex flex-col gap-8 backdrop-blur-md">
+                        <section>
+                            <label
+                                class="block text-[11px] font-extrabold uppercase tracking-[0.2em] text-slate-400 mb-5">카테고리</label>
+                            <div class="relative group">
+                                <select
+                                    class="w-full bg-white border border-slate-200 rounded-xl py-3.5 px-5 text-sm font-bold body-text appearance-none focus:ring-4 focus:ring-[var(--deep-blue)]/5 focus:border-[var(--deep-blue)] transition-all cursor-pointer">
+                                    <option>카테고리 선택</option>
+                                    <option>콘텐츠 제작</option>
+                                    <option>데이터 분석</option>
+                                    <option>마케팅 자동화</option>
+                                    <option>고객 지원</option>
+                                </select>
+                                <span
+                                    class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
+                            </div>
+                        </section>
+                        <section>
+                            <label
+                                class="block text-[11px] font-extrabold uppercase tracking-[0.2em] text-slate-400 mb-5">템플릿
+                                파일 업로드</label>
+                            <div class="space-y-3">
+                                <div
+                                    class="flex items-center gap-4 p-4 rounded-xl bg-white border border-slate-100 hover:border-[var(--deep-blue)] transition-all cursor-pointer group">
+                                    <div
+                                        class="size-10 rounded-lg bg-[var(--light-gray)] flex items-center justify-center group-hover:bg-[var(--deep-blue)]/10 transition-colors">
+                                        <span
+                                            class="material-symbols-outlined text-[var(--deep-blue)]">upload_file</span>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="text-[14px] font-bold body-text">파일 선택 또는 드래그</div>
+                                        <div
+                                            class="text-[10px] text-slate-400 uppercase font-bold tracking-widest mt-0.5">
+                                            .md 또는 .zip</div>
+                                    </div>
+                                </div>
+                                <p class="text-[11px] text-slate-400 leading-tight px-1">업로드된 마크다운은 상세 페이지의 하단 가이드 영역에
+                                    표시됩니다.</p>
+                            </div>
+                        </section>
+                        <div class="mt-auto pt-6 space-y-4">
+                            <button
+                                class="action-button inner-glow w-full flex items-center justify-center gap-3 bg-[var(--deep-blue)] text-white font-bold py-4.5 px-6 rounded-2xl shadow-lg shadow-[var(--deep-blue)]/20 active:scale-[0.98]">
+                                <span class="material-symbols-outlined text-2xl">save</span>
+                                <span class="text-base tracking-wide">스킬 저장하기</span>
+                            </button>
+                            <button
+                                class="w-full py-4 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors">
+                                취소 후 돌아가기
+                            </button>
+                        </div>
+                        <div class="p-6 bg-white/60 rounded-2xl border border-white shadow-sm mt-4">
+                            <h5
+                                class="text-[10px] font-extrabold text-[var(--deep-blue)] uppercase tracking-wider mb-3 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-sm">shield</span> 보안 가이드
+                            </h5>
+                            <p class="text-[12px] text-slate-500 leading-relaxed">
+                                등록된 모든 스킬은 사내 보안 가이드를 준수해야 하며, 위반 시 삭제될 수 있습니다.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <footer class="bg-white border-t border-slate-200 px-8 py-4 flex justify-between items-center z-10">
+            <p class="text-xs text-slate-500 font-medium">© 2023 엔터프라이즈 AI 스킬 허브 관리자</p>
+            <div class="flex gap-8">
+                <a class="text-xs text-slate-500 font-medium hover:text-[var(--deep-blue)] transition-colors"
+                    href="#">운영 가이드</a>
+                <a class="text-xs text-slate-500 font-medium hover:text-[var(--deep-blue)] transition-colors"
+                    href="#">보안 정책</a>
+            </div>
+        </footer>
+    </div>
+
+    ```
+</body>
+
+</html>

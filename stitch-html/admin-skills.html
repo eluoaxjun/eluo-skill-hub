@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+
+<html lang="ko">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>관리자 스킬 관리 페이지</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#000080",
+                        "accent": "#FEFE01",
+                        "background-light": "#F0F0F0",
+                        "background-dark": "#0f0f23",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "2xl": "1.5rem", // 24px as requested
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            background-color: #F0F0F0;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 128, 0.05);
+        }
+
+        .sidebar-item-active {
+            background: #000080;
+            color: #FEFE01;
+        }
+    </style>
+</head>
+
+<body class="font-display text-slate-900 bg-background-light dark:bg-background-dark min-h-screen">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col">
+            <div class="p-8 flex items-center gap-3">
+                <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-accent">
+                    <span class="material-symbols-outlined text-2xl">smart_toy</span>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg tracking-tight text-primary">AI Market</h1>
+                    <p class="text-xs text-slate-500 font-medium uppercase tracking-widest">Admin Console</p>
+                </div>
+            </div>
+            <nav class="flex-1 px-4 space-y-2 mt-4">
+                <a class="flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                    href="#">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <span class="font-medium">대시보드</span>
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 rounded-2xl sidebar-item-active transition-all shadow-lg shadow-primary/20"
+                    href="#">
+                    <span class="material-symbols-outlined">bolt</span>
+                    <span class="font-medium">스킬 관리</span>
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                    href="#">
+                    <span class="material-symbols-outlined">smart_toy</span>
+                    <span class="font-medium">에이전트 관리</span>
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                    href="#">
+                    <span class="material-symbols-outlined">bar_chart</span>
+                    <span class="font-medium">사용자 통계</span>
+                </a>
+                <div class="pt-8 pb-2 px-4">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">System</p>
+                </div>
+                <a class="flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                    href="#">
+                    <span class="material-symbols-outlined">settings</span>
+                    <span class="font-medium">설정</span>
+                </a>
+            </nav>
+            <div class="p-6">
+                <div class="p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 bg-cover bg-center"
+                        data-alt="User profile avatar circle"
+                        style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC18SkrZ74bO25x0m8YoomuN8wg_FMRxK_nEytUoGllDgyk2dSrwjLsJPmbrEKOgwfR94a_hKBKh3DFU5g6iYjTUKXrsEZ3hI8h5b3zdQgRgcr2pKHRhTy7-ruOE4m4w7e044nbTQzqiq1cMFVFD4-HG8kCkRQrScr_2z3E6gp1eNsaqXtFutaE8Sn44RCsLrE-7HZeGNw_aL7uiwCj-W1j2vI0e2jO09jL1phSeI51NRaeK473o9Zn_RZq9D_3NlZYNb-7yWaJl7Nm')">
+                    </div>
+                    <div class="flex-1 overflow-hidden">
+                        <p class="text-sm font-bold truncate">관리자님</p>
+                        <p class="text-xs text-slate-500 truncate">admin@company.ai</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header -->
+            <header
+                class="h-20 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-8 flex items-center justify-between z-10">
+
+            </header>
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-y-auto p-8 bg-background-light dark:bg-background-dark">
+                <div class="max-w-7xl mx-auto">
+                    <div class="flex justify-between items-end mb-8">
+                        <div>
+                            <h2 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">스킬 관리</h2>
+                            <p class="text-slate-500 mt-1">기업 내 등록된 모든 AI 스킬 및 에이전트 현황입니다.</p>
+                        </div>
+                        <div
+                            class="flex bg-white dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <button class="px-4 py-1.5 rounded-lg bg-primary text-white text-sm font-bold">전체</button>
+                            <button
+                                class="px-4 py-1.5 rounded-lg text-slate-500 text-sm font-medium hover:text-primary">배포됨</button>
+                            <button
+                                class="px-4 py-1.5 rounded-lg text-slate-500 text-sm font-medium hover:text-primary">초안</button>
+                        </div>
+                    </div>
+                    <!-- Skills Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Skill Card 1 -->
+                        <div
+                            class="glass-card rounded-2xl p-6 flex flex-col transition-all hover:-translate-y-1 hover:shadow-xl">
+                            <div class="flex justify-between items-start mb-4">
+                                <div
+                                    class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-3xl">chat_bubble</span>
+                                </div>
+                                <span
+                                    class="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full uppercase">Published</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-900 mb-1">고객 응대 봇 v2.1</h3>
+                            <p class="text-sm text-slate-500 mb-4 line-clamp-2">자연어 처리를 통한 24/7 자동 고객 응대 및 FAQ 스킬입니다.
+                            </p>
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center gap-2 text-xs text-slate-400 font-medium">
+                                    <span class="material-symbols-outlined text-sm">category</span>
+                                    <span>Customer Service</span>
+                                </div>
+
+                            </div>
+                            <div class="mt-auto pt-4 border-t border-slate-100 flex gap-2">
+                                <button
+                                    class="flex-1 py-2 rounded-xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-slate-200 transition-colors">수정</button>
+                                <button
+                                    class="flex-1 py-2 rounded-xl bg-red-50 text-red-600 text-sm font-bold hover:bg-red-100 transition-colors">삭제</button>
+                            </div>
+                        </div>
+                        <!-- Skill Card 2 -->
+                        <div
+                            class="glass-card rounded-2xl p-6 flex flex-col transition-all hover:-translate-y-1 hover:shadow-xl">
+                            <div class="flex justify-between items-start mb-4">
+                                <div
+                                    class="w-12 h-12 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-3xl">analytics</span>
+                                </div>
+                                <span
+                                    class="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full uppercase">Published</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-900 mb-1">데이터 분석 전문가</h3>
+                            <p class="text-sm text-slate-500 mb-4 line-clamp-2">복잡한 CSV 및 SQL 데이터를 시각화하고 인사이트를 도출합니다.
+                            </p>
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center gap-2 text-xs text-slate-400 font-medium">
+                                    <span class="material-symbols-outlined text-sm">category</span>
+                                    <span>Analytics</span>
+                                </div>
+
+                            </div>
+                            <div class="mt-auto pt-4 border-t border-slate-100 flex gap-2">
+                                <button
+                                    class="flex-1 py-2 rounded-xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-slate-200 transition-colors">수정</button>
+                                <button
+                                    class="flex-1 py-2 rounded-xl bg-red-50 text-red-600 text-sm font-bold hover:bg-red-100 transition-colors">삭제</button>
+                            </div>
+                        </div>
+                        <!-- Skill Card 3 -->
+                        <div
+                            class="glass-card rounded-2xl p-6 flex flex-col transition-all hover:-translate-y-1 hover:shadow-xl">
+                            <div class="flex justify-between items-start mb-4">
+                                <div
+                                    class="w-12 h-12 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-3xl">brush</span>
+                                </div>
+                                <span
+                                    class="px-3 py-1 bg-slate-200 text-slate-600 text-xs font-bold rounded-full uppercase">Draft</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-900 mb-1">이미지 생성 AI 에이전트</h3>
+                            <p class="text-sm text-slate-500 mb-4 line-clamp-2">텍스트 설명을 기반으로 고해상도 마케팅 이미지를 생성합니다.</p>
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center gap-2 text-xs text-slate-400 font-medium">
+                                    <span class="material-symbols-outlined text-sm">category</span>
+                                    <span>Creative</span>
+                                </div>
+
+                            </div>
+                            <div class="mt-auto pt-4 border-t border-slate-100 flex gap-2">
+                                <button
+                                    class="flex-1 py-2 rounded-xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-slate-200 transition-colors">수정</button>
+                                <button
+                                    class="flex-1 py-2 rounded-xl bg-red-50 text-red-600 text-sm font-bold hover:bg-red-100 transition-colors">삭제</button>
+                            </div>
+                        </div>
+                        <!-- Skill Card 4 -->
+                        <div
+                            class="glass-card rounded-2xl p-6 flex flex-col transition-all hover:-translate-y-1 hover:shadow-xl">
+                            <div class="flex justify-between items-start mb-4">
+                                <div
+                                    class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-3xl">translate</span>
+                                </div>
+                                <span
+                                    class="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full uppercase">Published</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-900 mb-1">번역 자동화 파이프라인</h3>
+                            <p class="text-sm text-slate-500 mb-4 line-clamp-2">다국어 문서 번역 및 톤앤매너 교정을 지원하는 엔터프라이즈 스킬입니다.
+                            </p>
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center gap-2 text-xs text-slate-400 font-medium">
+                                    <span class="material-symbols-outlined text-sm">category</span>
+                                    <span>Productivity</span>
+                                </div>
+
+                            </div>
+                            <div class="mt-auto pt-4 border-t border-slate-100 flex gap-2">
+                                <button
+                                    class="flex-1 py-2 rounded-xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-slate-200 transition-colors">수정</button>
+                                <button
+                                    class="flex-1 py-2 rounded-xl bg-red-50 text-red-600 text-sm font-bold hover:bg-red-100 transition-colors">삭제</button>
+                            </div>
+                        </div>
+                        <!-- Skill Card 5 -->
+                        <div
+                            class="glass-card rounded-2xl p-6 flex flex-col transition-all hover:-translate-y-1 hover:shadow-xl">
+                            <div class="flex justify-between items-start mb-4">
+                                <div
+                                    class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-3xl">code</span>
+                                </div>
+                                <span
+                                    class="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full uppercase">Published</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-900 mb-1">코드 리뷰 어시스턴트</h3>
+                            <p class="text-sm text-slate-500 mb-4 line-clamp-2">풀 리퀘스트 보안 취약점을 검사하고 최적화 코드를 제안합니다.</p>
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center gap-2 text-xs text-slate-400 font-medium">
+                                    <span class="material-symbols-outlined text-sm">category</span>
+                                    <span>Development</span>
+                                </div>
+
+                            </div>
+                            <div class="mt-auto pt-4 border-t border-slate-100 flex gap-2">
+                                <button
+                                    class="flex-1 py-2 rounded-xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-slate-200 transition-colors">수정</button>
+                                <button
+                                    class="flex-1 py-2 rounded-xl bg-red-50 text-red-600 text-sm font-bold hover:bg-red-100 transition-colors">삭제</button>
+                            </div>
+                        </div>
+                        <!-- Add New Skill Card Placeholder -->
+                        <div
+                            class="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-6 flex flex-col items-center justify-center text-slate-400 hover:text-primary hover:border-primary hover:bg-primary/5 transition-all cursor-pointer group">
+                            <div
+                                class="w-16 h-16 rounded-full bg-slate-100 group-hover:bg-primary/10 flex items-center justify-center mb-4 transition-colors">
+                                <span class="material-symbols-outlined text-4xl">add</span>
+                            </div>
+                            <p class="font-bold">새 스킬 추가하기</p>
+                            <p class="text-xs mt-1">새로운 AI 어시스턴트를 등록하세요</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>

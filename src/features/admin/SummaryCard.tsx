@@ -21,7 +21,7 @@ export default function SummaryCard({ title, value, icon: Icon, change }: Summar
         <Icon strokeWidth={2.5} className="size-5 text-[#000080]/40" />
       </div>
       <div className="flex items-baseline gap-2">
-        <span className="text-4xl font-black text-[#000080] tracking-tight">
+        <span className="text-5xl font-black text-[#000080] tracking-tight">
           {value.toLocaleString()}
         </span>
         {change && (

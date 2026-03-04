@@ -26,15 +26,15 @@ export default function AdminLayoutClient({ userName, userRole, children }: Admi
 
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-30 transition-transform duration-300 lg:static lg:translate-x-0 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed inset-y-0 left-0 z-30 transition-transform duration-300 lg:static lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
         <AdminSidebar userName={userName} userRole={userRole} />
       </div>
 
       {/* Main content */}
       <main className="flex-1 flex flex-col overflow-y-auto min-w-0">
+
         {/* Mobile header with hamburger */}
         <div className="flex items-center lg:hidden h-14 px-4 bg-white/50 border-b border-[#000080]/5 backdrop-blur-md sticky top-0 z-10">
           <button

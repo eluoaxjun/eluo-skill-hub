@@ -1,6 +1,10 @@
 import { createClient } from '@/shared/infrastructure/supabase/server';
+import { uploadFile } from '@/shared/infrastructure/supabase/storage';
 import type {
   AdminRepository,
+  CategoryOption,
+  CreateSkillInput,
+  CreateSkillResult,
   DashboardStats,
   FeedbackRow,
   MemberRow,
@@ -10,6 +14,7 @@ import type {
   RecentSkill,
   Role,
   SkillRow,
+  SkillStatusFilter,
 } from '@/admin/domain/types';
 
 type JoinedName = { name: string } | { name: string }[] | null;
@@ -42,6 +47,20 @@ function extractTitle(joined: JoinedTitle): string {
   if (!joined) return '';
   if (Array.isArray(joined)) return joined[0]?.title ?? '';
   return joined.title;
+}
+
+type JoinedCategory = { name: string; icon: string } | { name: string; icon: string }[] | null;
+
+function extractCategoryName(joined: JoinedCategory): string {
+  if (!joined) return '';
+  if (Array.isArray(joined)) return joined[0]?.name ?? '';
+  return joined.name;
+}
+
+function extractCategoryIcon(joined: JoinedCategory): string {
+  if (!joined) return '';
+  if (Array.isArray(joined)) return joined[0]?.icon ?? '';
+  return joined.icon;
 }
 
 type ProfileRow = {
@@ -166,24 +185,33 @@ export class SupabaseAdminRepository implements AdminRepository {
     return mapToMemberRow(data as ProfileRow);
   }
 
-  async getSkills(page: number, pageSize: number): Promise<PaginatedResult<SkillRow>> {
+  async getSkills(page: number, pageSize: number, search?: string, status?: SkillStatusFilter): Promise<PaginatedResult<SkillRow>> {
     const supabase = await createClient();
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
-    const { data, count } = await supabase
+    let query = supabase
       .from('skills')
-      .select('id, title, description, status, created_at, categories(name)', { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .range(from, to);
+      .select('id, title, description, status, created_at, categories(name, icon)', { count: 'exact' })
+      .order('created_at', { ascending: false });
+
+    if (search) {
+      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
+    }
+    if (status && status !== 'all') {
+      query = query.eq('status', status);
+    }
+
+    const { data, count } = await query.range(from, to);
 
     const totalCount = count ?? 0;
     const rows: SkillRow[] = (data ?? []).map((row) => ({
       id: row.id as string,
       title: row.title as string,
       description: (row.description as string | null) ?? null,
-      categoryName: extractName(row.categories as JoinedName),
-      status: ((row.status as string) === 'inactive' ? 'inactive' : 'active') as 'active' | 'inactive',
+      categoryName: extractCategoryName(row.categories as JoinedCategory),
+      categoryIcon: extractCategoryIcon(row.categories as JoinedCategory),
+      status: ((row.status as string) === 'drafted' ? 'drafted' : 'published') as 'published' | 'drafted',
       createdAt: row.created_at as string,
     }));
 
@@ -309,5 +337,97 @@ export class SupabaseAdminRepository implements AdminRepository {
         description: p.description ?? null,
       }));
     });
+  }
+
+  // T016: getCategories
+  async getCategories(): Promise<CategoryOption[]> {
+    const supabase = await createClient();
+
+    const { data } = await supabase
+      .from('categories')
+      .select('id, name, icon')
+      .order('sort_order', { ascending: true });
+
+    if (!data) return [];
+
+    return data.map((row) => ({
+      id: row.id as string,
+      name: row.name as string,
+      icon: row.icon as string,
+    }));
+  }
+
+  // T015: createSkill
+  async createSkill(input: CreateSkillInput): Promise<CreateSkillResult> {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { success: false, error: '권한이 없습니다' };
+    }
+
+    const icon = input.icon.trim() || '⚡';
+    const status = input.isPublished ? 'published' : 'drafted';
+
+    const { data: skill, error: insertError } = await supabase
+      .from('skills')
+      .insert({
+        icon,
+        category_id: input.categoryId,
+        title: input.title,
+        description: input.description,
+        status,
+        author_id: user.id,
+        markdown_file_path: '',
+      })
+      .select('id')
+      .single();
+
+    if (insertError || !skill) {
+      return { success: false, error: '저장에 실패했습니다. 다시 시도해주세요' };
+    }
+
+    const skillId = skill.id as string;
+
+    // 마크다운 파일 업로드
+    if (input.markdownFile) {
+      const mdPath = `${skillId}/${input.markdownFile.name}`;
+      try {
+        await uploadFile('skill-descriptions', mdPath, input.markdownFile);
+        const arrayBuffer = await input.markdownFile.arrayBuffer();
+        const content = new TextDecoder().decode(arrayBuffer);
+        await supabase
+          .from('skills')
+          .update({ markdown_file_path: mdPath, markdown_content: content })
+          .eq('id', skillId);
+      } catch {
+        // 파일 업로드 실패해도 스킬은 생성됨
+      }
+    }
+
+    // 템플릿 파일 업로드
+    if (input.templateFiles && input.templateFiles.length > 0) {
+      for (const file of input.templateFiles) {
+        const filePath = `${skillId}/${file.name}`;
+        const fileType = file.name.endsWith('.zip') ? '.zip' : '.md';
+        try {
+          await uploadFile('skill-templates', filePath, file);
+          await supabase.from('skill_templates').insert({
+            skill_id: skillId,
+            file_name: file.name,
+            file_path: filePath,
+            file_size: file.size,
+            file_type: fileType,
+          });
+        } catch {
+          // 개별 파일 실패는 무시
+        }
+      }
+    }
+
+    return { success: true, skillId };
   }
 }

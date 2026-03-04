@@ -1,22 +1,41 @@
+import { Suspense } from 'react';
 import { SupabaseAdminRepository } from '@/admin/infrastructure/supabase-admin-repository';
 import { GetSkillsUseCase } from '@/admin/application/get-skills-use-case';
-import SkillsTable from '@/features/admin/SkillsTable';
+import type { SkillStatusFilter } from '@/admin/domain/types';
+import SkillsCardGrid from '@/features/admin/SkillsCardGrid';
+import SkillSearch from '@/features/admin/SkillSearch';
 
 interface SkillsPageProps {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; q?: string; status?: string }>;
+}
+
+function parseStatus(raw: string | undefined): SkillStatusFilter {
+  if (raw === 'published' || raw === 'drafted') return raw;
+  return 'all';
 }
 
 export default async function SkillsPage({ searchParams }: SkillsPageProps) {
-  const { page: pageParam } = await searchParams;
+  const { page: pageParam, q, status: statusParam } = await searchParams;
   const page = Math.max(1, parseInt(pageParam ?? '1', 10) || 1);
+  const search = q?.trim() || undefined;
+  const status = parseStatus(statusParam);
 
   const repository = new SupabaseAdminRepository();
   const useCase = new GetSkillsUseCase(repository);
-  const result = await useCase.execute(page, 10);
+  const result = await useCase.execute(page, 10, search, status);
 
   return (
     <div className="p-8">
-      <SkillsTable result={result} />
+      <SkillsCardGrid
+        result={result}
+        currentStatus={status}
+        searchQuery={search}
+        searchInput={
+          <Suspense fallback={null}>
+            <SkillSearch defaultValue={q ?? ''} />
+          </Suspense>
+        }
+      />
     </div>
   );
 }

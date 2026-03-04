@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html class="light" lang="ko">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>AI 스킬 마켓플레이스 - 프리미엄 대시보드</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Noto+Sans+KR:wght@300;400;500;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-blue": "#00007F",
+                        "accent-yellow": "#FEFE01",
+                        "bg-light-gray": "#F0F0F0",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "Noto Sans KR", "sans-serif"],
+                        "sans": ["Noto Sans KR", "Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "card": "24px",
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        body { font-family: 'Noto Sans KR', 'Inter', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .sidebar-glass {
+            background-color: rgba(0, 0, 127, 0.9);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .nav-item-hover:hover {
+            text-shadow: 0 0 8px rgba(254, 254, 1, 0.6);
+            color: #FEFE01;
+        }
+        .content-card {
+            background-color: rgba(0, 0, 127, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .content-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 127, 0.1), 0 10px 10px -5px rgba(0, 0, 127, 0.04);
+            background-color: #ffffff;
+        }
+        .search-glow:focus-within {
+            box-shadow: 0 0 0 4px rgba(0, 0, 127, 0.05);
+            border-color: rgba(0, 0, 127, 0.4);
+        }
+        .btn-gradient-primary {
+            background: linear-gradient(135deg, #00007F 0%, #2A2A9F 100%);
+        }
+        .fab-container:hover .fab-label {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
+        }
+    </style>
+</head>
+
+<body class="bg-bg-light-gray font-sans text-slate-900 relative">
+    <div class="flex h-screen overflow-hidden">
+        <aside class="w-72 sidebar-glass flex flex-col h-full shrink-0 text-white z-20 border-r border-white/10">
+            <div class="p-8">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-10 h-10 bg-accent-yellow rounded-xl flex items-center justify-center text-primary-blue shadow-[0_0_15px_rgba(254,254,1,0.3)]">
+                        <img src="../public/eluo-logo.svg" alt="eluo-logo" class="size-5">
+                    </div>
+                    <div>
+                        <h1 class="text-base font-bold leading-none text-white tracking-tight">AI SKILLS HUB</h1>
+                        <p class="text-[10px] text-accent-yellow/70 font-bold uppercase tracking-[0.2em] mt-1.5">
+                            ENTERPRISE PORTAL</p>
+                    </div>
+                </div>
+            </div>
+            <nav class="flex-1 px-4 space-y-1.5">
+                <div class="px-4 py-3 text-[11px] font-bold text-white/30 uppercase tracking-widest">Navigation</div>
+                <a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-accent-yellow text-primary-blue shadow-lg font-bold"
+                    href="#">
+                    <span class="material-symbols-outlined text-[22px]">dashboard</span>
+                    <span class="text-sm">대시보드</span>
+                </a>
+                <a class="nav-item-hover flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-white/70"
+                    href="#">
+                    <span class="material-symbols-outlined text-[22px]">smart_toy</span>
+                    <span class="text-sm font-medium">내 에이전트</span>
+                </a>
+                <div class="pt-8 px-4 py-3 text-[11px] font-bold text-white/30 uppercase tracking-widest">Categories
+                </div>
+                <!-- TODO: db categories -->
+                <!-- <a class="nav-item-hover flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-white/70"
+                    href="#">
+                    <span class="material-symbols-outlined text-[22px]">account_tree</span>
+                    <span class="text-sm font-medium">업무 자동화</span>
+                </a>
+                <a class="nav-item-hover flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-white/70"
+                    href="#">
+                    <span class="material-symbols-outlined text-[22px]">edit_note</span>
+                    <span class="text-sm font-medium">문서 작성</span>
+                </a>
+                <a class="nav-item-hover flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-white/70"
+                    href="#">
+                    <span class="material-symbols-outlined text-[22px]">bar_chart</span>
+                    <span class="text-sm font-medium">데이터 분석</span>
+                </a> -->
+            </nav>
+            <div class="p-3 border-t border-white/10 bg-black/10">
+
+                <div
+                    class=" flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-white/5 transition-colors cursor-pointer text-white/50 hover:text-white/80">
+                    <span class="material-symbols-outlined">help_outline</span>
+                    <span class="text-sm font-medium">도움말 센터</span>
+                </div>
+            </div>
+        </aside>
+        <main class="flex-1 flex flex-col min-w-0 bg-bg-light-gray overflow-hidden relative">
+            <header
+                class="h-20 bg-white/60 backdrop-blur-xl flex items-center justify-between px-10 z-10 border-b border-white/20">
+                <div class="flex items-center gap-3 text-slate-400">
+                    <span class="text-sm font-medium">ELUO AI HUB</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span
+                        class="text-sm font-bold text-primary-blue bg-primary-blue/5 px-3 py-1 rounded-full">DASHBOARD</span>
+                </div>
+                <div class="flex items-center gap-8">
+                    <div class="flex items-center gap-4 border-l border-slate-200 pl-8">
+                        <button
+                            class="p-2.5 text-slate-500 hover:bg-white rounded-xl relative transition-all shadow-sm">
+                            <span class="material-symbols-outlined">notifications</span>
+                            <span
+                                class="absolute top-2.5 right-2.5 w-2 h-2 bg-accent-yellow rounded-full ring-2 ring-white"></span>
+                        </button>
+                        <div
+                            class="w-10 h-10 rounded-xl border-2 border-white shadow-sm flex items-center justify-center overflow-hidden">
+                            <img alt="User profile" class="w-full h-full object-cover"
+                                src="https://api.dicebear.com/9.x/thumbs/svg?seed=Leo" />
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <div class="flex-1 overflow-y-auto p-10 no-scrollbar">
+                <div class="max-w-4xl mx-auto mb-16">
+                    <h2 class="text-4xl font-bold mb-8 tracking-tight text-primary-blue">무엇을 도와드릴까요?</h2>
+                    <div
+                        class="relative group search-glow bg-white rounded-2xl overflow-hidden transition-all border border-primary-blue/20">
+                        <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                            <span
+                                class="material-symbols-outlined text-slate-400 group-focus-within:text-primary-blue transition-colors">search</span>
+                        </div>
+                        <input
+                            class="w-full pl-14 pr-36 py-5 bg-transparent border-none focus:ring-0 outline-none text-lg placeholder:text-slate-400"
+                            placeholder="업무 효율을 높여줄 AI 스킬을 검색하세요..." type="text" />
+                        <button
+                            class="absolute right-3 top-3 bottom-3 px-8 bg-accent-yellow text-primary-blue font-bold rounded-xl text-sm hover:brightness-105 transition-all shadow-md">
+                            검색하기
+                        </button>
+                    </div>
+                    <div class="flex gap-3 mt-5 overflow-x-auto no-scrollbar pb-2">
+                        <span
+                            class="px-4 py-1.5 bg-white/60 border border-white rounded-full text-xs font-bold cursor-pointer hover:border-primary-blue/30 transition-all text-slate-600 shadow-sm">#
+                            파이썬 스크립트</span>
+                        <span
+                            class="px-4 py-1.5 bg-white/60 border border-white rounded-full text-xs font-bold cursor-pointer hover:border-primary-blue/30 transition-all text-slate-600 shadow-sm">#
+                            PDF 요약기</span>
+                        <span
+                            class="px-4 py-1.5 bg-white/60 border border-white rounded-full text-xs font-bold cursor-pointer hover:border-primary-blue/30 transition-all text-slate-600 shadow-sm">#
+                            회의록 정리</span>
+                    </div>
+                </div>
+                <div class="max-w-6xl mx-auto">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h3 class="text-xl font-bold text-primary-blue">자동화 스킬</h3>
+                            <p class="text-sm text-slate-500 mt-1">유용하게 사용할 수 있는 스킬입니다.</p>
+                        </div>
+                        <button
+                            class="flex items-center gap-1 text-sm font-bold text-primary-blue hover:gap-2 transition-all">
+                            전체 보기 <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div class="content-card p-8 rounded-card border border-white/40 cursor-pointer">
+                            <div class="text-4xl mb-6 p-4 bg-white/80 w-fit rounded-2xl shadow-sm">🤖</div>
+                            <h4 class="text-lg font-bold mb-3 text-primary-blue">코드 오디터 프로</h4>
+                            <p class="text-sm text-slate-500 mb-6 leading-relaxed">JS 및 파이썬 코드베이스를 위한 자동 보안 검사 및 성능 최적화
+                                오디팅 툴입니다.</p>
+                            <div class="flex flex-wrap gap-2 pt-4 border-t border-primary-blue/5">
+                                <span
+                                    class="px-3 py-1 bg-primary-blue/5 text-[10px] font-bold uppercase rounded-full text-primary-blue">코딩
+                                    지원</span>
+                                <span
+                                    class="px-3 py-1 bg-accent-yellow text-[10px] font-bold uppercase rounded-full text-primary-blue">업무
+                                    자동화</span>
+                            </div>
+                        </div>
+                        <div class="content-card p-8 rounded-card border border-white/40 cursor-pointer">
+                            <div class="text-4xl mb-6 p-4 bg-white/80 w-fit rounded-2xl shadow-sm">✍️</div>
+                            <h4 class="text-lg font-bold mb-3 text-primary-blue">보고서 초안 생성기</h4>
+                            <p class="text-sm text-slate-500 mb-6 leading-relaxed">간단한 메모를 구조화된 화이트페이퍼 또는 내부 문서로 즉시
+                                변환합니다.</p>
+                            <div class="flex flex-wrap gap-2 pt-4 border-t border-primary-blue/5">
+                                <span
+                                    class="px-3 py-1 bg-primary-blue/5 text-[10px] font-bold uppercase rounded-full text-primary-blue">문서
+                                    작성</span>
+                                <span
+                                    class="px-3 py-1 bg-accent-yellow text-[10px] font-bold uppercase rounded-full text-primary-blue">마케팅</span>
+                            </div>
+                        </div>
+                        <div class="content-card p-8 rounded-card border border-white/40 cursor-pointer">
+                            <div class="text-4xl mb-6 p-4 bg-white/80 w-fit rounded-2xl shadow-sm">📊</div>
+                            <h4 class="text-lg font-bold mb-3 text-primary-blue">데이터 시각화 도우미</h4>
+                            <p class="text-sm text-slate-500 mb-6 leading-relaxed">CSV나 SQL에 연결하여 대화형 차트와 트렌드 예측을 즉시
+                                생성합니다.</p>
+                            <div class="flex flex-wrap gap-2 pt-4 border-t border-primary-blue/5">
+                                <span
+                                    class="px-3 py-1 bg-primary-blue/5 text-[10px] font-bold uppercase rounded-full text-primary-blue">데이터
+                                    분석</span>
+                                <span
+                                    class="px-3 py-1 bg-accent-yellow text-[10px] font-bold uppercase rounded-full text-primary-blue">통계</span>
+                            </div>
+                        </div>
+                        <div class="content-card p-8 rounded-card border border-white/40 cursor-pointer">
+                            <div class="text-4xl mb-6 p-4 bg-white/80 w-fit rounded-2xl shadow-sm">📧</div>
+                            <h4 class="text-lg font-bold mb-3 text-primary-blue">메일함 자동 분류기</h4>
+                            <p class="text-sm text-slate-500 mb-6 leading-relaxed">대량의 고객 지원 이메일을 지능적으로 분류하고 응답 초안을
+                                작성합니다.</p>
+                            <div class="flex flex-wrap gap-2 pt-4 border-t border-primary-blue/5">
+                                <span
+                                    class="px-3 py-1 bg-primary-blue/5 text-[10px] font-bold uppercase rounded-full text-primary-blue">운영</span>
+                                <span
+                                    class="px-3 py-1 bg-accent-yellow text-[10px] font-bold uppercase rounded-full text-primary-blue">커뮤니케이션</span>
+                            </div>
+                        </div>
+                        <div class="content-card p-8 rounded-card border border-white/40 cursor-pointer">
+                            <div class="text-4xl mb-6 p-4 bg-white/80 w-fit rounded-2xl shadow-sm">🎨</div>
+                            <h4 class="text-lg font-bold mb-3 text-primary-blue">비주얼 어시스턴트</h4>
+                            <p class="text-sm text-slate-500 mb-6 leading-relaxed">자연어 설명을 통해 일관된 브랜드 자산과 아이콘을 생성합니다.
+                            </p>
+                            <div class="flex flex-wrap gap-2 pt-4 border-t border-primary-blue/5">
+                                <span
+                                    class="px-3 py-1 bg-primary-blue/5 text-[10px] font-bold uppercase rounded-full text-primary-blue">디자인</span>
+                                <span
+                                    class="px-3 py-1 bg-accent-yellow text-[10px] font-bold uppercase rounded-full text-primary-blue">크리에이티브</span>
+                            </div>
+                        </div>
+                        <div class="content-card p-8 rounded-card border border-white/40 cursor-pointer">
+                            <div class="text-4xl mb-6 p-4 bg-white/80 w-fit rounded-2xl shadow-sm">⚡</div>
+                            <h4 class="text-lg font-bold mb-3 text-primary-blue">회의록 요약 봇</h4>
+                            <p class="text-sm text-slate-500 mb-6 leading-relaxed">실시간 대화를 요약하고 Slack이나 Jira로 후속 작업을 자동
+                                전송합니다.</p>
+                            <div class="flex flex-wrap gap-2 pt-4 border-t border-primary-blue/5">
+                                <span
+                                    class="px-3 py-1 bg-primary-blue/5 text-[10px] font-bold uppercase rounded-full text-primary-blue">생산성</span>
+                                <span
+                                    class="px-3 py-1 bg-accent-yellow text-[10px] font-bold uppercase rounded-full text-primary-blue">워크플로우</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-16 text-center">
+                        <button
+                            class="px-10 py-4 bg-white border border-slate-200 hover:border-primary-blue/30 hover:bg-slate-50 rounded-2xl text-sm font-bold text-primary-blue transition-all shadow-sm">
+                            더 많은 AI 스킬 발견하기
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="fab-container fixed bottom-10 right-10 flex items-center group z-50">
+                <div
+                    class="fab-label opacity-0 pointer-events-none translate-x-2 transition-all duration-300 sidebar-glass text-white text-[12px] font-bold py-2 px-4 rounded-xl mr-4 shadow-2xl whitespace-nowrap border border-white/20">
+                    플랫폼 개선 제안하기
+                </div>
+                <button
+                    class="w-14 h-14 bg-white border border-slate-200 rounded-2xl shadow-2xl flex items-center justify-center text-primary-blue hover:bg-accent-yellow transition-all hover:scale-110 active:scale-95">
+                    <span class="material-symbols-outlined text-2xl font-bold">chat_bubble</span>
+                </button>
+            </div>
+        </main>
+    </div>
+
+</body>
+
+</html>

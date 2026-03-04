@@ -36,8 +36,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const displayName = user.user_metadata?.display_name as string | undefined;
   const userName = displayName ?? profile?.email ?? user.email ?? '관리자';
 
+
   return (
-    <AdminLayoutClient userName={userName} userRole="최고 관리자">
+    <AdminLayoutClient userName={userName} userRole={roleName}>
       {children}
     </AdminLayoutClient>
   );

@@ -35,14 +35,14 @@ export default function RecentMembersTable({ members }: RecentMembersTableProps)
                   <div className="flex items-center gap-3">
                     <div className="size-8 rounded-full bg-[#000080]/10 flex items-center justify-center shrink-0">
                       <span className="text-xs font-bold text-[#000080]">
-                        {(member.displayName ?? member.email).charAt(0).toUpperCase()}
+                        {(member.name ?? member.email).charAt(0).toUpperCase()}
                       </span>
                     </div>
                     <div>
                       <p className="text-sm font-bold text-[#000080]">
-                        {member.displayName ?? member.email}
+                        {member.name ?? member.email}
                       </p>
-                      {member.displayName && (
+                      {member.name && (
                         <p className="text-xs text-[#000080]/50">{member.email}</p>
                       )}
                     </div>

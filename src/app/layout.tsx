@@ -18,7 +18,10 @@ const eluo = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "AI 스킬 허브",
+  title: {
+    default: "ELUO HUB",
+    template: "%s | ELUO HUB",
+  },
   description: "웹 에이전시의 워크플로우를 자동화하는 AI 스킬 마켓플레이스",
 };
 

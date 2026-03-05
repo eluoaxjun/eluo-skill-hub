@@ -1,4 +1,9 @@
+import type { Metadata } from 'next';
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
+
+export const metadata: Metadata = {
+  title: '대시보드',
+};
 import { getQueryClient } from '@/shared/infrastructure/tanstack-query/get-query-client';
 import { queryKeys } from '@/shared/infrastructure/tanstack-query/query-keys';
 import { SupabaseAdminRepository } from '@/admin/infrastructure/supabase-admin-repository';

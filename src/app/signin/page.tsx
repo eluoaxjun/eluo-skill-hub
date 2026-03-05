@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { SigninForm } from "@/features/auth/SigninForm";
+
+export const metadata: Metadata = {
+  title: "로그인",
+};
 import { BackgroundBeamsWithCollision } from "@/shared/ui/background-beams-with-collision";
 
 export default function SigninPage() {

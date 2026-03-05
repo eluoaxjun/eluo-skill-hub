@@ -231,6 +231,12 @@
   margin-bottom: 0;
 }
 
+/* Table */
+.notion-markdown .prose table {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
 /* Horizontal rule */
 .notion-markdown .prose hr {
   border: none;

@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { SignupForm } from "@/features/auth/SignupForm";
+
+export const metadata: Metadata = {
+  title: "회원가입",
+};
 import { BackgroundBeamsWithCollision } from "@/shared/ui/background-beams-with-collision";
 
 export default function SignupPage() {

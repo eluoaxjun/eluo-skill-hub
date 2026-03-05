@@ -1,4 +1,9 @@
+import type { Metadata } from 'next';
 import { SupabaseAdminRepository } from '@/admin/infrastructure/supabase-admin-repository';
+
+export const metadata: Metadata = {
+  title: '피드백 관리',
+};
 import { GetFeedbacksUseCase } from '@/admin/application/get-feedbacks-use-case';
 import FeedbacksTable from '@/features/admin/FeedbacksTable';
 

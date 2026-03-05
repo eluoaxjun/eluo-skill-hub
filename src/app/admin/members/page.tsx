@@ -1,4 +1,9 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
+
+export const metadata: Metadata = {
+  title: '멤버 관리',
+};
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { getQueryClient } from '@/shared/infrastructure/tanstack-query/get-query-client';
 import { queryKeys } from '@/shared/infrastructure/tanstack-query/query-keys';

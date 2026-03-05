@@ -1,4 +1,9 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+
+export const metadata: Metadata = {
+  title: '스킬 등록',
+};
 import { ChevronLeft } from 'lucide-react';
 import { SupabaseAdminRepository } from '@/admin/infrastructure/supabase-admin-repository';
 import SkillAddForm from '@/features/admin/SkillAddForm';

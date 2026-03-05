@@ -1,7 +1,15 @@
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getCurrentUser, getCurrentUserRole } from '@/shared/infrastructure/supabase/auth';
 import AccessDenied from '@/features/admin/AccessDenied';
 import AdminLayoutClient from '@/features/admin/AdminLayoutClient';
+
+export const metadata: Metadata = {
+  title: {
+    default: '관리자',
+    template: '%s | 관리자 | ELUO HUB',
+  },
+};
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user } = await getCurrentUser();

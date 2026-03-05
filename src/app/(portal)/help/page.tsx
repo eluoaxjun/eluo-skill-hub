@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import {
   BookOpen,
   Download,
@@ -11,6 +12,10 @@ import {
   FileText,
   Terminal,
 } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: '도움말',
+};
 
 export default function HelpPage() {
   return (

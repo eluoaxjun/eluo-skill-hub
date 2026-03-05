@@ -1,4 +1,9 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+
+export const metadata: Metadata = {
+  title: '스킬 수정',
+};
 import { ChevronLeft } from 'lucide-react';
 import { SupabaseAdminRepository } from '@/admin/infrastructure/supabase-admin-repository';
 import { GetSkillByIdUseCase } from '@/admin/application/get-skill-by-id-use-case';

@@ -25,18 +25,35 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   const pathname = request.nextUrl.pathname;
-  if (user && (pathname === "/signin" || pathname === "/signup")) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+  const hasAuthCookie = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"));
+
+  // /signin, /signup: 쿠키 있으면 즉시 리다이렉트 (getUser 생략)
+  if (pathname === "/signin" || pathname === "/signup") {
+    if (hasAuthCookie) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+    return supabaseResponse;
   }
 
-  if (!user && pathname.startsWith("/admin")) {
-    return NextResponse.redirect(new URL("/signin", request.url));
+  // /admin: 쿠키 없으면 즉시 리다이렉트, 있으면 getUser()로 검증
+  if (pathname.startsWith("/admin")) {
+    if (!hasAuthCookie) {
+      return NextResponse.redirect(new URL("/signin", request.url));
+    }
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.redirect(new URL("/signin", request.url));
+    }
+    return supabaseResponse;
   }
+
+  // 기타 경로: getSession()으로 로컬 JWT 검사 (토큰 갱신 시에만 서버 호출)
+  await supabase.auth.getSession();
 
   return supabaseResponse;
 }

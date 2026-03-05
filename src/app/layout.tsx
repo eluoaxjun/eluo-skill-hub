@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { Toaster } from "@/shared/ui/sonner";
+import QueryProvider from "@/shared/infrastructure/tanstack-query/QueryProvider";
 
 const pretendard = localFont({
   src: "./font/PretendardVariable.woff2",
@@ -29,7 +30,9 @@ export default function RootLayout({
   return (
     <html lang="ko" className={`${pretendard.variable} ${eluo.variable}`}>
       <body className="antialiased">
-        {children}
+        <QueryProvider>
+          {children}
+        </QueryProvider>
         <Toaster richColors position="top-right" />
       </body>
     </html>

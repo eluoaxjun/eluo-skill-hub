@@ -36,10 +36,10 @@ test.describe("랜딩 페이지", () => {
     expect(box!.height).toBeGreaterThan(100);
   });
 
-  test("US3: 시작하기 버튼이 표시되고 /login으로 이동한다", async ({
+  test("US3: 시작하기 버튼이 표시되고 /signin으로 이동한다", async ({
     page,
   }) => {
-    const ctaButton = page.locator('a[href="/login"]');
+    const ctaButton = page.locator('a[href="/signin"]').filter({ hasText: "시작하기" });
     await expect(ctaButton).toBeVisible();
     await expect(ctaButton).toContainText("시작하기");
   });
@@ -59,7 +59,8 @@ test.describe("랜딩 페이지", () => {
     const heroSection = page.locator("section").first();
     await expect(heroSection).toBeVisible();
 
+    // 글로브는 lg 이상에서만 표시 (hidden lg:block)
     const canvas = page.locator("canvas");
-    await expect(canvas).toBeVisible();
+    await expect(canvas).toBeHidden();
   });
 });

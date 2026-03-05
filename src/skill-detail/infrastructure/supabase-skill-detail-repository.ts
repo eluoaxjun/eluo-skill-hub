@@ -33,7 +33,7 @@ export class SupabaseSkillDetailRepository implements ISkillDetailRepository {
     const { data: skill, error } = await supabase
       .from('skills')
       .select(
-        'id, title, icon, description, markdown_content, updated_at, author_id, categories(name, icon)'
+        'id, title, icon, description, markdown_content, updated_at, author_id, download_count, categories(name, icon)'
       )
       .eq('id', skillId)
       .single();
@@ -43,7 +43,7 @@ export class SupabaseSkillDetailRepository implements ISkillDetailRepository {
     // Parallelize independent queries: author profile, templates, feedback stats
     const authorId = skill.author_id as string | null;
 
-    const [authorResult, templatesResult, feedbackStatsResult] = await Promise.all([
+    const [authorResult, templatesResult, feedbackCountResult] = await Promise.all([
       // Author name (only if author_id exists)
       authorId
         ? supabase.from('profiles').select('name').eq('id', authorId).single()
@@ -54,22 +54,16 @@ export class SupabaseSkillDetailRepository implements ISkillDetailRepository {
         .select('id, file_name, file_path, file_size, file_type')
         .eq('skill_id', skillId)
         .order('created_at', { ascending: true }),
-      // Feedback stats
+      // Feedback count
       supabase
         .from('skill_feedback_logs')
-        .select('rating')
+        .select('*', { count: 'exact', head: true })
         .eq('skill_id', skillId),
     ]);
 
     const authorName = (authorResult.data?.name as string | null) ?? null;
     const templates = templatesResult.data;
-
-    const ratings = feedbackStatsResult.data ?? [];
-    const feedbackCount = ratings.length;
-    const avgRating =
-      feedbackCount > 0
-        ? ratings.reduce((sum, r) => sum + (r.rating as number), 0) / feedbackCount
-        : null;
+    const feedbackCount = feedbackCountResult.count ?? 0;
 
     const category = extractCategory(skill.categories as JoinedCategory);
 
@@ -92,7 +86,7 @@ export class SupabaseSkillDetailRepository implements ISkillDetailRepository {
       authorName,
       updatedAt: skill.updated_at as string,
       templates: templateInfos,
-      avgRating: avgRating ? Math.round(avgRating * 10) / 10 : null,
+      downloadCount: (skill.download_count as number) ?? 0,
       feedbackCount,
     };
   }
@@ -108,7 +102,7 @@ export class SupabaseSkillDetailRepository implements ISkillDetailRepository {
     const [feedbacksResult, countResult] = await Promise.all([
       supabase
         .from('skill_feedback_logs')
-        .select('id, rating, comment, created_at, user_id')
+        .select('id, rating, comment, created_at, user_id, is_secret, deleted_at')
         .eq('skill_id', skillId)
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1),
@@ -174,6 +168,7 @@ export class SupabaseSkillDetailRepository implements ISkillDetailRepository {
         id: reply.id as string,
         content: reply.content as string,
         userName: profileMap.get(reply.user_id as string) ?? null,
+        userId: reply.user_id as string,
         createdAt: reply.created_at as string,
       });
       repliesByFeedbackId.set(feedbackId, existing);
@@ -181,9 +176,12 @@ export class SupabaseSkillDetailRepository implements ISkillDetailRepository {
 
     const mappedFeedbacks: FeedbackWithReplies[] = feedbacks.map((f) => ({
       id: f.id as string,
-      rating: f.rating as number,
+      rating: (f.rating as number | null) ?? null,
       comment: (f.comment as string | null) ?? null,
       userName: profileMap.get(f.user_id as string) ?? null,
+      userId: f.user_id as string,
+      isSecret: (f.is_secret as boolean) ?? false,
+      isDeleted: f.deleted_at !== null,
       createdAt: f.created_at as string,
       replies: repliesByFeedbackId.get(f.id as string) ?? [],
     }));
@@ -203,10 +201,10 @@ export class SupabaseSkillDetailRepository implements ISkillDetailRepository {
       .insert({
         user_id: userId,
         skill_id: input.skillId,
-        rating: input.rating,
-        comment: input.comment ?? null,
+        comment: input.comment,
+        is_secret: input.isSecret ?? false,
       })
-      .select('id, rating, comment, created_at')
+      .select('id, rating, comment, created_at, is_secret')
       .single();
 
     if (error || !data) {
@@ -222,9 +220,12 @@ export class SupabaseSkillDetailRepository implements ISkillDetailRepository {
 
     return {
       id: data.id as string,
-      rating: data.rating as number,
+      rating: (data.rating as number | null) ?? null,
       comment: (data.comment as string | null) ?? null,
       userName: (profile?.name as string | null) ?? null,
+      userId,
+      isSecret: (data.is_secret as boolean) ?? false,
+      isDeleted: false,
       createdAt: data.created_at as string,
       replies: [],
     };
@@ -257,8 +258,47 @@ export class SupabaseSkillDetailRepository implements ISkillDetailRepository {
       id: data.id as string,
       content: data.content as string,
       userName: (profile?.name as string | null) ?? null,
+      userId,
       createdAt: data.created_at as string,
     };
+  }
+
+  async getFeedbackReplyCount(feedbackId: string): Promise<number> {
+    const supabase = await createClient();
+    const { count } = await supabase
+      .from('feedback_replies')
+      .select('*', { count: 'exact', head: true })
+      .eq('feedback_id', feedbackId);
+    return count ?? 0;
+  }
+
+  async deleteReply(replyId: string): Promise<void> {
+    const supabase = await createClient();
+    const { error } = await supabase.from('feedback_replies').delete().eq('id', replyId);
+    if (error) throw new Error('댓글 삭제에 실패했습니다.');
+  }
+
+  async deleteFeedback(feedbackId: string): Promise<void> {
+    const supabase = await createClient();
+
+    // 대댓글도 함께 삭제
+    await supabase.from('feedback_replies').delete().eq('feedback_id', feedbackId);
+    const { error } = await supabase.from('skill_feedback_logs').delete().eq('id', feedbackId);
+    if (error) throw new Error('피드백 삭제에 실패했습니다.');
+  }
+
+  async softDeleteFeedback(feedbackId: string): Promise<void> {
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from('skill_feedback_logs')
+      .update({ deleted_at: new Date().toISOString(), comment: null })
+      .eq('id', feedbackId);
+    if (error) throw new Error('피드백 삭제에 실패했습니다.');
+  }
+
+  async incrementDownloadCount(skillId: string): Promise<void> {
+    const supabase = await createClient();
+    await supabase.rpc('increment_download_count', { skill_id_param: skillId });
   }
 
   async getTemplateSignedUrl(filePath: string, bucket: string): Promise<string> {

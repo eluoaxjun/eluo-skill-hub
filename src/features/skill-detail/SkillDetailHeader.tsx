@@ -1,4 +1,4 @@
-import { Star, ShieldCheck, AlignLeft } from 'lucide-react';
+import { ShieldCheck, AlignLeft, Download } from 'lucide-react';
 import type { SkillDetailPopup } from '@/skill-detail/domain/types';
 
 interface SkillDetailHeaderProps {
@@ -13,26 +13,14 @@ export default function SkillDetailHeader({ skill }: SkillDetailHeaderProps) {
         {skill.title}
       </h1>
       <div className="flex flex-wrap items-center gap-4 text-slate-500 text-sm">
-        {skill.authorName && (
-          <>
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-[18px] h-[18px]" />
-              {skill.authorName}
-            </span>
-            <span className="text-slate-300">/</span>
-          </>
-        )}
-        {skill.avgRating !== null && (
-          <>
-            <span className="flex items-center gap-1.5 text-[#00007F] font-semibold">
-              <Star className="w-[18px] h-[18px] fill-current" />
-              {skill.avgRating.toFixed(1)} ({skill.feedbackCount} 리뷰)
-            </span>
-            <span className="text-slate-300">/</span>
-          </>
-        )}
+
         <span className="bg-[#FEFE01] px-3 py-1 text-[#00007F] font-bold text-xs rounded-full shadow-sm">
           {skill.categoryName}
+        </span>
+        <span className="text-slate-300">/</span>
+        <span className="flex items-center gap-1.5">
+          <Download className="w-[18px] h-[18px]" />
+          다운로드 {skill.downloadCount.toLocaleString()}회
         </span>
       </div>
       {skill.description && (

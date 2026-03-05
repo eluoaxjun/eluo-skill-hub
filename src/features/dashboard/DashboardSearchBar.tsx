@@ -1,31 +1,27 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
+import { useDashboardFilter } from './DashboardLayoutClient';
+import { useTrackEvent } from '@/event-log/hooks/use-track-event';
 
 interface DashboardSearchBarProps {
   defaultValue?: string;
-  categoryId?: string;
 }
 
 export default function DashboardSearchBar({
   defaultValue = '',
-  categoryId,
 }: DashboardSearchBarProps) {
-  const router = useRouter();
+  const { setSearchQuery } = useDashboardFilter();
+  const trackEvent = useTrackEvent();
   const [query, setQuery] = useState(defaultValue);
 
   function handleSearch() {
     const trimmed = query.trim();
-    if (!trimmed && !defaultValue) return;
-
-    const params = new URLSearchParams();
-    if (trimmed) params.set('q', trimmed);
-    if (categoryId) params.set('category', categoryId);
-
-    const search = params.toString();
-    router.push(search ? `/dashboard?${search}` : '/dashboard');
+    if (trimmed) {
+      trackEvent('search.query', { query: trimmed });
+    }
+    setSearchQuery(trimmed || undefined);
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {

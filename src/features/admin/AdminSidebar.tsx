@@ -35,7 +35,7 @@ export default function AdminSidebar({ userName, userRole }: AdminSidebarProps) 
             <Zap strokeWidth={2.5} className="size-4 text-[#FEFE01] fill-[#FEFE01]" />
           </div>
           <div>
-            <h1 className="text-[#000080] font-bold text-lg leading-none">Eluo Skill Hub</h1>
+            <h1 className="text-[#000080] font-bold text-lg leading-none">Eluo Hub</h1>
             <p className="text-[10px] text-[#000080]/60 uppercase tracking-widest font-semibold">
               Admin
             </p>

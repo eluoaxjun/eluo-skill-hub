@@ -49,7 +49,7 @@ export default function SkillEditModal({ skillId, initialData, categories }: Ski
     <>
       {/* Overlay — glass-overlay backdrop */}
       <div className="fixed inset-0 z-50 bg-[rgba(0,0,127,0.1)] backdrop-blur-[12px] flex items-center justify-center p-4">
-        <div className="bg-gradient-to-br from-white to-[#f9f9f9] border border-white/40 rounded-3xl w-full max-w-5xl max-h-[92vh] overflow-hidden relative" style={{ boxShadow: 'rgba(0, 0, 127, 0.04) 0px 0px 0px 1px, rgba(0, 0, 127, 0.08) 0px 10px 30px -5px' }}>
+        <div className="bg-gradient-to-br from-white to-[#f9f9f9] border border-white/40 rounded-3xl w-full max-w-7xl max-h-[92vh] overflow-hidden relative" style={{ boxShadow: 'rgba(0, 0, 127, 0.04) 0px 0px 0px 1px, rgba(0, 0, 127, 0.08) 0px 10px 30px -5px' }}>
           <button
             type="button"
             onClick={handleCloseAttempt}

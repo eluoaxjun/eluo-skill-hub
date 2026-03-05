@@ -5,9 +5,11 @@ import FeedbackItem from './FeedbackItem';
 interface FeedbackListProps {
   feedbacks: FeedbackWithReplies[];
   skillId: string;
+  currentUserId: string;
+  isAdmin: boolean;
 }
 
-export default function FeedbackList({ feedbacks, skillId }: FeedbackListProps) {
+export default function FeedbackList({ feedbacks, skillId, currentUserId, isAdmin }: FeedbackListProps) {
   if (feedbacks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-slate-400">
@@ -24,6 +26,8 @@ export default function FeedbackList({ feedbacks, skillId }: FeedbackListProps) 
           key={feedback.id}
           feedback={feedback}
           skillId={skillId}
+          currentUserId={currentUserId}
+          isAdmin={isAdmin}
         />
       ))}
     </div>

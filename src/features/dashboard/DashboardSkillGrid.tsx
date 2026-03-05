@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
-import { useIsViewer } from './DashboardLayoutClient';
+import { useIsViewer, useDashboardFilter } from './DashboardLayoutClient';
 import { useDashboardSkills } from '@/dashboard/hooks/use-dashboard-queries';
 import { useBookmarkedSkillIds } from '@/bookmark/hooks/use-bookmark-queries';
 import DashboardSkillCard from './DashboardSkillCard';
@@ -15,23 +15,21 @@ const SkillDetailModal = dynamic(
 
 interface DashboardSkillGridProps {
   userId: string;
-  searchQuery?: string;
-  categoryId?: string;
-  currentLimit: number;
 }
 
-export default function DashboardSkillGrid({
-  userId,
-  searchQuery,
-  categoryId,
-  currentLimit,
-}: DashboardSkillGridProps) {
+export default function DashboardSkillGrid({ userId }: DashboardSkillGridProps) {
   const isViewer = useIsViewer();
+  const { filter } = useDashboardFilter();
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
 
+  const categoryId =
+    typeof filter.activeTab === 'object' && filter.activeTab.type === 'category'
+      ? filter.activeTab.categoryId
+      : undefined;
+
   const { data: skillsData } = useDashboardSkills({
-    limit: currentLimit,
-    search: searchQuery,
+    limit: filter.limit,
+    search: filter.searchQuery,
     categoryId,
   });
   const { data: bookmarkedSkillIds } = useBookmarkedSkillIds(userId || undefined);
@@ -39,7 +37,7 @@ export default function DashboardSkillGrid({
   const skills = skillsData?.skills ?? [];
   const hasMore = skillsData?.hasMore ?? false;
   const isEmpty = skills.length === 0;
-  const isSearchResult = !!searchQuery;
+  const isSearchResult = !!filter.searchQuery;
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -79,13 +77,7 @@ export default function DashboardSkillGrid({
             ))}
           </div>
 
-          {hasMore && (
-            <LoadMoreButton
-              currentLimit={currentLimit}
-              searchQuery={searchQuery}
-              categoryId={categoryId}
-            />
-          )}
+          {hasMore && <LoadMoreButton />}
         </>
       )}
 

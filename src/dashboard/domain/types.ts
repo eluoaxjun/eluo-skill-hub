@@ -28,6 +28,7 @@ export interface UserProfile {
 export type SidebarTab =
   | 'dashboard'
   | 'my-agents'
+  | 'help'
   | { type: 'category'; categoryId: string; categoryName: string };
 
 export interface DashboardRepository {

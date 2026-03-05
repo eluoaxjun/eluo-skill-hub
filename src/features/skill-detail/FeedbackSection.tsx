@@ -8,6 +8,8 @@ import FeedbackList from './FeedbackList';
 interface FeedbackSectionProps {
   skillId: string;
   feedbacks: FeedbackWithReplies[];
+  currentUserId: string;
+  isAdmin: boolean;
   hasMore?: boolean;
   loadingMore?: boolean;
   onLoadMore?: () => void;
@@ -16,6 +18,8 @@ interface FeedbackSectionProps {
 export default function FeedbackSection({
   skillId,
   feedbacks,
+  currentUserId,
+  isAdmin,
   hasMore = false,
   loadingMore = false,
   onLoadMore,
@@ -27,7 +31,12 @@ export default function FeedbackSection({
         피드백 및 리뷰
       </h3>
       <FeedbackForm skillId={skillId} />
-      <FeedbackList feedbacks={feedbacks} skillId={skillId} />
+      <FeedbackList
+        feedbacks={feedbacks}
+        skillId={skillId}
+        currentUserId={currentUserId}
+        isAdmin={isAdmin}
+      />
       {hasMore && onLoadMore && (
         <div className="flex justify-center mt-6">
           <button

@@ -5,8 +5,8 @@ export class SubmitFeedbackUseCase {
   constructor(private readonly repository: ISkillDetailRepository) {}
 
   async execute(userId: string, input: SubmitFeedbackInput): Promise<SubmitFeedbackResult> {
-    if (input.rating < 1 || input.rating > 5 || !Number.isInteger(input.rating)) {
-      return { success: false, error: '평점은 1-5 사이여야 합니다.' };
+    if (!input.comment.trim()) {
+      return { success: false, error: '피드백 내용을 입력해주세요.' };
     }
 
     const feedback = await this.repository.submitFeedback(userId, input);

@@ -10,7 +10,7 @@ export interface SkillDetailPopup {
   readonly authorName: string | null;
   readonly updatedAt: string;
   readonly templates: SkillTemplateInfo[];
-  readonly avgRating: number | null;
+  readonly downloadCount: number;
   readonly feedbackCount: number;
 }
 
@@ -25,9 +25,12 @@ export interface SkillTemplateInfo {
 // 피드백 + 댓글 묶음
 export interface FeedbackWithReplies {
   readonly id: string;
-  readonly rating: number;
+  readonly rating: number | null;
   readonly comment: string | null;
   readonly userName: string | null;
+  readonly userId: string;
+  readonly isSecret: boolean;
+  readonly isDeleted: boolean;
   readonly createdAt: string;
   readonly replies: FeedbackReply[];
 }
@@ -36,14 +39,15 @@ export interface FeedbackReply {
   readonly id: string;
   readonly content: string;
   readonly userName: string | null;
+  readonly userId: string;
   readonly createdAt: string;
 }
 
 // 입력 타입
 export interface SubmitFeedbackInput {
   readonly skillId: string;
-  readonly rating: number;
-  readonly comment?: string;
+  readonly comment: string;
+  readonly isSecret?: boolean;
 }
 
 export interface SubmitReplyInput {
@@ -73,6 +77,14 @@ export type SubmitFeedbackResult =
 
 export type SubmitReplyResult =
   | { success: true; reply: FeedbackReply }
+  | { success: false; error: string };
+
+export type DeleteFeedbackResult =
+  | { success: true }
+  | { success: false; error: string };
+
+export type DeleteReplyResult =
+  | { success: true }
   | { success: false; error: string };
 
 export type GetTemplateDownloadResult =

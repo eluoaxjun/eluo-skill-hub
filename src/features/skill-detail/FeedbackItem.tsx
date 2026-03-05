@@ -1,14 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { Star, Send } from 'lucide-react';
+import { Send, Lock, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useSubmitReply } from '@/skill-detail/hooks/use-skill-detail-queries';
+import { useSubmitReply, useDeleteFeedback, useDeleteReply } from '@/skill-detail/hooks/use-skill-detail-queries';
 import type { FeedbackWithReplies } from '@/skill-detail/domain/types';
 
 interface FeedbackItemProps {
   feedback: FeedbackWithReplies;
   skillId: string;
+  currentUserId: string;
+  isAdmin: boolean;
 }
 
 function formatRelativeTime(dateString: string): string {
@@ -26,9 +28,15 @@ function formatRelativeTime(dateString: string): string {
   return date.toLocaleDateString('ko-KR');
 }
 
-export default function FeedbackItem({ feedback, skillId }: FeedbackItemProps) {
+export default function FeedbackItem({ feedback, skillId, currentUserId, isAdmin }: FeedbackItemProps) {
   const [replyContent, setReplyContent] = useState('');
   const { mutate: submitReply, isPending: submitting } = useSubmitReply(skillId);
+  const { mutate: deleteFeedback, isPending: deleting } = useDeleteFeedback(skillId);
+  const { mutate: deleteReply } = useDeleteReply(skillId);
+
+  const isOwner = feedback.userId === currentUserId;
+  const canViewSecret = isOwner || isAdmin;
+  const canDelete = isOwner && !feedback.isDeleted;
 
   function handleReplySubmit() {
     if (!replyContent.trim()) {
@@ -51,6 +59,93 @@ export default function FeedbackItem({ feedback, skillId }: FeedbackItemProps) {
     );
   }
 
+  function handleReplyDelete(replyId: string) {
+    if (!confirm('댓글을 삭제하시겠습니까?')) return;
+
+    deleteReply(replyId, {
+      onSuccess: (result) => {
+        if (result.success) {
+          toast.success('댓글이 삭제되었습니다.');
+        } else {
+          toast.error(result.error);
+        }
+      },
+    });
+  }
+
+  function handleDelete() {
+    if (!confirm('피드백을 삭제하시겠습니까?')) return;
+
+    deleteFeedback(feedback.id, {
+      onSuccess: (result) => {
+        if (result.success) {
+          toast.success('피드백이 삭제되었습니다.');
+        } else {
+          toast.error(result.error);
+        }
+      },
+    });
+  }
+
+  // 소프트 삭제된 피드백
+  if (feedback.isDeleted) {
+    return (
+      <div className="flex gap-6 p-2">
+        <div className="size-12 rounded-full bg-slate-100 ring-2 ring-white overflow-hidden flex-shrink-0 shadow-sm flex items-center justify-center text-lg font-bold text-slate-300">
+          ?
+        </div>
+        <div className="flex-1">
+          <p className="text-base text-slate-400 italic py-2">삭제된 댓글입니다.</p>
+
+          {/* 대댓글은 유지 */}
+          {feedback.replies.length > 0 && (
+            <div className="mt-4 space-y-4 ml-2">
+              {feedback.replies.map((reply) => {
+                const replyIsOwner = reply.userId === currentUserId;
+                const replyCanView = replyIsOwner || isAdmin;
+                const isMasked = feedback.isSecret && !replyCanView && reply.content === '비밀글입니다.';
+
+                return (
+                  <div key={reply.id} className="flex gap-3 p-3 bg-slate-50 rounded-xl">
+                    <div className="size-8 rounded-full bg-slate-200 flex-shrink-0 flex items-center justify-center text-xs font-bold text-slate-500">
+                      {reply.userName?.[0]?.toUpperCase() ?? '?'}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-[#1a1a1a]">
+                            {reply.userName ?? '익명'}
+                          </span>
+                          <span className="text-xs text-slate-400">
+                            {formatRelativeTime(reply.createdAt)}
+                          </span>
+                        </div>
+                        {replyIsOwner && (
+                          <button
+                            onClick={() => handleReplyDelete(reply.id)}
+                            className="text-slate-400 hover:text-red-500 transition-colors"
+                            title="삭제"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                      <p className={`text-sm ${
+                        isMasked ? 'text-slate-400 italic' : 'text-[#1a1a1a] opacity-80'
+                      }`}>
+                        {reply.content}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex gap-6 p-2">
       <div className="size-12 rounded-full bg-slate-200 ring-2 ring-white overflow-hidden flex-shrink-0 shadow-sm flex items-center justify-center text-lg font-bold text-slate-500">
@@ -58,27 +153,36 @@ export default function FeedbackItem({ feedback, skillId }: FeedbackItemProps) {
       </div>
       <div className="flex-1">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-base font-bold text-[#1a1a1a]">
-            {feedback.userName ?? '익명'}
-          </span>
-          <span className="text-xs text-slate-400">
-            {formatRelativeTime(feedback.createdAt)}
-          </span>
-        </div>
-        <div className="flex items-center gap-1 mb-3">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <Star
-              key={star}
-              className={`w-4 h-4 ${
-                star <= feedback.rating
-                  ? 'text-[#00007F] fill-current'
-                  : 'text-slate-300'
-              }`}
-            />
-          ))}
+          <div className="flex items-center gap-2">
+            <span className="text-base font-bold text-[#1a1a1a]">
+              {feedback.userName ?? '익명'}
+            </span>
+            {feedback.isSecret && canViewSecret && (
+              <Lock className="w-3.5 h-3.5 text-slate-400" />
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            {canDelete && (
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="text-slate-400 hover:text-red-500 transition-colors disabled:opacity-50"
+                title="삭제"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            )}
+            <span className="text-xs text-slate-400">
+              {formatRelativeTime(feedback.createdAt)}
+            </span>
+          </div>
         </div>
         {feedback.comment && (
-          <p className="text-base text-[#1a1a1a] leading-relaxed opacity-80">
+          <p className={`text-base leading-relaxed ${
+            feedback.isSecret && !canViewSecret
+              ? 'text-slate-400 italic'
+              : 'text-[#1a1a1a] opacity-80'
+          }`}>
             {feedback.comment}
           </p>
         )}
@@ -86,24 +190,45 @@ export default function FeedbackItem({ feedback, skillId }: FeedbackItemProps) {
         {/* Replies */}
         {feedback.replies.length > 0 && (
           <div className="mt-4 space-y-4 ml-2">
-            {feedback.replies.map((reply) => (
-              <div key={reply.id} className="flex gap-3 p-3 bg-slate-50 rounded-xl">
-                <div className="size-8 rounded-full bg-slate-200 flex-shrink-0 flex items-center justify-center text-xs font-bold text-slate-500">
-                  {reply.userName?.[0]?.toUpperCase() ?? '?'}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-bold text-[#1a1a1a]">
-                      {reply.userName ?? '익명'}
-                    </span>
-                    <span className="text-xs text-slate-400">
-                      {formatRelativeTime(reply.createdAt)}
-                    </span>
+            {feedback.replies.map((reply) => {
+              const replyIsOwner = reply.userId === currentUserId;
+              const replyCanView = replyIsOwner || isAdmin;
+              const isMasked = feedback.isSecret && !replyCanView && reply.content === '비밀글입니다.';
+
+              return (
+                <div key={reply.id} className="flex gap-3 p-3 bg-slate-50 rounded-xl">
+                  <div className="size-8 rounded-full bg-slate-200 flex-shrink-0 flex items-center justify-center text-xs font-bold text-slate-500">
+                    {reply.userName?.[0]?.toUpperCase() ?? '?'}
                   </div>
-                  <p className="text-sm text-[#1a1a1a] opacity-80">{reply.content}</p>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-[#1a1a1a]">
+                          {reply.userName ?? '익명'}
+                        </span>
+                        <span className="text-xs text-slate-400">
+                          {formatRelativeTime(reply.createdAt)}
+                        </span>
+                      </div>
+                      {replyIsOwner && (
+                        <button
+                          onClick={() => handleReplyDelete(reply.id)}
+                          className="text-slate-400 hover:text-red-500 transition-colors"
+                          title="삭제"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                    <p className={`text-sm ${
+                      isMasked ? 'text-slate-400 italic' : 'text-[#1a1a1a] opacity-80'
+                    }`}>
+                      {reply.content}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 

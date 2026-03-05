@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { SigninUseCase } from "@/auth/application/signin-use-case";
 import { SupabaseAuthRepository } from "@/auth/infrastructure/supabase-auth-repository";
+import { trackServerEvent } from "@/event-log/infrastructure/track-server-event";
 import type { SigninActionState } from "@/auth/domain/types";
 
 export async function signin(
@@ -24,6 +25,8 @@ export async function signin(
   if (!result.success) {
     return { error: "이메일 또는 비밀번호가 올바르지 않습니다" };
   }
+
+  trackServerEvent('auth.signin', { email });
 
   redirect("/dashboard");
 }

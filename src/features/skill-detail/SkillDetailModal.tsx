@@ -3,6 +3,8 @@
 import { useEffect, useCallback } from 'react';
 import { X, Info } from 'lucide-react';
 import { useSkillDetail, useSkillFeedbacks } from '@/skill-detail/hooks/use-skill-detail-queries';
+import { useCurrentUserId, useIsAdmin } from '@/features/dashboard/DashboardLayoutClient';
+import { useTrackEvent } from '@/event-log/hooks/use-track-event';
 import SkillDetailHeader from './SkillDetailHeader';
 import SkillDetailGuide from './SkillDetailGuide';
 import FeedbackSection from './FeedbackSection';
@@ -34,6 +36,9 @@ export default function SkillDetailModal({
   isViewer,
   onClose,
 }: SkillDetailModalProps) {
+  const currentUserId = useCurrentUserId();
+  const isAdmin = useIsAdmin();
+  const trackEvent = useTrackEvent();
   const { data: skill, isLoading: skillLoading, error: skillError, refetch } = useSkillDetail(skillId);
   const {
     data: feedbacksData,
@@ -51,6 +56,11 @@ export default function SkillDetailModal({
       fetchNextPage();
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Track skill view event
+  useEffect(() => {
+    trackEvent('skill.view', { skill_id: skillId });
+  }, [skillId, trackEvent]);
 
   // ESC key + body overflow lock
   useEffect(() => {
@@ -79,7 +89,7 @@ export default function SkillDetailModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-6xl max-h-[92vh] overflow-hidden rounded-2xl flex flex-col md:flex-row relative"
+        className="w-full max-w-7xl max-h-[92vh] overflow-hidden rounded-2xl flex flex-col md:flex-row relative"
         style={{
           background: 'linear-gradient(135deg, #ffffff 0%, #f9f9f9 100%)',
           border: '1px solid rgba(255, 255, 255, 0.4)',
@@ -117,6 +127,8 @@ export default function SkillDetailModal({
               <FeedbackSection
                 skillId={skillId}
                 feedbacks={feedbacks}
+                currentUserId={currentUserId}
+                isAdmin={isAdmin}
                 hasMore={hasNextPage ?? false}
                 loadingMore={isFetchingNextPage}
                 onLoadMore={handleLoadMore}
@@ -133,6 +145,7 @@ export default function SkillDetailModal({
             </h4>
             <div className="space-y-4">
               <TemplateDownloadButton
+                skillId={skillId}
                 templates={skill?.templates ?? []}
                 isViewer={isViewer}
               />

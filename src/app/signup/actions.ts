@@ -5,6 +5,7 @@ import { SignupUseCase } from "@/auth/application/signup-use-case";
 import { VerifyOtpUseCase } from "@/auth/application/verify-otp-use-case";
 import { ResendOtpUseCase } from "@/auth/application/resend-otp-use-case";
 import { SupabaseAuthRepository } from "@/auth/infrastructure/supabase-auth-repository";
+import { trackServerEvent } from "@/event-log/infrastructure/track-server-event";
 import type {
   SignupActionState,
   VerifyOtpActionState,
@@ -58,6 +59,7 @@ export async function signup(
   const result = await useCase.execute({ name: name.trim(), email: email.toLowerCase(), password });
 
   if (result.success === "pending") {
+    trackServerEvent('auth.signup', { email: email.toLowerCase() });
     return { error: "", step: "verify", email: email.toLowerCase() };
   }
 
@@ -67,6 +69,8 @@ export async function signup(
     }
     return { error: result.error, step: "form", email: "" };
   }
+
+  trackServerEvent('auth.signup', { email: email.toLowerCase() });
 
   return { error: "", step: "verify", email: email.toLowerCase() };
 }

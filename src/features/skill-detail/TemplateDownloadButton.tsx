@@ -1,24 +1,25 @@
 'use client';
 
-import { useState } from 'react';
 import { Download } from 'lucide-react';
 import { toast } from 'sonner';
-import { getTemplateDownloadUrlAction } from '@/app/(portal)/dashboard/actions';
+import { useTemplateDownload } from '@/skill-detail/hooks/use-skill-detail-queries';
 import type { SkillTemplateInfo } from '@/skill-detail/domain/types';
 
 interface TemplateDownloadButtonProps {
+  skillId: string;
   templates: SkillTemplateInfo[];
   isViewer: boolean;
 }
 
 export default function TemplateDownloadButton({
+  skillId,
   templates,
   isViewer,
 }: TemplateDownloadButtonProps) {
-  const [downloading, setDownloading] = useState(false);
+  const { mutate: download, isPending: downloading } = useTemplateDownload(skillId);
   const hasTemplates = templates.length > 0;
 
-  async function handleDownload() {
+  function handleDownload() {
     if (!hasTemplates) return;
 
     if (isViewer) {
@@ -28,24 +29,22 @@ export default function TemplateDownloadButton({
       return;
     }
 
-    setDownloading(true);
-
-    for (const template of templates) {
-      const result = await getTemplateDownloadUrlAction(template.id);
-
-      if (result.success) {
-        const a = document.createElement('a');
-        a.href = result.signedUrl;
-        a.download = result.fileName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      } else {
-        toast.error(result.error);
-      }
-    }
-
-    setDownloading(false);
+    download(templates, {
+      onSuccess: (results) => {
+        for (const result of results) {
+          if (result.success) {
+            const a = document.createElement('a');
+            a.href = result.signedUrl;
+            a.download = result.fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          } else {
+            toast.error(result.error);
+          }
+        }
+      },
+    });
   }
 
   return (

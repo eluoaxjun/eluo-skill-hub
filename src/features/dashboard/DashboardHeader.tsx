@@ -16,7 +16,7 @@ export default function DashboardHeader({
   return (
     <header className="h-20 bg-white/60 backdrop-blur-xl flex items-center justify-between px-10 z-10 border-b border-white/20">
       <div className="flex items-center gap-3 text-slate-400">
-        <span className="text-sm font-medium">ELUO AI HUB</span>
+        <span className="text-sm font-medium">ELUO HUB</span>
         <ChevronRight size={12} />
         <span className="text-sm font-bold text-[#00007F] bg-[#00007F]/5 px-3 py-1 rounded-full">
           {breadcrumb}

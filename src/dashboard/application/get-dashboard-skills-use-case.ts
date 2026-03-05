@@ -5,9 +5,10 @@ export class GetDashboardSkillsUseCase {
 
   async execute(
     limit: number,
+    offset: number = 0,
     search?: string,
     categoryId?: string
   ): Promise<DashboardSkillsResult> {
-    return this.repository.getPublishedSkills(limit, search, categoryId);
+    return this.repository.getPublishedSkills(limit, offset, search, categoryId);
   }
 }

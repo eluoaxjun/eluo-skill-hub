@@ -53,8 +53,11 @@ export default async function DashboardLayout({
   const queryClient = getQueryClient();
   queryClient.setQueryData(queryKeys.dashboard.categories(), categories);
   queryClient.setQueryData(
-    queryKeys.dashboard.skills({ limit: DEFAULT_LIMIT }),
-    skillsResult,
+    queryKeys.dashboard.skills({}),
+    {
+      pages: [skillsResult],
+      pageParams: [0],
+    },
   );
   queryClient.setQueryData(queryKeys.bookmarks.ids(user.id), bookmarkedSkillIds);
 

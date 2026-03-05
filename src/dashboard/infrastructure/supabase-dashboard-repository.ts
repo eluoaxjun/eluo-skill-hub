@@ -26,6 +26,7 @@ function extractCategoryIcon(cat: JoinedCategory | JoinedCategory[] | null): str
 export class SupabaseDashboardRepository implements DashboardRepository {
   async getPublishedSkills(
     limit: number,
+    offset: number = 0,
     search?: string,
     categoryId?: string
   ): Promise<DashboardSkillsResult> {
@@ -39,7 +40,7 @@ export class SupabaseDashboardRepository implements DashboardRepository {
       )
       .eq('status', 'published')
       .order('created_at', { ascending: false })
-      .limit(limit);
+      .range(offset, offset + limit - 1);
 
     if (search) {
       query = query.or(
@@ -68,7 +69,7 @@ export class SupabaseDashboardRepository implements DashboardRepository {
     return {
       skills,
       totalCount,
-      hasMore: limit < totalCount,
+      hasMore: offset + limit < totalCount,
     };
   }
 

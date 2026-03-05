@@ -34,6 +34,7 @@ export type SidebarTab =
 export interface DashboardRepository {
   getPublishedSkills(
     limit: number,
+    offset: number,
     search?: string,
     categoryId?: string
   ): Promise<DashboardSkillsResult>;

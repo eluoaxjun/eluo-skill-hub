@@ -207,12 +207,13 @@ export async function deleteReplyAction(
 
 export async function getDashboardSkillsAction(
   limit: number,
+  offset: number = 0,
   search?: string,
   categoryId?: string
 ) {
   const repository = new SupabaseDashboardRepository();
   const useCase = new GetDashboardSkillsUseCase(repository);
-  return useCase.execute(limit, search, categoryId);
+  return useCase.execute(limit, offset, search, categoryId);
 }
 
 export async function getBookmarkedSkillIdsAction(): Promise<string[]> {

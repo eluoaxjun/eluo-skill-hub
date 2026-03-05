@@ -1,7 +1,7 @@
 export const queryKeys = {
   dashboard: {
     all: ['dashboard'] as const,
-    skills: (params: { limit: number; search?: string; categoryId?: string }) =>
+    skills: (params: { search?: string; categoryId?: string }) =>
       ['dashboard', 'skills', params] as const,
     categories: () => ['dashboard', 'categories'] as const,
   },

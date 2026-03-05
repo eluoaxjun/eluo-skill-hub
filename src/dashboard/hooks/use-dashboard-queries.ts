@@ -1,17 +1,22 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/shared/infrastructure/tanstack-query/query-keys';
 import { getDashboardSkillsAction, getCategoriesAction } from '@/app/(portal)/dashboard/actions';
 
+const PAGE_SIZE = 9;
+
 export function useDashboardSkills(params: {
-  limit: number;
   search?: string;
   categoryId?: string;
 }) {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: queryKeys.dashboard.skills(params),
-    queryFn: () => getDashboardSkillsAction(params.limit, params.search, params.categoryId),
+    queryFn: ({ pageParam = 0 }) =>
+      getDashboardSkillsAction(PAGE_SIZE, pageParam, params.search, params.categoryId),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.hasMore ? allPages.length * PAGE_SIZE : undefined,
     staleTime: 60 * 1000,
   });
 }

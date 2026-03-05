@@ -27,15 +27,14 @@ export default function DashboardSkillGrid({ userId }: DashboardSkillGridProps) 
       ? filter.activeTab.categoryId
       : undefined;
 
-  const { data: skillsData } = useDashboardSkills({
-    limit: filter.limit,
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useDashboardSkills({
     search: filter.searchQuery,
     categoryId,
   });
   const { data: bookmarkedSkillIds } = useBookmarkedSkillIds(userId || undefined);
 
-  const skills = skillsData?.skills ?? [];
-  const hasMore = skillsData?.hasMore ?? false;
+  const skills = data?.pages.flatMap((page) => page.skills) ?? [];
+  const hasMore = hasNextPage ?? false;
   const isEmpty = skills.length === 0;
   const isSearchResult = !!filter.searchQuery;
 
@@ -77,7 +76,12 @@ export default function DashboardSkillGrid({ userId }: DashboardSkillGridProps) 
             ))}
           </div>
 
-          {hasMore && <LoadMoreButton />}
+          {hasMore && (
+            <LoadMoreButton
+              onLoadMore={fetchNextPage}
+              isLoading={isFetchingNextPage}
+            />
+          )}
         </>
       )}
 

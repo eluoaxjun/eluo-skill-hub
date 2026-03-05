@@ -25,14 +25,12 @@ export function useCurrentUserId(): string {
 interface DashboardFilterState {
   activeTab: SidebarTab;
   searchQuery?: string;
-  limit: number;
 }
 
 interface DashboardFilterContextValue {
   filter: DashboardFilterState;
   setActiveTab: (tab: SidebarTab) => void;
   setSearchQuery: (query?: string) => void;
-  setLimit: (limit: number) => void;
 }
 
 const DashboardFilterContext = createContext<DashboardFilterContextValue | null>(null);
@@ -51,11 +49,8 @@ interface DashboardLayoutClientProps {
   userId?: string;
   initialCategoryId?: string;
   initialSearchQuery?: string;
-  initialLimit?: number;
   children: React.ReactNode;
 }
-
-const DEFAULT_LIMIT = 9;
 
 export default function DashboardLayoutClient({
   userProfile,
@@ -65,7 +60,6 @@ export default function DashboardLayoutClient({
   userId = '',
   initialCategoryId,
   initialSearchQuery,
-  initialLimit = DEFAULT_LIMIT,
   children,
 }: DashboardLayoutClientProps) {
   const pathname = usePathname();
@@ -85,19 +79,14 @@ export default function DashboardLayoutClient({
   const [filter, setFilter] = useState<DashboardFilterState>({
     activeTab: initialTab,
     searchQuery: initialSearchQuery,
-    limit: initialLimit,
   });
 
   const setActiveTab = useCallback((tab: SidebarTab) => {
-    setFilter((prev) => ({ ...prev, activeTab: tab, limit: DEFAULT_LIMIT }));
+    setFilter((prev) => ({ ...prev, activeTab: tab }));
   }, []);
 
   const setSearchQuery = useCallback((query?: string) => {
-    setFilter((prev) => ({ ...prev, searchQuery: query, limit: DEFAULT_LIMIT }));
-  }, []);
-
-  const setLimit = useCallback((limit: number) => {
-    setFilter((prev) => ({ ...prev, limit }));
+    setFilter((prev) => ({ ...prev, searchQuery: query }));
   }, []);
 
   const breadcrumb =
@@ -113,7 +102,7 @@ export default function DashboardLayoutClient({
     <IsViewerContext.Provider value={isViewer}>
       <IsAdminContext.Provider value={isAdmin}>
         <UserIdContext.Provider value={userId}>
-          <DashboardFilterContext.Provider value={{ filter, setActiveTab, setSearchQuery, setLimit }}>
+          <DashboardFilterContext.Provider value={{ filter, setActiveTab, setSearchQuery }}>
             <div className="flex h-screen overflow-hidden">
               <DashboardSidebar
                 categories={categories}

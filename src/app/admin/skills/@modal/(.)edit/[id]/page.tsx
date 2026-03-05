@@ -1,4 +1,3 @@
-import { getCurrentUser, getCurrentUserRole } from '@/shared/infrastructure/supabase/auth';
 import { SupabaseAdminRepository } from '@/admin/infrastructure/supabase-admin-repository';
 import { GetSkillByIdUseCase } from '@/admin/application/get-skill-by-id-use-case';
 import type { CategoryOption, GetSkillResult } from '@/admin/domain/types';
@@ -12,44 +11,7 @@ interface EditSkillModalPageProps {
 export default async function EditSkillModalPage({ params }: EditSkillModalPageProps) {
   const { id } = await params;
 
-  const { user } = await getCurrentUser();
-
-  if (!user) {
-    return (
-      <div className="fixed inset-0 z-50 bg-[rgba(0,0,127,0.1)] backdrop-blur-[12px] flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl p-8 text-center max-w-md">
-          <p className="text-lg font-bold text-slate-900 mb-2">권한이 없습니다.</p>
-          <p className="text-sm text-slate-500 mb-4">관리자 로그인이 필요합니다.</p>
-          <Link
-            href="/admin/skills"
-            className="inline-block px-6 py-2 bg-[#00007F] text-white rounded-xl text-sm font-bold hover:brightness-110 transition-all"
-          >
-            돌아가기
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  const { roleName } = await getCurrentUserRole();
-
-  if (roleName !== 'admin') {
-    return (
-      <div className="fixed inset-0 z-50 bg-[rgba(0,0,127,0.1)] backdrop-blur-[12px] flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl p-8 text-center max-w-md">
-          <p className="text-lg font-bold text-slate-900 mb-2">관리자 권한이 필요합니다.</p>
-          <Link
-            href="/admin/skills"
-            className="inline-block px-6 py-2 bg-[#00007F] text-white rounded-xl text-sm font-bold hover:brightness-110 transition-all"
-          >
-            돌아가기
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  // 인증 완료 후 데이터 조회
+  // 인증은 admin layout에서 처리됨 — 바로 데이터 조회
   const repository = new SupabaseAdminRepository();
   const [skillResult, categories] = await Promise.all([
     (async (): Promise<GetSkillResult> => {

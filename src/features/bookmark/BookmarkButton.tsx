@@ -1,41 +1,41 @@
 'use client';
 
-import { useOptimistic, useTransition } from 'react';
 import { Bookmark, BookmarkCheck } from 'lucide-react';
-import { toggleBookmark } from '@/app/(portal)/dashboard/actions';
+import { useToggleBookmark } from '@/bookmark/hooks/use-bookmark-mutations';
+import { useBookmarkedSkillIds } from '@/bookmark/hooks/use-bookmark-queries';
 
 interface BookmarkButtonProps {
   skillId: string;
   isBookmarked: boolean;
+  userId?: string;
 }
 
 export default function BookmarkButton({
   skillId,
-  isBookmarked,
+  isBookmarked: initialIsBookmarked,
+  userId,
 }: BookmarkButtonProps) {
-  const [optimisticBookmarked, setOptimisticBookmarked] =
-    useOptimistic(isBookmarked);
-  const [isPending, startTransition] = useTransition();
+  const { data: bookmarkedIds } = useBookmarkedSkillIds(userId);
+  const { mutate: toggle, isPending } = useToggleBookmark(userId ?? '');
+
+  const isBookmarked = bookmarkedIds ? bookmarkedIds.includes(skillId) : initialIsBookmarked;
 
   function handleClick(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-
-    startTransition(async () => {
-      setOptimisticBookmarked(!optimisticBookmarked);
-      await toggleBookmark(skillId);
-    });
+    if (!userId) return;
+    toggle(skillId);
   }
 
   return (
     <button
       type="button"
       onClick={handleClick}
-      disabled={isPending}
+      disabled={isPending || !userId}
       className="absolute top-3 right-3 z-10 p-1.5 rounded-lg transition-colors hover:bg-slate-100"
-      aria-label={optimisticBookmarked ? '북마크 해제' : '북마크 추가'}
+      aria-label={isBookmarked ? '북마크 해제' : '북마크 추가'}
     >
-      {optimisticBookmarked ? (
+      {isBookmarked ? (
         <BookmarkCheck size={18} className="text-[#00007F]" />
       ) : (
         <Bookmark size={18} className="text-slate-400 hover:text-slate-600" />

@@ -3,12 +3,12 @@
 import { useState } from 'react';
 import { Star, Send } from 'lucide-react';
 import { toast } from 'sonner';
-import { submitFeedbackReplyAction } from '@/app/(portal)/dashboard/actions';
-import type { FeedbackWithReplies, FeedbackReply } from '@/skill-detail/domain/types';
+import { useSubmitReply } from '@/skill-detail/hooks/use-skill-detail-queries';
+import type { FeedbackWithReplies } from '@/skill-detail/domain/types';
 
 interface FeedbackItemProps {
   feedback: FeedbackWithReplies;
-  onReplyAdded: (feedbackId: string, reply: FeedbackReply) => void;
+  skillId: string;
 }
 
 function formatRelativeTime(dateString: string): string {
@@ -26,32 +26,29 @@ function formatRelativeTime(dateString: string): string {
   return date.toLocaleDateString('ko-KR');
 }
 
-export default function FeedbackItem({ feedback, onReplyAdded }: FeedbackItemProps) {
+export default function FeedbackItem({ feedback, skillId }: FeedbackItemProps) {
   const [replyContent, setReplyContent] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const { mutate: submitReply, isPending: submitting } = useSubmitReply(skillId);
 
-  async function handleReplySubmit() {
+  function handleReplySubmit() {
     if (!replyContent.trim()) {
       toast.warning('댓글 내용을 입력해주세요.');
       return;
     }
 
-    setSubmitting(true);
-
-    const result = await submitFeedbackReplyAction({
-      feedbackId: feedback.id,
-      content: replyContent.trim(),
-    });
-
-    setSubmitting(false);
-
-    if (result.success) {
-      onReplyAdded(feedback.id, result.reply);
-      setReplyContent('');
-      toast.success('댓글이 등록되었습니다.');
-    } else {
-      toast.error(result.error);
-    }
+    submitReply(
+      { feedbackId: feedback.id, content: replyContent.trim() },
+      {
+        onSuccess: (result) => {
+          if (result.success) {
+            setReplyContent('');
+            toast.success('댓글이 등록되었습니다.');
+          } else {
+            toast.error(result.error);
+          }
+        },
+      },
+    );
   }
 
   return (

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { Blocks, Clock } from 'lucide-react';
 import type { SkillRow } from '@/admin/domain/types';
-import { deleteSkill } from '@/app/admin/skills/actions';
+import { useDeleteSkill } from '@/admin/hooks/use-admin-mutations';
 import SkillDeleteConfirmDialog from '@/features/admin/SkillDeleteConfirmDialog';
 
 interface SkillCardProps {
@@ -14,23 +14,22 @@ interface SkillCardProps {
 
 export default function SkillCard({ skill }: SkillCardProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const { mutate: deleteSkillMutation, isPending: isDeleting } = useDeleteSkill();
 
-  const handleDelete = async () => {
-    setIsDeleting(true);
-    try {
-      const result = await deleteSkill(skill.id);
-      if (result.success) {
-        toast.success('스킬이 삭제되었습니다');
-        setIsDeleteDialogOpen(false);
-      } else {
-        toast.error(result.error);
-      }
-    } catch {
-      toast.error('스킬 삭제 중 오류가 발생했습니다');
-    } finally {
-      setIsDeleting(false);
-    }
+  const handleDelete = () => {
+    deleteSkillMutation(skill.id, {
+      onSuccess: (result) => {
+        if (result.success) {
+          toast.success('스킬이 삭제되었습니다');
+          setIsDeleteDialogOpen(false);
+        } else {
+          toast.error(result.error);
+        }
+      },
+      onError: () => {
+        toast.error('스킬 삭제 중 오류가 발생했습니다');
+      },
+    });
   };
 
   return (

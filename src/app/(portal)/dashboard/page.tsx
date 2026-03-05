@@ -1,8 +1,8 @@
-import { SupabaseDashboardRepository } from '@/dashboard/infrastructure/supabase-dashboard-repository';
-import { GetDashboardSkillsUseCase } from '@/dashboard/application/get-dashboard-skills-use-case';
-import { SupabaseBookmarkRepository } from '@/bookmark/infrastructure/supabase-bookmark-repository';
-import { GetUserBookmarksUseCase } from '@/bookmark/application/get-user-bookmarks-use-case';
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { getQueryClient } from '@/shared/infrastructure/tanstack-query/get-query-client';
+import { queryKeys } from '@/shared/infrastructure/tanstack-query/query-keys';
 import { getCurrentUser } from '@/shared/infrastructure/supabase/auth';
+import { getDashboardSkillsAction, getBookmarkedSkillIdsAction } from '@/app/(portal)/dashboard/actions';
 import DashboardSkillGrid from '@/features/dashboard/DashboardSkillGrid';
 import DashboardSearchBar from '@/features/dashboard/DashboardSearchBar';
 
@@ -23,38 +23,35 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const categoryId =
     typeof params.category === 'string' ? params.category : undefined;
 
-  const repository = new SupabaseDashboardRepository();
-  const getSkillsUseCase = new GetDashboardSkillsUseCase(repository);
+  const queryClient = getQueryClient();
+  const { user } = await getCurrentUser();
+  const userId = user?.id ?? '';
 
-  // Step 1: getSkills와 getUser를 병렬 실행 (getSkills는 user.id 불필요)
-  const [skillsResult, { user }] = await Promise.all([
-    getSkillsUseCase.execute(limit, searchQuery || undefined, categoryId),
-    getCurrentUser(),
+  const skillsParams = { limit, search: searchQuery, categoryId };
+
+  await Promise.all([
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.dashboard.skills(skillsParams),
+      queryFn: () => getDashboardSkillsAction(limit, searchQuery, categoryId),
+    }),
+    userId
+      ? queryClient.prefetchQuery({
+          queryKey: queryKeys.bookmarks.ids(userId),
+          queryFn: () => getBookmarkedSkillIdsAction(),
+        })
+      : Promise.resolve(),
   ]);
 
-  const { skills, totalCount, hasMore } = skillsResult;
-
-  let bookmarkedSkillIds: string[] = [];
-
-  if (user) {
-    const bookmarkRepository = new SupabaseBookmarkRepository();
-    const bookmarksUseCase = new GetUserBookmarksUseCase(bookmarkRepository);
-    bookmarkedSkillIds = await bookmarksUseCase.getBookmarkedSkillIds(user.id).catch(() => [] as string[]);
-  }
-
   return (
-    <>
+    <HydrationBoundary state={dehydrate(queryClient)}>
       <DashboardSearchBar defaultValue={searchQuery} categoryId={categoryId} />
 
       <DashboardSkillGrid
-        skills={skills}
-        totalCount={totalCount}
-        hasMore={hasMore}
+        userId={userId}
         searchQuery={searchQuery}
         categoryId={categoryId}
         currentLimit={limit}
-        bookmarkedSkillIds={bookmarkedSkillIds}
       />
-    </>
+    </HydrationBoundary>
   );
 }

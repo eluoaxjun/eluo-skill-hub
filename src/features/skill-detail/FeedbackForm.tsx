@@ -3,44 +3,38 @@
 import { useState } from 'react';
 import { Send } from 'lucide-react';
 import { toast } from 'sonner';
-import { submitFeedbackAction } from '@/app/(portal)/dashboard/actions';
-import type { FeedbackWithReplies } from '@/skill-detail/domain/types';
+import { useSubmitFeedback } from '@/skill-detail/hooks/use-skill-detail-queries';
 import StarRating from './StarRating';
 
 interface FeedbackFormProps {
   skillId: string;
-  onSubmit: (feedback: FeedbackWithReplies) => void;
 }
 
-export default function FeedbackForm({ skillId, onSubmit }: FeedbackFormProps) {
+export default function FeedbackForm({ skillId }: FeedbackFormProps) {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const { mutate: submitFeedback, isPending: submitting } = useSubmitFeedback(skillId);
 
-  async function handleSubmit() {
+  function handleSubmit() {
     if (rating === 0) {
       toast.warning('별점을 선택해주세요.');
       return;
     }
 
-    setSubmitting(true);
-
-    const result = await submitFeedbackAction({
-      skillId,
-      rating,
-      comment: comment.trim() || undefined,
-    });
-
-    setSubmitting(false);
-
-    if (result.success) {
-      onSubmit(result.feedback);
-      setRating(0);
-      setComment('');
-      toast.success('피드백이 등록되었습니다.');
-    } else {
-      toast.error(result.error);
-    }
+    submitFeedback(
+      { skillId, rating, comment: comment.trim() || undefined },
+      {
+        onSuccess: (result) => {
+          if (result.success) {
+            setRating(0);
+            setComment('');
+            toast.success('피드백이 등록되었습니다.');
+          } else {
+            toast.error(result.error);
+          }
+        },
+      },
+    );
   }
 
   return (

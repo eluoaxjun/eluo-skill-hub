@@ -1,11 +1,11 @@
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
-import { getCategories } from '@/app/admin/skills/actions';
+import { SupabaseAdminRepository } from '@/admin/infrastructure/supabase-admin-repository';
 import SkillAddForm from '@/features/admin/SkillAddForm';
 
 export default async function NewSkillPage() {
-  const result = await getCategories();
-  const categories = result.success ? result.categories : [];
+  const repository = new SupabaseAdminRepository();
+  const categories = await repository.getCategories().catch(() => []);
 
   return (
     <div className="p-8 max-w-6xl mx-auto">

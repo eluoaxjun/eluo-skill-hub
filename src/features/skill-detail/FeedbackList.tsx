@@ -1,13 +1,13 @@
 import { MessageCircle } from 'lucide-react';
-import type { FeedbackWithReplies, FeedbackReply } from '@/skill-detail/domain/types';
+import type { FeedbackWithReplies } from '@/skill-detail/domain/types';
 import FeedbackItem from './FeedbackItem';
 
 interface FeedbackListProps {
   feedbacks: FeedbackWithReplies[];
-  onReplyAdded: (feedbackId: string, reply: FeedbackReply) => void;
+  skillId: string;
 }
 
-export default function FeedbackList({ feedbacks, onReplyAdded }: FeedbackListProps) {
+export default function FeedbackList({ feedbacks, skillId }: FeedbackListProps) {
   if (feedbacks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-slate-400">
@@ -23,7 +23,7 @@ export default function FeedbackList({ feedbacks, onReplyAdded }: FeedbackListPr
         <FeedbackItem
           key={feedback.id}
           feedback={feedback}
-          onReplyAdded={onReplyAdded}
+          skillId={skillId}
         />
       ))}
     </div>

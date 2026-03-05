@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import {
   Select,
   SelectContent,
@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/ui/select';
-import { updateMemberRole } from '@/app/admin/members/actions';
+import { useUpdateMemberRole } from '@/admin/hooks/use-admin-mutations';
 import type { Role } from '@/admin/domain/types';
 
 interface RoleSelectProps {
@@ -26,23 +26,27 @@ export default function RoleSelect({
   roles,
   isCurrentUser,
 }: RoleSelectProps) {
-  const [isPending, startTransition] = useTransition();
+  const { mutate: updateRole, isPending } = useUpdateMemberRole();
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   function handleChange(newRoleId: string) {
     if (newRoleId === currentRoleId) return;
 
-    startTransition(async () => {
-      setFeedback(null);
-      const result = await updateMemberRole(memberId, newRoleId);
-      if (result.success) {
-        setFeedback({ type: 'success', message: '역할이 변경되었습니다' });
-        setTimeout(() => setFeedback(null), 3000);
-      } else {
-        setFeedback({ type: 'error', message: result.error ?? '역할 변경에 실패했습니다' });
-        setTimeout(() => setFeedback(null), 5000);
-      }
-    });
+    setFeedback(null);
+    updateRole(
+      { memberId, roleId: newRoleId },
+      {
+        onSuccess: (result) => {
+          if (result.success) {
+            setFeedback({ type: 'success', message: '역할이 변경되었습니다' });
+            setTimeout(() => setFeedback(null), 3000);
+          } else {
+            setFeedback({ type: 'error', message: result.error ?? '역할 변경에 실패했습니다' });
+            setTimeout(() => setFeedback(null), 5000);
+          }
+        },
+      },
+    );
   }
 
   if (isCurrentUser) {

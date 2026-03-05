@@ -1,4 +1,7 @@
 import { Suspense } from 'react';
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { getQueryClient } from '@/shared/infrastructure/tanstack-query/get-query-client';
+import { queryKeys } from '@/shared/infrastructure/tanstack-query/query-keys';
 import { SupabaseAdminRepository } from '@/admin/infrastructure/supabase-admin-repository';
 import { GetSkillsUseCase } from '@/admin/application/get-skills-use-case';
 import type { SkillStatusFilter } from '@/admin/domain/types';
@@ -29,21 +32,28 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
     repository.getCategories(),
   ]);
 
+  const queryClient = getQueryClient();
+  queryClient.setQueryData(queryKeys.admin.skills({ page, limit: 10, search, status, categoryId }), result);
+  queryClient.setQueryData(queryKeys.admin.skillStatusCounts(), statusCounts);
+  queryClient.setQueryData(queryKeys.admin.categories(), categories);
+
   return (
-    <div className="p-8">
-      <SkillsCardGrid
-        result={result}
-        currentStatus={status}
-        currentCategoryId={categoryId}
-        categories={categories}
-        searchQuery={search}
-        statusCounts={statusCounts}
-        searchInput={
-          <Suspense fallback={null}>
-            <SkillSearch defaultValue={q ?? ''} />
-          </Suspense>
-        }
-      />
-    </div>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <div className="p-8">
+        <SkillsCardGrid
+          result={result}
+          currentStatus={status}
+          currentCategoryId={categoryId}
+          categories={categories}
+          searchQuery={search}
+          statusCounts={statusCounts}
+          searchInput={
+            <Suspense fallback={null}>
+              <SkillSearch defaultValue={q ?? ''} />
+            </Suspense>
+          }
+        />
+      </div>
+    </HydrationBoundary>
   );
 }

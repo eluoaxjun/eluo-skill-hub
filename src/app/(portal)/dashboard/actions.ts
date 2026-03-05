@@ -6,6 +6,10 @@ import { createClient } from '@/shared/infrastructure/supabase/server';
 import { getCurrentUser } from '@/shared/infrastructure/supabase/auth';
 import { SupabaseBookmarkRepository } from '@/bookmark/infrastructure/supabase-bookmark-repository';
 import { ToggleBookmarkUseCase } from '@/bookmark/application/toggle-bookmark-use-case';
+import { GetUserBookmarksUseCase } from '@/bookmark/application/get-user-bookmarks-use-case';
+import { SupabaseDashboardRepository } from '@/dashboard/infrastructure/supabase-dashboard-repository';
+import { GetDashboardSkillsUseCase } from '@/dashboard/application/get-dashboard-skills-use-case';
+import { GetCategoriesUseCase } from '@/dashboard/application/get-categories-use-case';
 import { SupabaseSkillDetailRepository } from '@/skill-detail/infrastructure/supabase-skill-detail-repository';
 import { GetSkillDetailUseCase } from '@/skill-detail/application/get-skill-detail-use-case';
 import { GetFeedbacksUseCase } from '@/skill-detail/application/get-feedbacks-use-case';
@@ -114,6 +118,38 @@ export async function submitFeedbackReplyAction(
   } catch {
     return { success: false, error: '댓글 저장에 실패했습니다.' };
   }
+}
+
+export async function getDashboardSkillsAction(
+  limit: number,
+  search?: string,
+  categoryId?: string
+) {
+  const repository = new SupabaseDashboardRepository();
+  const useCase = new GetDashboardSkillsUseCase(repository);
+  return useCase.execute(limit, search, categoryId);
+}
+
+export async function getBookmarkedSkillIdsAction(): Promise<string[]> {
+  const { user } = await getCurrentUser();
+  if (!user) return [];
+  const repository = new SupabaseBookmarkRepository();
+  const useCase = new GetUserBookmarksUseCase(repository);
+  return useCase.getBookmarkedSkillIds(user.id).catch(() => [] as string[]);
+}
+
+export async function getBookmarkedSkillsAction() {
+  const { user } = await getCurrentUser();
+  if (!user) return [];
+  const repository = new SupabaseBookmarkRepository();
+  const useCase = new GetUserBookmarksUseCase(repository);
+  return useCase.execute(user.id);
+}
+
+export async function getCategoriesAction() {
+  const repository = new SupabaseDashboardRepository();
+  const getCategoriesUseCase = new GetCategoriesUseCase(repository);
+  return getCategoriesUseCase.execute();
 }
 
 export async function getTemplateDownloadUrlAction(

@@ -56,7 +56,7 @@ export default function AdminSidebar({ userName, userRole }: AdminSidebarProps) 
                   : 'text-[#000080]/70 hover:bg-[#000080]/5'
                   }`}
               >
-                <Icon strokeWidth={2.5} className={`size-5 ${isActive ? 'text-brand-yellow' : 'text-[#000080]/60'}`} />
+                <Icon strokeWidth={2.5} className={`size-5 ${isActive ? 'text-[#FEFE01]' : 'text-[#000080]/60'}`} />
                 <span>{label}</span>
               </Link>
             );

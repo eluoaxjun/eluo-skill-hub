@@ -61,10 +61,10 @@ export function SigninForm() {
     <div className="glass-card w-full max-w-[440px] rounded-2xl shadow-xl p-8 md:p-12 relative z-10">
       {/* Brand icon + title */}
       <div className="flex flex-col items-center mb-8">
-        <div className="w-16 h-16 bg-brand-yellow rounded-2xl flex items-center justify-center mb-4 shadow-sm">
+        <div className="w-16 h-16 bg-[#FEFE01] rounded-2xl flex items-center justify-center mb-4 shadow-sm">
           <span className="text-4xl">🤖</span>
         </div>
-        <h1 className="text-2xl font-bold tracking-tight text-brand-navy">로그인</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-[#00007F]">로그인</h1>
         <p className="text-slate-600 text-sm mt-2 text-center">ELUO AI Skill Hub에 접속하세요</p>
       </div>
 
@@ -94,7 +94,7 @@ export function SigninForm() {
         <div className="space-y-2">
           <div className="flex justify-between items-center">
             <Label htmlFor="password" className="text-sm font-semibold text-slate-700">비밀번호</Label>
-            <a href="#" className="text-xs text-brand-navy hover:underline">비밀번호 찾기</a>
+            <a href="#" className="text-xs text-[#00007F] hover:underline">비밀번호 찾기</a>
           </div>
           <div className="relative">
             <Input
@@ -111,7 +111,7 @@ export function SigninForm() {
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand-navy transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#00007F] transition-colors"
               aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 표시"}
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -133,7 +133,7 @@ export function SigninForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full h-12 bg-brand-navy text-white font-bold rounded-[8px] hover:bg-[#0000A0] transition-all shadow-md mt-4 disabled:opacity-60 disabled:cursor-not-allowed"
+          className="w-full h-12 bg-[#00007F] text-white font-bold rounded-[8px] hover:bg-[#0000A0] transition-all shadow-md mt-4 disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {isPending ? "로그인 중..." : "로그인"}
         </button>
@@ -143,7 +143,7 @@ export function SigninForm() {
       <div className="mt-8 pt-6 border-t border-slate-200 text-center">
         <p className="text-sm text-slate-600">
           계정이 없으신가요?
-          <a href="/signup" className="text-brand-navy font-bold hover:underline ml-1">회원가입</a>
+          <a href="/signup" className="text-[#00007F] font-bold hover:underline ml-1">회원가입</a>
         </p>
       </div>
     </div>

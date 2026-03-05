@@ -3,13 +3,13 @@ import { GlobeSection } from "./GlobeSection";
 export function LandingPage() {
   return (
     <main className="min-h-svh flex flex-col">
-      {/* Hero — bg-brand-navy, 2단 레이아웃 */}
-      <section className="bg-brand-navy text-white py-12 px-6 flex-1 flex">
+      {/* Hero — bg-[#00007F], 2단 레이아웃 */}
+      <section className="bg-[#00007F] text-white py-12 px-6 flex-1 flex">
         <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center min-h-[500px] gap-16">
           {/* 좌측: 텍스트 + CTA */}
           <div className="flex-1 flex flex-col justify-center gap-6 text-center lg:text-left">
             <h1 className="text-6xl font-bold tracking-tight font-eluo">
-              <span className="text-brand-yellow">ELUO</span> AI SKILL HUB
+              <span className="text-[#FEFE01]">ELUO</span> AI SKILL HUB
             </h1>
             <p className="text-lg text-white/80 max-w-xl">
               웹 에이전시의 기획·디자인·퍼블리싱·개발·QA 워크플로우를<br className="hidden lg:block" /> 자동화하는 스킬을 검색하고 설치하세요.
@@ -17,7 +17,7 @@ export function LandingPage() {
             <div>
               <a
                 href="/signin"
-                className="inline-flex items-center gap-2 bg-brand-yellow text-brand-navy font-semibold px-8 py-3 rounded-lg hover:opacity-90 transition-opacity"
+                className="inline-flex items-center gap-2 bg-[#FEFE01] text-[#00007F] font-semibold px-8 py-3 rounded-lg hover:opacity-90 transition-opacity"
               >
                 시작하기
               </a>
@@ -26,7 +26,7 @@ export function LandingPage() {
             {/* features */}
             <section className="">
               <div className="max-w-4xl mx-auto">
-                <h2 className="text-2xl font-bold text-brand-navy text-center mb-10">
+                <h2 className="text-2xl font-bold text-[#00007F] text-center mb-10">
                   주요 기능
                 </h2>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -35,8 +35,8 @@ export function LandingPage() {
                       key={feature.title}
                       className="bg-white rounded-lg p-6 shadow-sm border border-border"
                     >
-                      <div className="w-10 h-10 rounded-lg bg-brand-navy flex items-center justify-center mb-4 mx-auto lg:mx-0">
-                        <span className="text-brand-yellow text-lg font-bold">
+                      <div className="w-10 h-10 rounded-lg bg-[#00007F] flex items-center justify-center mb-4 mx-auto lg:mx-0">
+                        <span className="text-[#FEFE01] text-lg font-bold">
                           {feature.icon}
                         </span>
                       </div>
@@ -63,7 +63,7 @@ export function LandingPage() {
 
 
       {/* Footer */}
-      <footer className="bg-brand-navy border-t border-white/10 py-6 px-6 text-center text-white/40 text-sm">
+      <footer className="bg-[#00007F] border-t border-white/10 py-6 px-6 text-center text-white/40 text-sm">
         © 2026 Eluo. All rights reserved.
       </footer>
     </main>

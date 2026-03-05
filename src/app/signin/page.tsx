@@ -21,7 +21,7 @@ export default function SigninPage() {
           </h2>
         </Link>
         <button
-          className="flex min-w-[76px] lg:min-w-[84px] cursor-pointer items-center justify-center rounded-[8px] h-9 lg:h-10 px-3 lg:px-4 bg-brand-navy text-white text-xs lg:text-sm font-bold leading-normal hover:bg-[#0000A0] transition-colors shadow-sm"
+          className="flex min-w-[76px] lg:min-w-[84px] cursor-pointer items-center justify-center rounded-[8px] h-9 lg:h-10 px-3 lg:px-4 bg-[#00007F] text-white text-xs lg:text-sm font-bold leading-normal hover:bg-[#0000A0] transition-colors shadow-sm"
           type="button"
         >
           로그인

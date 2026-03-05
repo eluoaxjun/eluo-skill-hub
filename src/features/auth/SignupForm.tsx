@@ -141,10 +141,10 @@ function SignupFormInner({ onReset }: { onReset: () => void }) {
       <div className="glass-card w-full max-w-[480px] rounded-3xl shadow-2xl p-8 md:p-10 relative z-10">
         {/* Card header */}
         <div className="flex flex-col items-center mb-10">
-          <div className="w-14 h-14 bg-brand-yellow rounded-2xl flex items-center justify-center mb-6 shadow-sm">
+          <div className="w-14 h-14 bg-[#FEFE01] rounded-2xl flex items-center justify-center mb-6 shadow-sm">
             <span className="text-3xl">👤</span>
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-brand-navy">이미 가입된 이메일입니다</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-[#00007F]">이미 가입된 이메일입니다</h1>
           <p className="text-slate-500 text-sm mt-3 text-center font-medium">
             입력하신 이메일은 이미 가입된 계정입니다.
             <br />
@@ -155,7 +155,7 @@ function SignupFormInner({ onReset }: { onReset: () => void }) {
         <div className="space-y-4">
           <Link
             href="/signin"
-            className="w-full h-14 bg-brand-navy text-white font-bold rounded-xl hover:shadow-lg hover:shadow-brand-navy/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+            className="w-full h-14 bg-[#00007F] text-white font-bold rounded-xl hover:shadow-lg hover:shadow-brand-navy/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
           >
             로그인으로 이동
           </Link>
@@ -163,7 +163,7 @@ function SignupFormInner({ onReset }: { onReset: () => void }) {
             <button
               type="button"
               onClick={onReset}
-              className="text-sm text-slate-600 hover:text-brand-navy transition-colors underline underline-offset-4"
+              className="text-sm text-slate-600 hover:text-[#00007F] transition-colors underline underline-offset-4"
             >
               다른 이메일로 가입하기
             </button>
@@ -178,12 +178,12 @@ function SignupFormInner({ onReset }: { onReset: () => void }) {
       <div className="glass-card w-full max-w-[480px] rounded-3xl shadow-2xl p-8 md:p-10 relative z-10">
         {/* Card header */}
         <div className="flex flex-col items-center mb-10">
-          <div className="w-14 h-14 bg-brand-yellow rounded-2xl flex items-center justify-center mb-6 shadow-sm">
+          <div className="w-14 h-14 bg-[#FEFE01] rounded-2xl flex items-center justify-center mb-6 shadow-sm">
             <span className="text-3xl">✉️</span>
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-brand-navy">이메일 인증</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-[#00007F]">이메일 인증</h1>
           <p className="text-slate-500 text-sm mt-3 text-center font-medium">
-            <span className="font-bold text-brand-navy">{verifiedEmail}</span>
+            <span className="font-bold text-[#00007F]">{verifiedEmail}</span>
             <br />
             로 발송된 8자리 인증코드를 입력해 주세요.
           </p>
@@ -194,7 +194,7 @@ function SignupFormInner({ onReset }: { onReset: () => void }) {
           <div className="space-y-2">
             <label
               htmlFor="token"
-              className="text-xs font-bold text-brand-navy uppercase tracking-wider ml-1"
+              className="text-xs font-bold text-[#00007F] uppercase tracking-wider ml-1"
             >
               인증코드
             </label>
@@ -221,7 +221,7 @@ function SignupFormInner({ onReset }: { onReset: () => void }) {
             <button
               type="submit"
               disabled={isVerifyPending}
-              className="w-full h-14 bg-brand-navy text-white font-bold rounded-xl hover:shadow-lg hover:shadow-brand-navy/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full h-14 bg-[#00007F] text-white font-bold rounded-xl hover:shadow-lg hover:shadow-brand-navy/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isVerifyPending ? "확인 중..." : "인증 확인"}
             </button>
@@ -244,7 +244,7 @@ function SignupFormInner({ onReset }: { onReset: () => void }) {
             <button
               type="submit"
               disabled={isResendPending || cooldown > 0 || resendState.isRateLimited}
-              className="text-sm text-slate-600 hover:text-brand-navy transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="text-sm text-slate-600 hover:text-[#00007F] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {cooldown > 0
                 ? `재발송 가능까지 ${cooldown}초`
@@ -262,10 +262,10 @@ function SignupFormInner({ onReset }: { onReset: () => void }) {
     <div className="glass-card w-full max-w-[480px] rounded-3xl shadow-2xl p-8 md:p-10 relative z-10">
       {/* Card header */}
       <div className="flex flex-col items-center mb-10">
-        <div className="w-14 h-14 bg-brand-yellow rounded-2xl flex items-center justify-center mb-6 shadow-sm">
+        <div className="w-14 h-14 bg-[#FEFE01] rounded-2xl flex items-center justify-center mb-6 shadow-sm">
           <span className="text-3xl">✨</span>
         </div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-brand-navy">회원가입</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight text-[#00007F]">회원가입</h1>
         <p className="text-slate-500 text-sm mt-3 text-center font-medium">
           ELUO AI 플랫폼의 새로운 여정을 시작하세요
         </p>
@@ -276,7 +276,7 @@ function SignupFormInner({ onReset }: { onReset: () => void }) {
         <div className="space-y-2">
           <label
             htmlFor="name"
-            className="text-xs font-bold text-brand-navy uppercase tracking-wider ml-1"
+            className="text-xs font-bold text-[#00007F] uppercase tracking-wider ml-1"
           >
             이름
           </label>
@@ -302,7 +302,7 @@ function SignupFormInner({ onReset }: { onReset: () => void }) {
         <div className="space-y-2">
           <label
             htmlFor="email"
-            className="text-xs font-bold text-brand-navy uppercase tracking-wider ml-1"
+            className="text-xs font-bold text-[#00007F] uppercase tracking-wider ml-1"
           >
             이메일
           </label>
@@ -329,7 +329,7 @@ function SignupFormInner({ onReset }: { onReset: () => void }) {
           <div className="space-y-2">
             <label
               htmlFor="password"
-              className="text-xs font-bold text-brand-navy uppercase tracking-wider ml-1"
+              className="text-xs font-bold text-[#00007F] uppercase tracking-wider ml-1"
             >
               비밀번호
             </label>
@@ -353,7 +353,7 @@ function SignupFormInner({ onReset }: { onReset: () => void }) {
           <div className="space-y-2">
             <label
               htmlFor="confirmPassword"
-              className="text-xs font-bold text-brand-navy uppercase tracking-wider ml-1"
+              className="text-xs font-bold text-[#00007F] uppercase tracking-wider ml-1"
             >
               비밀번호 확인
             </label>
@@ -388,7 +388,7 @@ function SignupFormInner({ onReset }: { onReset: () => void }) {
           <button
             type="submit"
             disabled={isSignupPending}
-            className="w-full h-14 bg-brand-navy text-white font-bold rounded-xl hover:shadow-lg hover:shadow-brand-navy/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full h-14 bg-[#00007F] text-white font-bold rounded-xl hover:shadow-lg hover:shadow-brand-navy/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {isSignupPending ? "처리 중..." : "회원가입"}
           </button>
@@ -401,7 +401,7 @@ function SignupFormInner({ onReset }: { onReset: () => void }) {
           이미 계정이 있으신가요?{" "}
           <Link
             href="/signin"
-            className="text-slate-800 font-bold hover:text-brand-navy transition-colors underline underline-offset-4"
+            className="text-slate-800 font-bold hover:text-[#00007F] transition-colors underline underline-offset-4"
           >
             로그인
           </Link>

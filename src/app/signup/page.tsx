@@ -22,7 +22,7 @@ export default function SignupPage() {
         </Link>
         <Link
           href="/signin"
-          className="flex min-w-[76px] lg:min-w-[84px] cursor-pointer items-center justify-center rounded-[8px] h-9 lg:h-10 px-3 lg:px-4 bg-brand-navy text-white text-xs lg:text-sm font-bold leading-normal hover:bg-[#0000A0] transition-colors shadow-sm"
+          className="flex min-w-[76px] lg:min-w-[84px] cursor-pointer items-center justify-center rounded-[8px] h-9 lg:h-10 px-3 lg:px-4 bg-[#00007F] text-white text-xs lg:text-sm font-bold leading-normal hover:bg-[#0000A0] transition-colors shadow-sm"
         >
           로그인
         </Link>

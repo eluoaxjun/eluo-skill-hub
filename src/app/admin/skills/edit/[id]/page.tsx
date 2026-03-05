@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
-import { createClient } from '@/shared/infrastructure/supabase/server';
+import { getCurrentUser, getCurrentUserRole } from '@/shared/infrastructure/supabase/auth';
 import { SupabaseAdminRepository } from '@/admin/infrastructure/supabase-admin-repository';
 import { GetSkillByIdUseCase } from '@/admin/application/get-skill-by-id-use-case';
 import type { CategoryOption, GetSkillResult } from '@/admin/domain/types';
@@ -13,11 +13,7 @@ interface EditSkillPageProps {
 export default async function EditSkillPage({ params }: EditSkillPageProps) {
   const { id } = await params;
 
-  // verifyAdmin 1회 호출로 통합
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user } = await getCurrentUser();
 
   if (!user) {
     return (
@@ -35,14 +31,7 @@ export default async function EditSkillPage({ params }: EditSkillPageProps) {
     );
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('roles(name)')
-    .eq('id', user.id)
-    .single();
-
-  const roles = profile?.roles as { name: string } | { name: string }[] | null;
-  const roleName = Array.isArray(roles) ? roles[0]?.name : roles?.name;
+  const { roleName } = await getCurrentUserRole();
 
   if (roleName !== 'admin') {
     return (

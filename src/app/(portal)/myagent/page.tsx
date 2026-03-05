@@ -1,14 +1,11 @@
 import { Bookmark } from 'lucide-react';
-import { createClient } from '@/shared/infrastructure/supabase/server';
+import { getCurrentUser } from '@/shared/infrastructure/supabase/auth';
 import { SupabaseBookmarkRepository } from '@/bookmark/infrastructure/supabase-bookmark-repository';
 import { GetUserBookmarksUseCase } from '@/bookmark/application/get-user-bookmarks-use-case';
 import DashboardSkillCard from '@/features/dashboard/DashboardSkillCard';
 
 export default async function MyAgentPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user } = await getCurrentUser();
 
   if (!user) return null;
 

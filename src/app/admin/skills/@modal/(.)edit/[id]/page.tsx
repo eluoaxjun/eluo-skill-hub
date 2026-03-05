@@ -1,4 +1,4 @@
-import { createClient } from '@/shared/infrastructure/supabase/server';
+import { getCurrentUser, getCurrentUserRole } from '@/shared/infrastructure/supabase/auth';
 import { SupabaseAdminRepository } from '@/admin/infrastructure/supabase-admin-repository';
 import { GetSkillByIdUseCase } from '@/admin/application/get-skill-by-id-use-case';
 import type { CategoryOption, GetSkillResult } from '@/admin/domain/types';
@@ -12,11 +12,7 @@ interface EditSkillModalPageProps {
 export default async function EditSkillModalPage({ params }: EditSkillModalPageProps) {
   const { id } = await params;
 
-  // verifyAdmin 1회 호출로 통합 (기존: getSkillById + getCategories 각각 내부에서 호출)
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user } = await getCurrentUser();
 
   if (!user) {
     return (
@@ -35,14 +31,7 @@ export default async function EditSkillModalPage({ params }: EditSkillModalPageP
     );
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('roles(name)')
-    .eq('id', user.id)
-    .single();
-
-  const roles = profile?.roles as { name: string } | { name: string }[] | null;
-  const roleName = Array.isArray(roles) ? roles[0]?.name : roles?.name;
+  const { roleName } = await getCurrentUserRole();
 
   if (roleName !== 'admin') {
     return (
@@ -60,7 +49,7 @@ export default async function EditSkillModalPage({ params }: EditSkillModalPageP
     );
   }
 
-  // 인증 완료 후 데이터 조회 (verifyAdmin 중복 없이 직접 repository 호출)
+  // 인증 완료 후 데이터 조회
   const repository = new SupabaseAdminRepository();
   const [skillResult, categories] = await Promise.all([
     (async (): Promise<GetSkillResult> => {

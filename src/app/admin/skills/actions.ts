@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/infrastructure/supabase/server';
+import { requireAdmin } from '@/shared/infrastructure/supabase/auth';
 import { SupabaseAdminRepository } from '@/admin/infrastructure/supabase-admin-repository';
 import { CreateSkillUseCase } from '@/admin/application/create-skill-use-case';
 import { DeleteSkillUseCase } from '@/admin/application/delete-skill-use-case';
@@ -9,28 +9,10 @@ import { UpdateSkillUseCase } from '@/admin/application/update-skill-use-case';
 import type { CategoryOption, CreateSkillResult, DeleteSkillResult, GetSkillResult, UpdateSkillResult } from '@/admin/domain/types';
 import { revalidatePath } from 'next/cache';
 
-async function verifyAdmin(): Promise<boolean> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return false;
-
-  const { data } = await supabase
-    .from('profiles')
-    .select('roles(name)')
-    .eq('id', user.id)
-    .single();
-
-  if (!data) return false;
-  const roles = data.roles as { name: string } | { name: string }[] | null;
-  const roleName = Array.isArray(roles) ? roles[0]?.name : roles?.name;
-  return roleName === 'admin';
-}
-
 export async function createSkill(formData: FormData): Promise<CreateSkillResult> {
-  const isAdmin = await verifyAdmin();
-  if (!isAdmin) {
+  try {
+    await requireAdmin();
+  } catch {
     return { success: false, error: '권한이 없습니다' };
   }
 
@@ -107,8 +89,9 @@ export async function createSkill(formData: FormData): Promise<CreateSkillResult
 }
 
 export async function getSkillById(id: string): Promise<GetSkillResult> {
-  const isAdmin = await verifyAdmin();
-  if (!isAdmin) {
+  try {
+    await requireAdmin();
+  } catch {
     return { success: false, error: '관리자 권한이 필요합니다.' };
   }
 
@@ -122,8 +105,9 @@ export async function getSkillById(id: string): Promise<GetSkillResult> {
 }
 
 export async function updateSkill(formData: FormData): Promise<UpdateSkillResult> {
-  const isAdmin = await verifyAdmin();
-  if (!isAdmin) {
+  try {
+    await requireAdmin();
+  } catch {
     return { success: false, error: '관리자 권한이 필요합니다.' };
   }
 
@@ -216,8 +200,9 @@ export async function updateSkill(formData: FormData): Promise<UpdateSkillResult
 }
 
 export async function deleteSkill(skillId: string): Promise<DeleteSkillResult> {
-  const isAdmin = await verifyAdmin();
-  if (!isAdmin) {
+  try {
+    await requireAdmin();
+  } catch {
     return { success: false, error: '권한이 없습니다' };
   }
 
@@ -233,7 +218,7 @@ export async function deleteSkill(skillId: string): Promise<DeleteSkillResult> {
     if (result.success) {
       revalidatePath('/admin/skills');
       revalidatePath('/admin');
-    }
+      }
 
     return result;
   } catch {

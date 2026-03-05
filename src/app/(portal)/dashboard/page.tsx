@@ -2,7 +2,7 @@ import { SupabaseDashboardRepository } from '@/dashboard/infrastructure/supabase
 import { GetDashboardSkillsUseCase } from '@/dashboard/application/get-dashboard-skills-use-case';
 import { SupabaseBookmarkRepository } from '@/bookmark/infrastructure/supabase-bookmark-repository';
 import { GetUserBookmarksUseCase } from '@/bookmark/application/get-user-bookmarks-use-case';
-import { createClient } from '@/shared/infrastructure/supabase/server';
+import { getCurrentUser } from '@/shared/infrastructure/supabase/auth';
 import DashboardSkillGrid from '@/features/dashboard/DashboardSkillGrid';
 import DashboardSearchBar from '@/features/dashboard/DashboardSearchBar';
 
@@ -25,12 +25,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   const repository = new SupabaseDashboardRepository();
   const getSkillsUseCase = new GetDashboardSkillsUseCase(repository);
-  const supabase = await createClient();
 
   // Step 1: getSkills와 getUser를 병렬 실행 (getSkills는 user.id 불필요)
-  const [skillsResult, { data: { user } }] = await Promise.all([
+  const [skillsResult, { user }] = await Promise.all([
     getSkillsUseCase.execute(limit, searchQuery || undefined, categoryId),
-    supabase.auth.getUser(),
+    getCurrentUser(),
   ]);
 
   const { skills, totalCount, hasMore } = skillsResult;

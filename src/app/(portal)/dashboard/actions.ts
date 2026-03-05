@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/shared/infrastructure/supabase/server';
+import { getCurrentUser } from '@/shared/infrastructure/supabase/auth';
 import { SupabaseBookmarkRepository } from '@/bookmark/infrastructure/supabase-bookmark-repository';
 import { ToggleBookmarkUseCase } from '@/bookmark/application/toggle-bookmark-use-case';
 import { SupabaseSkillDetailRepository } from '@/skill-detail/infrastructure/supabase-skill-detail-repository';
@@ -30,10 +31,7 @@ export async function signOut() {
 export async function toggleBookmark(
   skillId: string
 ): Promise<{ bookmarked: boolean }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user } = await getCurrentUser();
 
   if (!user) {
     throw new Error('인증되지 않은 사용자입니다.');
@@ -52,10 +50,7 @@ export async function toggleBookmark(
 export async function getSkillDetailAction(
   skillId: string
 ): Promise<GetSkillDetailResult> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user } = await getCurrentUser();
 
   if (!user) {
     return { success: false, error: '인증되지 않은 사용자입니다.' };
@@ -70,10 +65,7 @@ export async function getSkillFeedbacksAction(
   skillId: string,
   offset: number = 0
 ): Promise<GetFeedbacksResult> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user } = await getCurrentUser();
 
   if (!user) {
     return { success: false, error: '인증되지 않은 사용자입니다.' };
@@ -87,10 +79,7 @@ export async function getSkillFeedbacksAction(
 export async function submitFeedbackAction(
   input: SubmitFeedbackInput
 ): Promise<SubmitFeedbackResult> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user } = await getCurrentUser();
 
   if (!user) {
     return { success: false, error: '인증되지 않은 사용자입니다.' };
@@ -110,10 +99,7 @@ export async function submitFeedbackAction(
 export async function submitFeedbackReplyAction(
   input: SubmitReplyInput
 ): Promise<SubmitReplyResult> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user } = await getCurrentUser();
 
   if (!user) {
     return { success: false, error: '인증되지 않은 사용자입니다.' };
@@ -133,16 +119,14 @@ export async function submitFeedbackReplyAction(
 export async function getTemplateDownloadUrlAction(
   templateId: string
 ): Promise<GetTemplateDownloadResult> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user } = await getCurrentUser();
 
   if (!user) {
     return { success: false, error: '인증되지 않은 사용자입니다.' };
   }
 
   // Get template file info
+  const supabase = await createClient();
   const { data: template } = await supabase
     .from('skill_templates')
     .select('file_path, file_name')

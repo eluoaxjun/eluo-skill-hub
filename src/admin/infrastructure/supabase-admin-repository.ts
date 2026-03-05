@@ -238,15 +238,19 @@ export class SupabaseAdminRepository implements AdminRepository {
   async getSkillStatusCounts(): Promise<SkillStatusCounts> {
     const supabase = await createClient();
 
-    const [publishedResult, draftedResult] = await Promise.all([
-      supabase.from('skills').select('id', { count: 'exact', head: true }).eq('status', 'published'),
-      supabase.from('skills').select('id', { count: 'exact', head: true }).eq('status', 'drafted'),
-    ]);
+    // 단일 쿼리로 모든 status를 가져와 JS에서 카운트
+    const { data } = await supabase
+      .from('skills')
+      .select('status');
 
-    return {
-      published: publishedResult.count ?? 0,
-      drafted: draftedResult.count ?? 0,
-    };
+    const counts = { published: 0, drafted: 0 };
+    for (const row of data ?? []) {
+      const status = row.status as string;
+      if (status === 'published') counts.published++;
+      else if (status === 'drafted') counts.drafted++;
+    }
+
+    return counts;
   }
 
   async getFeedbacks(page: number, pageSize: number): Promise<PaginatedResult<FeedbackRow>> {
@@ -385,21 +389,26 @@ export class SupabaseAdminRepository implements AdminRepository {
   async getSkillById(id: string): Promise<GetSkillResult> {
     const supabase = await createClient();
 
-    const { data: skill, error } = await supabase
-      .from('skills')
-      .select('id, title, description, icon, category_id, status, markdown_file_path, markdown_content, created_at, categories(id, name, icon)')
-      .eq('id', id)
-      .single();
+    // skill 조회와 templates 조회를 병렬 실행
+    const [skillResult, templatesResult] = await Promise.all([
+      supabase
+        .from('skills')
+        .select('id, title, description, icon, category_id, status, markdown_file_path, markdown_content, created_at, categories(id, name, icon)')
+        .eq('id', id)
+        .single(),
+      supabase
+        .from('skill_templates')
+        .select('id, skill_id, file_name, file_path, file_size, file_type, created_at')
+        .eq('skill_id', id)
+        .order('created_at', { ascending: true }),
+    ]);
+
+    const { data: skill, error } = skillResult;
+    const { data: templates } = templatesResult;
 
     if (error || !skill) {
       return { success: false, error: '스킬을 찾을 수 없습니다.' };
     }
-
-    const { data: templates } = await supabase
-      .from('skill_templates')
-      .select('id, skill_id, file_name, file_path, file_size, file_type, created_at')
-      .eq('skill_id', id)
-      .order('created_at', { ascending: true });
 
     const category = skill.categories as { id: string; name: string; icon: string } | { id: string; name: string; icon: string }[] | null;
     const catObj = Array.isArray(category) ? category[0] : category;
@@ -659,23 +668,27 @@ export class SupabaseAdminRepository implements AdminRepository {
   async deleteSkill(skillId: string): Promise<DeleteSkillResult> {
     const supabase = await createClient();
 
-    // 스킬 존재 여부 확인
-    const { data: skill, error: fetchError } = await supabase
-      .from('skills')
-      .select('id, markdown_file_path')
-      .eq('id', skillId)
-      .single();
+    // 스킬 존재 여부 확인 + 템플릿 파일 경로 조회를 병렬 실행
+    const [skillResult, templatesResult] = await Promise.all([
+      supabase
+        .from('skills')
+        .select('id, markdown_file_path')
+        .eq('id', skillId)
+        .single(),
+      supabase
+        .from('skill_templates')
+        .select('id, file_path')
+        .eq('skill_id', skillId),
+    ]);
+
+    const { data: skill, error: fetchError } = skillResult;
+    const { data: templates } = templatesResult;
 
     if (fetchError || !skill) {
       return { success: false, error: '스킬을 찾을 수 없습니다' };
     }
 
     try {
-      // 1. 템플릿 파일 경로 조회 (병렬 삭제를 위해 먼저 조회)
-      const { data: templates } = await supabase
-        .from('skill_templates')
-        .select('id, file_path')
-        .eq('skill_id', skillId);
 
       // 2. 피드백 삭제 + Storage 파일 삭제를 병렬 실행
       const markdownPath = skill.markdown_file_path as string | null;

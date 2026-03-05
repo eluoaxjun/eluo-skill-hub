@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { createClient } from '@/shared/infrastructure/supabase/server';
+import { getCurrentUser } from '@/shared/infrastructure/supabase/auth';
 import { SupabaseAdminRepository } from '@/admin/infrastructure/supabase-admin-repository';
 import { GetMembersUseCase } from '@/admin/application/get-members-use-case';
 import MembersTable from '@/features/admin/MembersTable';
@@ -14,10 +14,7 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
   const page = Math.max(1, parseInt(pageParam ?? '1', 10) || 1);
   const search = q?.trim() || undefined;
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user } = await getCurrentUser();
 
   const repository = new SupabaseAdminRepository();
   const useCase = new GetMembersUseCase(repository);

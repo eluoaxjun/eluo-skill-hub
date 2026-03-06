@@ -36,9 +36,9 @@ export default function BookmarkButton({
       aria-label={isBookmarked ? '북마크 해제' : '북마크 추가'}
     >
       {isBookmarked ? (
-        <BookmarkCheck size={18} className="text-[#00007F]" />
+        <BookmarkCheck size={22} className="text-[#00007F]" />
       ) : (
-        <Bookmark size={18} className="text-slate-400 hover:text-slate-600" />
+        <Bookmark size={22} className="text-slate-400 hover:text-slate-600" />
       )}
     </button>
   );

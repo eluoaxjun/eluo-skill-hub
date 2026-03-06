@@ -16,7 +16,7 @@ export default function DashboardSkillCard({ skill, isBookmarked, userId, onClic
       onClick={onClick}
     >
       <BookmarkButton skillId={skill.id} isBookmarked={isBookmarked ?? false} userId={userId} />
-      <div className="text-4xl mb-6 p-4 bg-white/80 w-fit rounded-2xl shadow-sm">
+      <div className="text-2xl mb-6 p-3 bg-white/80 w-fit rounded-2xl shadow-sm">
         {skill.icon}
       </div>
       <h4 className="text-lg font-bold mb-3 text-[#00007F]">{skill.title}</h4>

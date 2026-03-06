@@ -65,7 +65,10 @@ export default function DashboardSidebar({
   return (
     <aside className="w-72 flex flex-col h-full shrink-0 text-white z-20 border-r border-white/10 bg-[rgba(0,0,127,0.9)] backdrop-blur-xl">
       <div className="p-8">
-        <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={handleDashboardClick}
+          className="flex items-center gap-3 cursor-pointer">
           <div className="w-10 h-10 bg-[#FEFE01] rounded-xl flex items-center justify-center text-[#00007F] shadow-[0_0_15px_rgba(254,254,1,0.3)]">
             <Image
               src="/eluo-logo.svg"
@@ -75,7 +78,7 @@ export default function DashboardSidebar({
               priority
             />
           </div>
-          <div>
+          <div className="text-left">
             <h1 className="text-base font-bold leading-none text-white tracking-tight">
               ELUO HUB
             </h1>
@@ -83,7 +86,7 @@ export default function DashboardSidebar({
               ENTERPRISE PORTAL
             </p>
           </div>
-        </div>
+        </button>
       </div>
 
       <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
@@ -96,7 +99,7 @@ export default function DashboardSidebar({
           onClick={handleDashboardClick}
           className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${isDashboardActive
             ? 'bg-[#FEFE01] text-[#00007F] shadow-lg font-bold'
-            : 'text-white/70 hover:text-[#FEFE01]'
+            : 'text-white/70 hover:text-[#FEFE01] hover:bg-white/10 cursor-pointer'
             }`}
         >
           <LayoutDashboard size={22} />
@@ -109,7 +112,7 @@ export default function DashboardSidebar({
             onClick={() => handleCategoryClick(cat)}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${isCategoryActive(cat.id)
               ? 'bg-[#FEFE01] text-[#00007F] shadow-lg font-bold'
-              : 'text-white/70 hover:text-[#FEFE01]'
+              : 'text-white/70 hover:text-[#FEFE01] hover:bg-white/10 cursor-pointer'
               }`}
           >
             <CategoryIcon icon={cat.icon} size={22} />
@@ -126,7 +129,7 @@ export default function DashboardSidebar({
           onClick={handleMyAgentsClick}
           className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${isMyAgentsActive
             ? 'bg-[#FEFE01] text-[#00007F] shadow-lg font-bold'
-            : 'text-white/70 hover:text-[#FEFE01]'
+            : 'text-white/70 hover:text-[#FEFE01] hover:bg-white/10 cursor-pointer'
             }`}
         >
           <Bot size={22} />
@@ -146,7 +149,7 @@ export default function DashboardSidebar({
           }}
           className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition-all duration-300 ${isHelpActive
             ? 'bg-[#FEFE01] text-[#00007F] shadow-lg font-bold'
-            : 'text-white/50 hover:text-white/80 hover:bg-white/5'
+            : 'text-white/50 hover:text-white/80 hover:bg-white/10 cursor-pointer'
             }`}
         >
           <HelpCircle size={20} />

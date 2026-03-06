@@ -34,6 +34,8 @@ export default function DashboardSkillGrid({ userId }: DashboardSkillGridProps) 
   const { data: bookmarkedSkillIds } = useBookmarkedSkillIds(userId || undefined);
 
   const skills = data?.pages.flatMap((page) => page.skills) ?? [];
+  const totalCount = data?.pages[0]?.totalCount ?? 0;
+  const remainingCount = Math.max(0, totalCount - skills.length);
   const hasMore = hasNextPage ?? false;
   const isEmpty = skills.length === 0;
   const isSearchResult = !!filter.searchQuery;
@@ -42,7 +44,12 @@ export default function DashboardSkillGrid({ userId }: DashboardSkillGridProps) 
     <div className="max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h3 className="text-xl font-bold text-[#00007F]">자동화 스킬</h3>
+          <h3 className="text-xl font-bold text-[#00007F]">
+            자동화 스킬
+            {totalCount > 0 && (
+              <span className="ml-2 text-sm font-medium text-slate-400">({totalCount})</span>
+            )}
+          </h3>
           <p className="text-sm text-slate-500 mt-1">
             업무에서 유용하게 사용할 수 있는 스킬입니다.
           </p>
@@ -80,6 +87,7 @@ export default function DashboardSkillGrid({ userId }: DashboardSkillGridProps) 
             <LoadMoreButton
               onLoadMore={fetchNextPage}
               isLoading={isFetchingNextPage}
+              remainingCount={remainingCount}
             />
           )}
         </>

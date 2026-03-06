@@ -8,7 +8,7 @@ interface SkillDetailHeaderProps {
 export default function SkillDetailHeader({ skill }: SkillDetailHeaderProps) {
   return (
     <div className="mb-12">
-      <div className="text-8xl mb-8 drop-shadow-sm">{skill.icon}</div>
+      <div className="text-5xl mb-8 drop-shadow-sm">{skill.icon}</div>
       <h1 className="text-4xl font-bold tracking-tight mb-4 leading-tight text-[#00007F]">
         {skill.title}
       </h1>

@@ -34,3 +34,49 @@ export interface EventLogRepository {
   insert(event: EventLogInsert): Promise<void>;
   insertBatch(events: EventLogInsert[]): Promise<void>;
 }
+
+// Analytics types
+
+export interface AnalyticsDateRange {
+  readonly startDate: string; // ISO 8601 timestamptz
+  readonly endDate: string;   // ISO 8601 timestamptz
+}
+
+export interface AnalyticsOverview {
+  readonly activeUsers: number;
+  readonly skillViews: number;
+  readonly templateDownloads: number;
+  readonly activeUsersChange: number;
+  readonly skillViewsChange: number;
+  readonly templateDownloadsChange: number;
+}
+
+export interface DailyTrendItem {
+  readonly date: string; // YYYY-MM-DD
+  readonly skillViews: number;
+  readonly templateDownloads: number;
+}
+
+export interface SkillRankingItem {
+  readonly skillId: string;
+  readonly skillTitle: string;
+  readonly viewCount: number;
+  readonly downloadCount: number;
+  readonly bookmarkCount: number;
+}
+
+export interface SidebarClickItem {
+  readonly tab: string;
+  readonly clickCount: number;
+}
+
+export interface UserBehaviorData {
+  readonly sidebarClicks: readonly SidebarClickItem[];
+}
+
+export interface AnalyticsRepository {
+  getOverview(range: AnalyticsDateRange): Promise<AnalyticsOverview>;
+  getDailyTrend(range: AnalyticsDateRange): Promise<readonly DailyTrendItem[]>;
+  getSkillRankings(range: AnalyticsDateRange, limit?: number): Promise<readonly SkillRankingItem[]>;
+  getUserBehavior(range: AnalyticsDateRange): Promise<UserBehaviorData>;
+}

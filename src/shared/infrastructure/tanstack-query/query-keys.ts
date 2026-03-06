@@ -26,5 +26,16 @@ export const queryKeys = {
     members: (params: { page: number; limit: number; search?: string; currentUserId: string }) =>
       ['admin', 'members', params] as const,
     roles: () => ['admin', 'roles'] as const,
+    analytics: {
+      all: ['admin', 'analytics'] as const,
+      overview: (range: { startDate: string; endDate: string }) =>
+        ['admin', 'analytics', 'overview', range] as const,
+      dailyTrend: (range: { startDate: string; endDate: string }) =>
+        ['admin', 'analytics', 'daily-trend', range] as const,
+      skillRankings: (range: { startDate: string; endDate: string }) =>
+        ['admin', 'analytics', 'skill-rankings', range] as const,
+      userBehavior: (range: { startDate: string; endDate: string }) =>
+        ['admin', 'analytics', 'user-behavior', range] as const,
+    },
   },
 } as const;

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, Zap, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Users, Zap, MessageSquare, BarChart3 } from 'lucide-react';
 
 interface AdminSidebarProps {
   userName: string;
@@ -14,6 +14,7 @@ const navItems = [
   { label: '회원 관리', href: '/admin/members', icon: Users },
   { label: '스킬 관리', href: '/admin/skills', icon: Zap },
   { label: '피드백 관리', href: '/admin/feedbacks', icon: MessageSquare },
+  { label: '통계분석', href: '/admin/analytics', icon: BarChart3 },
 ];
 
 export default function AdminSidebar({ userName, userRole }: AdminSidebarProps) {

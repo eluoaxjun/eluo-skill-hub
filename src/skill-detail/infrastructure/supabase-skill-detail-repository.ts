@@ -33,7 +33,7 @@ export class SupabaseSkillDetailRepository implements ISkillDetailRepository {
     const { data: skill, error } = await supabase
       .from('skills')
       .select(
-        'id, title, description, markdown_content, updated_at, author_id, download_count, categories(name, icon)'
+        'id, title, description, version, markdown_content, updated_at, author_id, download_count, tags, categories(name, icon)'
       )
       .eq('id', skillId)
       .single();
@@ -81,6 +81,8 @@ export class SupabaseSkillDetailRepository implements ISkillDetailRepository {
       description: (skill.description as string | null) ?? null,
       categoryName: category.name,
       categoryIcon: category.icon,
+      version: (skill.version as string) ?? '1.0.0',
+      tags: (skill.tags as string[] | null) ?? [],
       markdownContent: (skill.markdown_content as string | null) ?? null,
       authorName,
       updatedAt: skill.updated_at as string,
@@ -123,37 +125,28 @@ export class SupabaseSkillDetailRepository implements ISkillDetailRepository {
       .filter(Boolean);
     const feedbackIds = feedbacks.map((f) => f.id as string);
 
-    // Parallelize: replies and feedback-author profiles
-    const [repliesResult, feedbackProfilesResult] = await Promise.all([
-      supabase
-        .from('feedback_replies')
-        .select('id, feedback_id, content, created_at, user_id')
-        .in('feedback_id', feedbackIds)
-        .order('created_at', { ascending: true }),
-      feedbackUserIds.length > 0
-        ? supabase.from('profiles').select('id, name').in('id', feedbackUserIds)
-        : Promise.resolve({ data: [] as { id: string; name: string | null }[] }),
-    ]);
+    // 먼저 replies 를 가져온 뒤, 피드백 작성자 + 답글 작성자의 user_id 를 합산하여
+    // 단 한 번의 profiles 조회로 처리 (기존의 2-query 패턴 제거)
+    const repliesResult = await supabase
+      .from('feedback_replies')
+      .select('id, feedback_id, content, created_at, user_id')
+      .in('feedback_id', feedbackIds)
+      .order('created_at', { ascending: true });
+
+    const replies = repliesResult.data ?? [];
+
+    // 피드백 작성자 ID + 답글 작성자 ID 를 합산해 중복 제거 후 단일 조회
+    const replyUserIds = replies.map((r) => r.user_id as string).filter(Boolean);
+    const allUserIds = [...new Set([...feedbackUserIds, ...replyUserIds])];
 
     const profileMap = new Map<string, string | null>();
-    for (const p of feedbackProfilesResult.data ?? []) {
-      profileMap.set(p.id as string, (p.name as string | null) ?? null);
-    }
-
-    // Collect reply user IDs and fetch missing profiles
-    const replies = repliesResult.data ?? [];
-    const replyUserIds = replies
-      .map((r) => r.user_id as string)
-      .filter((id) => id && !profileMap.has(id));
-
-    if (replyUserIds.length > 0) {
-      const uniqueReplyUserIds = [...new Set(replyUserIds)];
-      const { data: replyProfiles } = await supabase
+    if (allUserIds.length > 0) {
+      const { data: allProfiles } = await supabase
         .from('profiles')
         .select('id, name')
-        .in('id', uniqueReplyUserIds);
+        .in('id', allUserIds);
 
-      for (const p of replyProfiles ?? []) {
+      for (const p of allProfiles ?? []) {
         profileMap.set(p.id as string, (p.name as string | null) ?? null);
       }
     }
@@ -280,10 +273,13 @@ export class SupabaseSkillDetailRepository implements ISkillDetailRepository {
   async deleteFeedback(feedbackId: string): Promise<void> {
     const supabase = await createClient();
 
-    // 대댓글도 함께 삭제
-    await supabase.from('feedback_replies').delete().eq('feedback_id', feedbackId);
-    const { error } = await supabase.from('skill_feedback_logs').delete().eq('id', feedbackId);
-    if (error) throw new Error('피드백 삭제에 실패했습니다.');
+    // 대댓글과 피드백 본체를 병렬로 삭제
+    const [, feedbackResult] = await Promise.all([
+      supabase.from('feedback_replies').delete().eq('feedback_id', feedbackId),
+      supabase.from('skill_feedback_logs').delete().eq('id', feedbackId),
+    ]);
+
+    if (feedbackResult.error) throw new Error('피드백 삭제에 실패했습니다.');
   }
 
   async softDeleteFeedback(feedbackId: string): Promise<void> {

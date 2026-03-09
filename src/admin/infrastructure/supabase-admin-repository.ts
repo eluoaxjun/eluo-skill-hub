@@ -21,6 +21,7 @@ import type {
   SkillTemplateRow,
   UpdateSkillInput,
   UpdateSkillResult,
+  VersionHistoryEntry,
 } from '@/admin/domain/types';
 
 type JoinedName = { name: string } | { name: string }[] | null;
@@ -68,6 +69,7 @@ function extractCategoryIcon(joined: JoinedCategory): string {
   if (Array.isArray(joined)) return joined[0]?.icon ?? '';
   return joined.icon;
 }
+
 
 type ProfileRow = {
   id: unknown;
@@ -198,7 +200,7 @@ export class SupabaseAdminRepository implements AdminRepository {
 
     let query = supabase
       .from('skills')
-      .select('id, title, description, status, created_at, updated_at, categories(name, icon)', { count: 'exact' })
+      .select('id, title, description, version, status, created_at, updated_at, tags, categories(name, icon)', { count: 'exact' })
       .order('created_at', { ascending: false });
 
     if (search) {
@@ -221,6 +223,8 @@ export class SupabaseAdminRepository implements AdminRepository {
       categoryName: extractCategoryName(row.categories as JoinedCategory),
       categoryIcon: extractCategoryIcon(row.categories as JoinedCategory),
       status: ((row.status as string) === 'drafted' ? 'drafted' : 'published') as 'published' | 'drafted',
+      version: (row.version as string) ?? '1.0.0',
+      tags: (row.tags as string[] | null) ?? [],
       createdAt: row.created_at as string,
       updatedAt: row.updated_at as string,
     }));
@@ -237,19 +241,22 @@ export class SupabaseAdminRepository implements AdminRepository {
   async getSkillStatusCounts(): Promise<SkillStatusCounts> {
     const supabase = await createClient();
 
-    // 단일 쿼리로 모든 status를 가져와 JS에서 카운트
-    const { data } = await supabase
-      .from('skills')
-      .select('status');
+    // 두 번의 count-only HEAD 쿼리를 병렬로 실행 — 행 데이터 전송 없음
+    const [publishedResult, draftedResult] = await Promise.all([
+      supabase
+        .from('skills')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'published'),
+      supabase
+        .from('skills')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'drafted'),
+    ]);
 
-    const counts = { published: 0, drafted: 0 };
-    for (const row of data ?? []) {
-      const status = row.status as string;
-      if (status === 'published') counts.published++;
-      else if (status === 'drafted') counts.drafted++;
-    }
-
-    return counts;
+    return {
+      published: publishedResult.count ?? 0,
+      drafted: draftedResult.count ?? 0,
+    };
   }
 
   async getFeedbacks(page: number, pageSize: number): Promise<PaginatedResult<FeedbackRow>> {
@@ -388,11 +395,11 @@ export class SupabaseAdminRepository implements AdminRepository {
   async getSkillById(id: string): Promise<GetSkillResult> {
     const supabase = await createClient();
 
-    // skill 조회와 templates 조회를 병렬 실행
-    const [skillResult, templatesResult] = await Promise.all([
+    // skill 조회, templates 조회, 버전 이력 조회를 병렬 실행
+    const [skillResult, templatesResult, versionHistoryResult] = await Promise.all([
       supabase
         .from('skills')
-        .select('id, title, description, category_id, status, markdown_file_path, markdown_content, created_at, categories(id, name, icon)')
+        .select('id, title, description, version, category_id, status, markdown_file_path, markdown_content, created_at, tags, categories(id, name, icon)')
         .eq('id', id)
         .single(),
       supabase
@@ -400,6 +407,11 @@ export class SupabaseAdminRepository implements AdminRepository {
         .select('id, skill_id, file_name, file_path, file_size, file_type, created_at')
         .eq('skill_id', id)
         .order('created_at', { ascending: true }),
+      supabase
+        .from('skill_version_history')
+        .select('version, changed_at, note')
+        .eq('skill_id', id)
+        .order('changed_at', { ascending: false }),
     ]);
 
     const { data: skill, error } = skillResult;
@@ -422,6 +434,12 @@ export class SupabaseAdminRepository implements AdminRepository {
       createdAt: t.created_at as string,
     }));
 
+    const versionHistory: VersionHistoryEntry[] = (versionHistoryResult.data ?? []).map((h) => ({
+      version: h.version as string,
+      changedAt: h.changed_at as string,
+      note: (h.note as string | null) ?? null,
+    }));
+
     return {
       success: true,
       skill: {
@@ -432,9 +450,12 @@ export class SupabaseAdminRepository implements AdminRepository {
         categoryName: catObj?.name ?? '',
         categoryIcon: catObj?.icon ?? '',
         status: ((skill.status as string) === 'drafted' ? 'drafted' : 'published') as 'published' | 'drafted',
+        version: (skill.version as string) ?? '1.0.0',
+        tags: (skill.tags as string[] | null) ?? [],
         markdownFilePath: (skill.markdown_file_path as string) ?? '',
         markdownContent: (skill.markdown_content as string) ?? '',
         templates: templateRows,
+        versionHistory,
         createdAt: skill.created_at as string,
       },
     };
@@ -443,45 +464,59 @@ export class SupabaseAdminRepository implements AdminRepository {
   async updateSkill(input: UpdateSkillInput): Promise<UpdateSkillResult> {
     const supabase = await createClient();
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const status = input.isPublished ? 'published' : 'drafted';
+    const newVersion = input.version || '1.0.0';
 
-    if (!user) {
+    // auth 확인과 현재 버전 조회를 병렬 실행
+    const [authResult, currentSkillResult] = await Promise.all([
+      supabase.auth.getUser(),
+      supabase
+        .from('skills')
+        .select('version, markdown_file_path')
+        .eq('id', input.skillId)
+        .single(),
+    ]);
+
+    if (!authResult.data.user) {
       return { success: false, error: '권한이 없습니다' };
     }
 
-    const status = input.isPublished ? 'published' : 'drafted';
+    const currentVersion = (currentSkillResult.data?.version as string) ?? '1.0.0';
+    const existingMarkdownPath = (currentSkillResult.data?.markdown_file_path as string) ?? '';
 
-    // 스킬 기본 정보 업데이트
-    const { error: updateError } = await supabase
+    const normalizedTags = input.tags.map((t) => t.trim()).filter(Boolean);
+
+    const updateResult = await supabase
       .from('skills')
       .update({
         category_id: input.categoryId,
         title: input.title,
         description: input.description,
+        version: newVersion,
         status,
+        tags: normalizedTags,
       })
       .eq('id', input.skillId);
 
+    const { error: updateError } = updateResult;
     if (updateError) {
       return { success: false, error: '수정에 실패했습니다. 다시 시도해주세요' };
     }
 
-    // 마크다운 파일 처리
+    // 버전이 변경된 경우 이전 버전을 이력에 저장
+    if (currentVersion !== newVersion) {
+      await supabase.from('skill_version_history').insert({
+        skill_id: input.skillId,
+        version: currentVersion,
+      });
+    }
+
+    // 마크다운 파일 처리 (existingMarkdownPath 는 이미 위에서 병렬로 조회함)
     const fileErrors: string[] = [];
     if (input.removeMarkdown) {
-      // 기존 마크다운 삭제
-      const { data: existing } = await supabase
-        .from('skills')
-        .select('markdown_file_path')
-        .eq('id', input.skillId)
-        .single();
-
-      const existingPath = (existing?.markdown_file_path as string) ?? '';
-      if (existingPath) {
+      if (existingMarkdownPath) {
         try {
-          await deleteFile('skill-descriptions', existingPath);
+          await deleteFile('skill-descriptions', existingMarkdownPath);
         } catch {
           // 기존 파일 삭제 실패는 무시 (이미 없을 수 있음)
         }
@@ -588,15 +623,19 @@ export class SupabaseAdminRepository implements AdminRepository {
 
     const status = input.isPublished ? 'published' : 'drafted';
 
+    const normalizedTags = input.tags.map((t) => t.trim()).filter(Boolean);
+
     const { data: skill, error: insertError } = await supabase
       .from('skills')
       .insert({
         category_id: input.categoryId,
         title: input.title,
         description: input.description,
+        version: input.version || '1.0.0',
         status,
         author_id: user.id,
         markdown_file_path: '',
+        tags: normalizedTags,
       })
       .select('id')
       .single();

@@ -35,9 +35,6 @@ export default function SkillCard({ skill }: SkillCardProps) {
   return (
     <div className="bg-white/70 backdrop-blur-sm border border-white/30 shadow-lg shadow-[#000080]/5 rounded-2xl p-6 flex flex-col transition-all hover:-translate-y-1 hover:shadow-xl">
       <div className="flex justify-between items-start mb-4">
-        <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-3xl">
-          {skill.icon}
-        </div>
         {skill.status === 'published' ? (
           <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full uppercase">
             Published

@@ -16,7 +16,6 @@ export async function createSkill(formData: FormData): Promise<CreateSkillResult
     return { success: false, error: '권한이 없습니다' };
   }
 
-  const icon = (formData.get('icon') as string | null) ?? '';
   const categoryId = (formData.get('categoryId') as string | null) ?? '';
   const title = (formData.get('title') as string | null) ?? '';
   const description = (formData.get('description') as string | null) ?? '';
@@ -71,7 +70,6 @@ export async function createSkill(formData: FormData): Promise<CreateSkillResult
   const useCase = new CreateSkillUseCase(repository);
 
   const result = await useCase.execute({
-    icon,
     categoryId,
     title,
     description,
@@ -112,7 +110,6 @@ export async function updateSkill(formData: FormData): Promise<UpdateSkillResult
   }
 
   const skillId = (formData.get('skillId') as string | null) ?? '';
-  const icon = (formData.get('icon') as string | null) ?? '';
   const categoryId = (formData.get('categoryId') as string | null) ?? '';
   const title = (formData.get('title') as string | null) ?? '';
   const description = (formData.get('description') as string | null) ?? '';
@@ -180,7 +177,6 @@ export async function updateSkill(formData: FormData): Promise<UpdateSkillResult
 
   const result = await useCase.execute({
     skillId,
-    icon,
     categoryId,
     title,
     description,

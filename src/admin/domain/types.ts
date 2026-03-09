@@ -54,7 +54,6 @@ export interface SkillRow {
   readonly id: string;
   readonly title: string;
   readonly description: string | null;
-  readonly icon: string;
   readonly categoryName: string;
   readonly categoryIcon: string;
   readonly status: 'published' | 'drafted';
@@ -69,7 +68,6 @@ export interface CategoryOption {
 }
 
 export interface CreateSkillInput {
-  readonly icon: string;
   readonly categoryId: string;
   readonly title: string;
   readonly description: string;
@@ -118,7 +116,6 @@ export interface SkillDetail {
   readonly id: string;
   readonly title: string;
   readonly description: string;
-  readonly icon: string;
   readonly categoryId: string;
   readonly categoryName: string;
   readonly categoryIcon: string;
@@ -131,7 +128,6 @@ export interface SkillDetail {
 
 export interface UpdateSkillInput {
   readonly skillId: string;
-  readonly icon: string;
   readonly categoryId: string;
   readonly title: string;
   readonly description: string;

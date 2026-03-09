@@ -2,7 +2,6 @@ export interface DashboardSkillCard {
   readonly id: string;
   readonly title: string;
   readonly description: string | null;
-  readonly icon: string;
   readonly categoryName: string;
   readonly categoryIcon: string;
   readonly createdAt: string;

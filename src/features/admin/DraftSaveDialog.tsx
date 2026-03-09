@@ -37,7 +37,6 @@ export default function DraftSaveDialog({ pendingInput, onClose, onSaved, mode =
     setIsSaving(true);
     try {
       const formData = new FormData();
-      formData.append('icon', pendingInput.icon);
       formData.append('categoryId', pendingInput.categoryId);
       formData.append('title', pendingInput.title);
       formData.append('description', pendingInput.description);

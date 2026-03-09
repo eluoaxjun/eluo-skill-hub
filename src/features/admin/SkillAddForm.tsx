@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Textarea } from '@/shared/ui/textarea';
@@ -23,7 +23,6 @@ interface SkillAddFormProps {
 }
 
 interface FormState {
-  icon: string;
   categoryId: string;
   title: string;
   description: string;
@@ -31,23 +30,14 @@ interface FormState {
 }
 
 const INITIAL_STATE: FormState = {
-  icon: '',
   categoryId: '',
   title: '',
   description: '',
   isPublished: false,
 };
 
-const EMOJI_GROUPS = [
-  { label: '작업·개발', emojis: ['⚡', '🤖', '🛠️', '💻', '🔧', '🔌', '📡', '🧩'] },
-  { label: '분석·데이터', emojis: ['📊', '📈', '📉', '🔍', '🧪', '💡', '📋', '🗂️'] },
-  { label: '문서·글쓰기', emojis: ['📝', '📄', '✍️', '📚', '🗒️', '💬', '📣', '🌐'] },
-  { label: '디자인·창작', emojis: ['🎨', '✏️', '🖼️', '🎭', '🎬', '📸', '🖌️', '✨'] },
-];
-
 function isDirtyStateAdd(state: FormState, markdownFile: File | undefined, templateFiles: File[]): boolean {
   return (
-    state.icon !== '' ||
     state.categoryId !== '' ||
     state.title !== '' ||
     state.description !== '' ||
@@ -66,7 +56,6 @@ function isDirtyStateEdit(
   removedTemplateIds: string[],
 ): boolean {
   return (
-    state.icon !== initial.icon ||
     state.categoryId !== initial.categoryId ||
     state.title !== initial.title ||
     state.description !== initial.description ||
@@ -92,12 +81,11 @@ export default function SkillAddForm({ categories: initialCategories, onDirtyCha
 
   const editInitialState: FormState = initialData
     ? {
-        icon: initialData.icon,
-        categoryId: initialData.categoryId,
-        title: initialData.title,
-        description: initialData.description,
-        isPublished: initialData.status === 'published',
-      }
+      categoryId: initialData.categoryId,
+      title: initialData.title,
+      description: initialData.description,
+      isPublished: initialData.status === 'published',
+    }
     : INITIAL_STATE;
 
   const [categories, setCategories] = useState<CategoryOption[]>(initialCategories ?? []);
@@ -109,22 +97,6 @@ export default function SkillAddForm({ categories: initialCategories, onDirtyCha
   const [removedTemplateIds, setRemovedTemplateIds] = useState<string[]>([]);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const emojiPickerRef = useRef<HTMLDivElement>(null);
-
-  const handleCloseEmojiPicker = useCallback((e: MouseEvent) => {
-    if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as Node)) {
-      setShowEmojiPicker(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (showEmojiPicker) {
-      document.addEventListener('mousedown', handleCloseEmojiPicker);
-    }
-    return () => document.removeEventListener('mousedown', handleCloseEmojiPicker);
-  }, [showEmojiPicker, handleCloseEmojiPicker]);
-
   useEffect(() => {
     if (initialCategories) return;
     getCategories().then((result) => {
@@ -174,7 +146,6 @@ export default function SkillAddForm({ categories: initialCategories, onDirtyCha
     if (isEditMode && skillId) {
       return {
         skillId,
-        icon: form.icon,
         categoryId: form.categoryId,
         title: form.title,
         description: form.description,
@@ -186,7 +157,6 @@ export default function SkillAddForm({ categories: initialCategories, onDirtyCha
       };
     }
     return {
-      icon: form.icon,
       categoryId: form.categoryId,
       title: form.title,
       description: form.description,
@@ -201,7 +171,6 @@ export default function SkillAddForm({ categories: initialCategories, onDirtyCha
     setIsSubmitting(true);
     try {
       const formData = new FormData();
-      formData.append('icon', form.icon);
       formData.append('categoryId', form.categoryId);
       formData.append('title', form.title);
       formData.append('description', form.description);
@@ -252,65 +221,22 @@ export default function SkillAddForm({ categories: initialCategories, onDirtyCha
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col md:flex-row max-h-[92vh]">
-      {/* 좌측 패널 — 아이콘 + 제목 + 상세 설명 */}
+      {/* 좌측 패널 — 제목 + 상세 설명 */}
       <div className="flex-1 overflow-y-auto p-10 md:p-14 scrollbar-hide">
-        {/* 아이콘 + 제목 */}
-        <div className="mb-10 flex items-start gap-8">
-          <div className="relative flex-shrink-0" ref={emojiPickerRef}>
-            <button
-              type="button"
-              className="group size-28 bg-[#F0F0F0] rounded-3xl flex flex-col items-center justify-center border-2 border-dashed border-slate-300 hover:border-[#00007F] hover:bg-white transition-all overflow-hidden"
-              onClick={() => setShowEmojiPicker((v) => !v)}
-              title="이모지 선택"
-            >
-              {form.icon ? (
-                <span className="text-5xl">{form.icon}</span>
-              ) : (
-                <>
-                  <span className="text-4xl text-slate-400 group-hover:text-[#00007F]">+</span>
-                  <span className="text-[12px] font-bold text-slate-400 mt-2 group-hover:text-[#00007F]">아이콘 선택</span>
-                </>
-              )}
-            </button>
-            {showEmojiPicker && (
-              <div className="absolute left-0 top-36 z-50 bg-white border border-slate-200 rounded-xl shadow-xl p-3 w-64">
-                {EMOJI_GROUPS.map((group) => (
-                  <div key={group.label} className="mb-2">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">{group.label}</p>
-                    <div className="flex flex-wrap gap-1">
-                      {group.emojis.map((emoji) => (
-                        <button
-                          key={emoji}
-                          type="button"
-                          className="w-8 h-8 text-xl rounded-lg hover:bg-slate-100 flex items-center justify-center transition-colors"
-                          onClick={() => {
-                            updateField('icon', emoji);
-                            setShowEmojiPicker(false);
-                          }}
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="flex-1 pt-2">
-            <label className="block text-[12px] font-extrabold uppercase tracking-wider text-slate-400 mb-3 ml-1">제목</label>
-            <input
-              id="title"
-              value={form.title}
-              onChange={(e) => updateField('title', e.target.value)}
-              placeholder="스킬 명칭을 입력하세요"
-              maxLength={100}
-              className={`w-full text-2xl font-bold bg-transparent border-b-2 border-slate-100 focus:border-[#00007F] focus:ring-0 focus:outline-none placeholder:text-slate-300 transition-all pb-2 px-1 ${fieldErrors.title ? 'border-red-400' : ''}`}
-            />
-            {fieldErrors.title && (
-              <p className="text-xs text-red-500 mt-1">{fieldErrors.title}</p>
-            )}
-          </div>
+        {/* 제목 */}
+        <div className="mb-10">
+          <label className="block text-[12px] font-extrabold uppercase tracking-wider text-slate-400 mb-3 ml-1">제목</label>
+          <input
+            id="title"
+            value={form.title}
+            onChange={(e) => updateField('title', e.target.value)}
+            placeholder="스킬 명칭을 입력하세요"
+            maxLength={100}
+            className={`w-full text-2xl font-bold bg-transparent border-b-2 border-slate-100 focus:border-[#00007F] focus:ring-0 focus:outline-none placeholder:text-slate-300 transition-all pb-2 px-1 ${fieldErrors.title ? 'border-red-400' : ''}`}
+          />
+          {fieldErrors.title && (
+            <p className="text-xs text-red-500 mt-1">{fieldErrors.title}</p>
+          )}
         </div>
 
         {/* 설명 */}
@@ -422,15 +348,7 @@ export default function SkillAddForm({ categories: initialCategories, onDirtyCha
           </button>
         </div>
 
-        {/* 보안 가이드 */}
-        <div className="p-6 bg-white/60 rounded-2xl border border-white shadow-sm">
-          <h5 className="text-[10px] font-extrabold text-[#00007F] uppercase tracking-wider mb-3 flex items-center gap-2">
-            보안 가이드
-          </h5>
-          <p className="text-[12px] text-slate-500 leading-relaxed">
-            등록된 모든 스킬은 사내 보안 가이드를 준수해야 하며, 위반 시 삭제될 수 있습니다.
-          </p>
-        </div>
+
       </div>
     </form>
   );

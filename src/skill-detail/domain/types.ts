@@ -2,7 +2,6 @@
 export interface SkillDetailPopup {
   readonly id: string;
   readonly title: string;
-  readonly icon: string;
   readonly description: string | null;
   readonly categoryName: string;
   readonly categoryIcon: string;

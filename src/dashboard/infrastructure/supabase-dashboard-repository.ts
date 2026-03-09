@@ -35,7 +35,7 @@ export class SupabaseDashboardRepository implements DashboardRepository {
     let query = supabase
       .from('skills')
       .select(
-        'id, title, description, icon, created_at, categories(name, icon)',
+        'id, title, description, created_at, categories(name, icon)',
         { count: 'exact' }
       )
       .eq('status', 'published')
@@ -60,7 +60,6 @@ export class SupabaseDashboardRepository implements DashboardRepository {
       id: row.id as string,
       title: row.title as string,
       description: (row.description as string | null) ?? null,
-      icon: (row.icon as string) ?? '⚡',
       categoryName: extractCategoryName(row.categories as unknown as JoinedCategory),
       categoryIcon: extractCategoryIcon(row.categories as unknown as JoinedCategory),
       createdAt: row.created_at as string,

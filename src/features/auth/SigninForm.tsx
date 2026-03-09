@@ -61,9 +61,7 @@ export function SigninForm() {
     <div className="glass-card w-full max-w-[440px] rounded-2xl shadow-xl p-8 md:p-12 relative z-10">
       {/* Brand icon + title */}
       <div className="flex flex-col items-center mb-8">
-        <div className="w-16 h-16 bg-[#FEFE01] rounded-2xl flex items-center justify-center mb-4 shadow-sm">
-          <span className="text-4xl">🤖</span>
-        </div>
+
         <h1 className="text-2xl font-bold tracking-tight text-[#00007F]">로그인</h1>
         <p className="text-slate-600 text-sm mt-2 text-center">ELUO AI Skill Hub에 접속하세요</p>
       </div>

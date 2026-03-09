@@ -198,7 +198,7 @@ export class SupabaseAdminRepository implements AdminRepository {
 
     let query = supabase
       .from('skills')
-      .select('id, title, description, icon, status, created_at, updated_at, categories(name, icon)', { count: 'exact' })
+      .select('id, title, description, status, created_at, updated_at, categories(name, icon)', { count: 'exact' })
       .order('created_at', { ascending: false });
 
     if (search) {
@@ -218,7 +218,6 @@ export class SupabaseAdminRepository implements AdminRepository {
       id: row.id as string,
       title: row.title as string,
       description: (row.description as string | null) ?? null,
-      icon: (row.icon as string) ?? '⚡',
       categoryName: extractCategoryName(row.categories as JoinedCategory),
       categoryIcon: extractCategoryIcon(row.categories as JoinedCategory),
       status: ((row.status as string) === 'drafted' ? 'drafted' : 'published') as 'published' | 'drafted',
@@ -393,7 +392,7 @@ export class SupabaseAdminRepository implements AdminRepository {
     const [skillResult, templatesResult] = await Promise.all([
       supabase
         .from('skills')
-        .select('id, title, description, icon, category_id, status, markdown_file_path, markdown_content, created_at, categories(id, name, icon)')
+        .select('id, title, description, category_id, status, markdown_file_path, markdown_content, created_at, categories(id, name, icon)')
         .eq('id', id)
         .single(),
       supabase
@@ -429,7 +428,6 @@ export class SupabaseAdminRepository implements AdminRepository {
         id: skill.id as string,
         title: skill.title as string,
         description: (skill.description as string) ?? '',
-        icon: (skill.icon as string) ?? '⚡',
         categoryId: (skill.category_id as string) ?? '',
         categoryName: catObj?.name ?? '',
         categoryIcon: catObj?.icon ?? '',
@@ -453,14 +451,12 @@ export class SupabaseAdminRepository implements AdminRepository {
       return { success: false, error: '권한이 없습니다' };
     }
 
-    const icon = input.icon.trim() || '⚡';
     const status = input.isPublished ? 'published' : 'drafted';
 
     // 스킬 기본 정보 업데이트
     const { error: updateError } = await supabase
       .from('skills')
       .update({
-        icon,
         category_id: input.categoryId,
         title: input.title,
         description: input.description,
@@ -590,13 +586,11 @@ export class SupabaseAdminRepository implements AdminRepository {
       return { success: false, error: '권한이 없습니다' };
     }
 
-    const icon = input.icon.trim() || '⚡';
     const status = input.isPublished ? 'published' : 'drafted';
 
     const { data: skill, error: insertError } = await supabase
       .from('skills')
       .insert({
-        icon,
         category_id: input.categoryId,
         title: input.title,
         description: input.description,

@@ -70,8 +70,7 @@ export async function signup(
     return { error: result.error, step: "form", email: "" };
   }
 
-  trackServerEvent('auth.signup', { email: email.toLowerCase() });
-
+  // signUp은 항상 pending 또는 에러를 반환하므로 여기에 도달하지 않음
   return { error: "", step: "verify", email: email.toLowerCase() };
 }
 

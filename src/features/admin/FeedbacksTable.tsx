@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import type { FeedbackRow, FeedbackReplyRow, PaginatedResult } from '@/admin/domain/types';
 import { Lock, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
-import { getRepliesAction } from '@/app/admin/feedbacks/actions';
+import { getRepliesAction, getCurrentUserIdAction } from '@/app/admin/feedbacks/actions';
 import FeedbackReplies from '@/features/admin/FeedbackReplies';
 import FeedbackReplyForm from '@/features/admin/FeedbackReplyForm';
 
@@ -16,9 +16,14 @@ interface FeedbacksTableProps {
 export default function FeedbacksTable({ result }: FeedbacksTableProps) {
   const { data, page, totalPages } = result;
 
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [expandedFeedbackId, setExpandedFeedbackId] = useState<string | null>(null);
   const [repliesMap, setRepliesMap] = useState<Record<string, FeedbackReplyRow[]>>({});
   const [loadingMap, setLoadingMap] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    void getCurrentUserIdAction().then(setCurrentUserId);
+  }, []);
 
   const loadReplies = useCallback(async (feedbackId: string) => {
     setLoadingMap((prev) => ({ ...prev, [feedbackId]: true }));
@@ -127,7 +132,12 @@ export default function FeedbacksTable({ result }: FeedbacksTableProps) {
                   {isExpanded && (
                     <tr key={`${feedback.id}-accordion`} className="bg-[#000080]/2">
                       <td colSpan={6} className="pb-3">
-                        <FeedbackReplies replies={replies} loading={loading} />
+                        <FeedbackReplies
+                          replies={replies}
+                          loading={loading}
+                          currentUserId={currentUserId}
+                          onReplyUpdated={() => void loadReplies(feedback.id)}
+                        />
                         <FeedbackReplyForm
                           feedbackId={feedback.id}
                           onReplyCreated={() => void handleReplyCreated(feedback.id)}

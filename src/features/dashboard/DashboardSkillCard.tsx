@@ -25,9 +25,7 @@ export default function DashboardSkillCard({ skill, isBookmarked, userId, onTagC
           <CategoryIcon icon={skill.categoryIcon} size={12} />
           {skill.categoryName}
         </span>
-        <span className="px-2.5 py-1 bg-[#00007F]/10 text-[10px] font-semibold rounded-full text-[#00007F]">
-          v{skill.version}
-        </span>
+
         {skill.tags.slice(0, 3).map((tag) => (
           <button
             key={tag}
@@ -43,14 +41,19 @@ export default function DashboardSkillCard({ skill, isBookmarked, userId, onTagC
           </button>
         ))}
       </div>
-      <p className="mt-3 text-xs text-slate-400">
-        {(() => {
-          const fmt = (d: string) => d.slice(0, 10).replace(/-/g, '');
-          const created = fmt(skill.createdAt);
-          const updated = fmt(skill.updatedAt);
-          return created === updated ? created : `${created} / ${updated}`;
-        })()}
-      </p>
+      <div className="flex items-center justify-between mt-3">
+        <p className="text-xs text-slate-400">
+          {(() => {
+            const fmt = (d: string) => d.slice(0, 10).replace(/-/g, '');
+            const created = fmt(skill.createdAt);
+            const updated = fmt(skill.updatedAt);
+            return created === updated ? created : `${created} / ${updated}`;
+          })()}
+        </p>
+        <span className="px-2.5 py-1 bg-[#00007F]/10 text-[10px] font-semibold rounded-full text-[#00007F] shrink-0">
+          v{skill.version}
+        </span>
+      </div>
     </div>
   );
 }

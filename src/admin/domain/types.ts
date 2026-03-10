@@ -107,6 +107,7 @@ export interface FeedbackRow {
 export interface FeedbackReplyRow {
   readonly id: string;
   readonly feedbackId: string;
+  readonly userId: string;
   readonly userName: string;
   readonly content: string;
   readonly createdAt: string;
@@ -118,6 +119,14 @@ export interface CreateFeedbackReplyInput {
 }
 
 export type CreateFeedbackReplyResult =
+  | { success: true }
+  | { success: false; error: string };
+
+export type UpdateFeedbackReplyResult =
+  | { success: true }
+  | { success: false; error: string };
+
+export type DeleteFeedbackReplyResult =
   | { success: true }
   | { success: false; error: string };
 
@@ -194,6 +203,8 @@ export interface AdminRepository {
   getFeedbacks(page: number, pageSize: number): Promise<PaginatedResult<FeedbackRow>>;
   getFeedbackReplies(feedbackId: string): Promise<FeedbackReplyRow[]>;
   createFeedbackReply(userId: string, input: CreateFeedbackReplyInput): Promise<CreateFeedbackReplyResult>;
+  updateFeedbackReply(replyId: string, content: string): Promise<UpdateFeedbackReplyResult>;
+  deleteFeedbackReply(replyId: string): Promise<DeleteFeedbackReplyResult>;
   getAllRoles(): Promise<Role[]>;
   updateMemberRole(memberId: string, roleId: string): Promise<void>;
   getAdminCount(): Promise<number>;

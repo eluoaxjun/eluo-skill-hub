@@ -8,6 +8,7 @@ import type {
   CreateSkillInput,
   CreateSkillResult,
   DashboardStats,
+  DeleteFeedbackReplyResult,
   DeleteSkillResult,
   FeedbackReplyRow,
   FeedbackRow,
@@ -22,6 +23,7 @@ import type {
   SkillStatusCounts,
   SkillStatusFilter,
   SkillTemplateRow,
+  UpdateFeedbackReplyResult,
   UpdateSkillInput,
   UpdateSkillResult,
   VersionHistoryEntry,
@@ -320,7 +322,7 @@ export class SupabaseAdminRepository implements AdminRepository {
     const supabase = await createClient();
     const { data } = await supabase
       .from('feedback_replies')
-      .select('id, feedback_id, content, created_at, profiles!feedback_replies_user_id_profiles_fkey(email)')
+      .select('id, feedback_id, user_id, content, created_at, profiles!feedback_replies_user_id_profiles_fkey(email)')
       .eq('feedback_id', feedbackId)
       .order('created_at', { ascending: false });
 
@@ -328,6 +330,7 @@ export class SupabaseAdminRepository implements AdminRepository {
     return data.map((row) => ({
       id: row.id as string,
       feedbackId: row.feedback_id as string,
+      userId: row.user_id as string,
       userName: extractEmail(row.profiles as JoinedEmail),
       content: row.content as string,
       createdAt: row.created_at as string,
@@ -345,6 +348,28 @@ export class SupabaseAdminRepository implements AdminRepository {
       });
 
     if (error) return { success: false, error: '댓글 등록에 실패했습니다.' };
+    return { success: true };
+  }
+
+  async updateFeedbackReply(replyId: string, content: string): Promise<UpdateFeedbackReplyResult> {
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from('feedback_replies')
+      .update({ content })
+      .eq('id', replyId);
+
+    if (error) return { success: false, error: '댓글 수정에 실패했습니다.' };
+    return { success: true };
+  }
+
+  async deleteFeedbackReply(replyId: string): Promise<DeleteFeedbackReplyResult> {
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from('feedback_replies')
+      .delete()
+      .eq('id', replyId);
+
+    if (error) return { success: false, error: '댓글 삭제에 실패했습니다.' };
     return { success: true };
   }
 

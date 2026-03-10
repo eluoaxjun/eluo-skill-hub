@@ -4,7 +4,7 @@ import { SupabaseAdminRepository } from '@/admin/infrastructure/supabase-admin-r
 import { GetFeedbackRepliesUseCase } from '@/admin/application/get-feedback-replies-use-case';
 import { CreateFeedbackReplyUseCase } from '@/admin/application/create-feedback-reply-use-case';
 import { createClient } from '@/shared/infrastructure/supabase/server';
-import type { FeedbackReplyRow, CreateFeedbackReplyResult } from '@/admin/domain/types';
+import type { FeedbackReplyRow, CreateFeedbackReplyResult, UpdateFeedbackReplyResult, DeleteFeedbackReplyResult } from '@/admin/domain/types';
 
 export async function getRepliesAction(feedbackId: string): Promise<FeedbackReplyRow[]> {
   const repository = new SupabaseAdminRepository();
@@ -23,4 +23,34 @@ export async function createReplyAction(feedbackId: string, content: string): Pr
   const repository = new SupabaseAdminRepository();
   const useCase = new CreateFeedbackReplyUseCase(repository);
   return useCase.execute(user.id, { feedbackId, content });
+}
+
+export async function updateReplyAction(replyId: string, content: string): Promise<UpdateFeedbackReplyResult> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: '로그인이 필요합니다.' };
+  }
+
+  const repository = new SupabaseAdminRepository();
+  return repository.updateFeedbackReply(replyId, content);
+}
+
+export async function deleteReplyAction(replyId: string): Promise<DeleteFeedbackReplyResult> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: '로그인이 필요합니다.' };
+  }
+
+  const repository = new SupabaseAdminRepository();
+  return repository.deleteFeedbackReply(replyId);
+}
+
+export async function getCurrentUserIdAction(): Promise<string | null> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id ?? null;
 }

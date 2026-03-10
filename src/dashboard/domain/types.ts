@@ -2,10 +2,12 @@ export interface DashboardSkillCard {
   readonly id: string;
   readonly title: string;
   readonly description: string | null;
-  readonly icon: string;
   readonly categoryName: string;
   readonly categoryIcon: string;
+  readonly version: string;
+  readonly tags: readonly string[];
   readonly createdAt: string;
+  readonly updatedAt: string;
 }
 
 export interface DashboardSkillsResult {
@@ -36,7 +38,8 @@ export interface DashboardRepository {
     limit: number,
     offset: number,
     search?: string,
-    categoryId?: string
+    categoryId?: string,
+    tag?: string
   ): Promise<DashboardSkillsResult>;
 
   getCategories(): Promise<CategoryItem[]>;

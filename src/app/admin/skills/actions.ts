@@ -16,10 +16,13 @@ export async function createSkill(formData: FormData): Promise<CreateSkillResult
     return { success: false, error: '권한이 없습니다' };
   }
 
-  const icon = (formData.get('icon') as string | null) ?? '';
   const categoryId = (formData.get('categoryId') as string | null) ?? '';
   const title = (formData.get('title') as string | null) ?? '';
   const description = (formData.get('description') as string | null) ?? '';
+  const version = (formData.get('version') as string | null) ?? '1.0.0';
+  const tagsRaw = (formData.get('tags') as string | null) ?? '[]';
+  let tags: string[] = [];
+  try { tags = JSON.parse(tagsRaw) as string[]; } catch { tags = []; }
   const isPublished = formData.get('isPublished') === 'true';
   const markdownFileRaw = formData.get('markdownFile');
   const markdownFile = markdownFileRaw instanceof File && markdownFileRaw.size > 0 ? markdownFileRaw : undefined;
@@ -71,10 +74,11 @@ export async function createSkill(formData: FormData): Promise<CreateSkillResult
   const useCase = new CreateSkillUseCase(repository);
 
   const result = await useCase.execute({
-    icon,
     categoryId,
     title,
     description,
+    version,
+    tags,
     isPublished,
     markdownFile,
     templateFiles: templateFiles.length > 0 ? templateFiles : undefined,
@@ -112,10 +116,13 @@ export async function updateSkill(formData: FormData): Promise<UpdateSkillResult
   }
 
   const skillId = (formData.get('skillId') as string | null) ?? '';
-  const icon = (formData.get('icon') as string | null) ?? '';
   const categoryId = (formData.get('categoryId') as string | null) ?? '';
   const title = (formData.get('title') as string | null) ?? '';
   const description = (formData.get('description') as string | null) ?? '';
+  const version = (formData.get('version') as string | null) ?? '1.0.0';
+  const tagsRaw = (formData.get('tags') as string | null) ?? '[]';
+  let updateTags: string[] = [];
+  try { updateTags = JSON.parse(tagsRaw) as string[]; } catch { updateTags = []; }
   const isPublished = formData.get('isPublished') === 'true';
   const removeMarkdown = formData.get('removeMarkdown') === 'true';
   const markdownFileRaw = formData.get('markdownFile');
@@ -180,10 +187,11 @@ export async function updateSkill(formData: FormData): Promise<UpdateSkillResult
 
   const result = await useCase.execute({
     skillId,
-    icon,
     categoryId,
     title,
     description,
+    version,
+    tags: updateTags,
     isPublished,
     markdownFile,
     removeMarkdown,

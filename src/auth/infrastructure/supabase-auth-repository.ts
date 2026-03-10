@@ -27,8 +27,19 @@ export class SupabaseAuthRepository implements AuthRepository {
 
   async signUp(credentials: SignupCredentials): Promise<SignupResult> {
     const supabase = await createClient();
-    const { data, error } = await supabase.auth.signUp({
-      email: credentials.email.toLowerCase(),
+    const email = credentials.email.toLowerCase();
+
+    // RPC로 이메일 중복 체크 (SECURITY DEFINER로 RLS 우회, boolean만 반환)
+    const { data: emailExists } = await supabase.rpc("check_email_exists", {
+      check_email: email,
+    });
+
+    if (emailExists) {
+      return { success: false, error: "이미 가입된 이메일입니다" };
+    }
+
+    const { error } = await supabase.auth.signUp({
+      email,
       password: credentials.password,
       options: {
         data: {
@@ -49,17 +60,7 @@ export class SupabaseAuthRepository implements AuthRepository {
       return { success: false, error: error.message };
     }
 
-    // 이미 존재하는 이메일: identities가 빈 배열로 반환됨
-    if (data.user && data.user.identities && data.user.identities.length === 0) {
-      // 이메일 미인증(pending) 계정: OTP 입력 화면으로 전환
-      if (!data.user.email_confirmed_at) {
-        return { success: "pending" };
-      }
-      // 이미 인증 완료된 계정
-      return { success: false, error: "이미 가입된 이메일입니다" };
-    }
-
-    return { success: true };
+    return { success: "pending" };
   }
 
   async verifyOtp(credentials: VerifyOtpCredentials): Promise<VerifyOtpResult> {

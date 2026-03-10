@@ -35,9 +35,6 @@ export default function SkillCard({ skill }: SkillCardProps) {
   return (
     <div className="bg-white/70 backdrop-blur-sm border border-white/30 shadow-lg shadow-[#000080]/5 rounded-2xl p-6 flex flex-col transition-all hover:-translate-y-1 hover:shadow-xl">
       <div className="flex justify-between items-start mb-4">
-        <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-3xl">
-          {skill.icon}
-        </div>
         {skill.status === 'published' ? (
           <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full uppercase">
             Published
@@ -50,15 +47,39 @@ export default function SkillCard({ skill }: SkillCardProps) {
       </div>
       <h3 className="text-lg font-bold text-slate-900 mb-1">{skill.title}</h3>
       <p className="text-sm text-slate-500 mb-4 line-clamp-2">{skill.description ?? ''}</p>
-      <div className="mb-6">
+      <div className="mb-6 ">
         <div className="flex items-center gap-2 text-xs text-slate-400 font-medium">
           <Blocks className='size-4' />
           <span>{skill.categoryName}</span>
+          <span className="ml-1 px-2 py-0.5 bg-[#00007F]/10 text-[#00007F] text-[10px] font-semibold rounded-full">
+            v{skill.version}
+          </span>
         </div>
         <div className="flex items-center gap-2 text-xs text-slate-400 font-medium mt-1">
           <Clock className='size-4' />
-          <span>{new Date(skill.updatedAt).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+          <span>생성 {new Date(skill.createdAt).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
         </div>
+        {new Date(skill.createdAt).getTime() !== new Date(skill.updatedAt).getTime() && (
+          <div className="flex items-center gap-2 text-xs text-slate-400 font-medium mt-1">
+            <Clock className='size-4' />
+            <span>수정 {new Date(skill.updatedAt).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+          </div>
+        )}
+        {skill.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-3">
+            {skill.tags.slice(0, 3).map((tag) => (
+              <span
+                key={tag}
+                className="px-2 py-0.5 bg-slate-100 text-[10px] font-medium rounded-full text-slate-500"
+              >
+                #{tag}
+              </span>
+            ))}
+            {skill.tags.length > 3 && (
+              <span className="px-2 py-0.5 text-[10px] text-slate-400">+{skill.tags.length - 3}</span>
+            )}
+          </div>
+        )}
       </div>
       <div className="mt-auto pt-4 border-t border-slate-100 flex gap-2">
         <Link

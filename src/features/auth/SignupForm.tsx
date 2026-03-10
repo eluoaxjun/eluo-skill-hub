@@ -178,9 +178,6 @@ function SignupFormInner({ onReset }: { onReset: () => void }) {
       <div className="glass-card w-full max-w-[480px] rounded-3xl shadow-2xl p-8 md:p-10 relative z-10">
         {/* Card header */}
         <div className="flex flex-col items-center mb-10">
-          <div className="w-14 h-14 bg-[#FEFE01] rounded-2xl flex items-center justify-center mb-6 shadow-sm">
-            <span className="text-3xl">✉️</span>
-          </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-[#00007F]">이메일 인증</h1>
           <p className="text-slate-500 text-sm mt-3 text-center font-medium">
             <span className="font-bold text-[#00007F]">{verifiedEmail}</span>
@@ -262,9 +259,6 @@ function SignupFormInner({ onReset }: { onReset: () => void }) {
     <div className="glass-card w-full max-w-[480px] rounded-3xl shadow-2xl p-8 md:p-10 relative z-10">
       {/* Card header */}
       <div className="flex flex-col items-center mb-10">
-        <div className="w-14 h-14 bg-[#FEFE01] rounded-2xl flex items-center justify-center mb-6 shadow-sm">
-          <span className="text-3xl">✨</span>
-        </div>
         <h1 className="text-3xl font-extrabold tracking-tight text-[#00007F]">회원가입</h1>
         <p className="text-slate-500 text-sm mt-3 text-center font-medium">
           ELUO AI 플랫폼의 새로운 여정을 시작하세요

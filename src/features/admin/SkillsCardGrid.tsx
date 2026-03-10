@@ -1,9 +1,15 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import type { CategoryOption, PaginatedResult, SkillRow, SkillStatusCounts, SkillStatusFilter } from '@/admin/domain/types';
 import SkillCard from './SkillCard';
+import SkillTableView from './SkillTableView';
 import SkillStatusFilterTabs from './SkillStatusFilter';
 import SkillCategoryFilter from './SkillCategoryFilter';
+import ViewModeToggle from './ViewModeToggle';
+import type { ViewMode } from './ViewModeToggle';
 
 interface SkillsCardGridProps {
   result: PaginatedResult<SkillRow>;
@@ -25,6 +31,7 @@ function buildPageUrl(pageNum: number, searchQuery?: string, currentStatus?: Ski
 }
 
 export default function SkillsCardGrid({ result, currentStatus, currentCategoryId, categories, searchQuery, searchInput, statusCounts }: SkillsCardGridProps) {
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const { data, page, totalPages, totalCount } = result;
 
   return (
@@ -45,21 +52,20 @@ export default function SkillsCardGrid({ result, currentStatus, currentCategoryI
       </div>
       <div className="flex justify-between items-center mb-6">
         {/* Category filter */}
-        <div className="">
+        <div className="flex items-center gap-3">
           <SkillCategoryFilter categories={categories} currentCategoryId={currentCategoryId} />
         </div>
-        {/* Search input */}
-        <div className="">{searchInput}</div>
-
-
+        {/* View toggle + Search input */}
+        <div className="flex items-center gap-3">
+          <ViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+          {searchInput}
+        </div>
       </div>
 
-
-
-      {/* Card grid */}
+      {/* Content area - shared empty state */}
       {data.length === 0 ? (
         <div className="space-y-4">
-          <div className=" border border-white/30  rounded-2xl p-12 text-center">
+          <div className="border border-white/30 rounded-2xl p-12 text-center">
             {searchQuery ? (
               <p className="text-slate-500 font-medium">검색 결과가 없습니다</p>
             ) : (
@@ -77,7 +83,7 @@ export default function SkillsCardGrid({ result, currentStatus, currentCategoryI
             <p className="text-xs mt-1">새로운 AI 어시스턴트를 등록하세요</p>
           </Link>
         </div>
-      ) : (
+      ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {data.map((skill) => (
             <SkillCard key={skill.id} skill={skill} />
@@ -93,6 +99,10 @@ export default function SkillsCardGrid({ result, currentStatus, currentCategoryI
             <p className="font-bold">새 스킬 추가하기</p>
             <p className="text-xs mt-1">새로운 AI 어시스턴트를 등록하세요</p>
           </Link>
+        </div>
+      ) : (
+        <div className="bg-white/70 backdrop-blur-sm border border-white/30 shadow-lg shadow-[#000080]/5 rounded-2xl p-6">
+          <SkillTableView skills={data} />
         </div>
       )}
 

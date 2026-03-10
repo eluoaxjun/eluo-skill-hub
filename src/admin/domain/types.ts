@@ -54,10 +54,11 @@ export interface SkillRow {
   readonly id: string;
   readonly title: string;
   readonly description: string | null;
-  readonly icon: string;
   readonly categoryName: string;
   readonly categoryIcon: string;
   readonly status: 'published' | 'drafted';
+  readonly version: string;
+  readonly tags: readonly string[];
   readonly createdAt: string;
   readonly updatedAt: string;
 }
@@ -69,10 +70,11 @@ export interface CategoryOption {
 }
 
 export interface CreateSkillInput {
-  readonly icon: string;
   readonly categoryId: string;
   readonly title: string;
   readonly description: string;
+  readonly version: string;
+  readonly tags: readonly string[];
   readonly isPublished: boolean;
   readonly markdownFile?: File;
   readonly templateFiles?: File[];
@@ -114,27 +116,36 @@ export interface SkillStatusCounts {
   readonly drafted: number;
 }
 
+export interface VersionHistoryEntry {
+  readonly version: string;
+  readonly changedAt: string;
+  readonly note: string | null;
+}
+
 export interface SkillDetail {
   readonly id: string;
   readonly title: string;
   readonly description: string;
-  readonly icon: string;
   readonly categoryId: string;
   readonly categoryName: string;
   readonly categoryIcon: string;
   readonly status: 'published' | 'drafted';
+  readonly version: string;
+  readonly tags: readonly string[];
   readonly markdownFilePath: string;
   readonly markdownContent: string;
   readonly templates: SkillTemplateRow[];
+  readonly versionHistory: VersionHistoryEntry[];
   readonly createdAt: string;
 }
 
 export interface UpdateSkillInput {
   readonly skillId: string;
-  readonly icon: string;
   readonly categoryId: string;
   readonly title: string;
   readonly description: string;
+  readonly version: string;
+  readonly tags: readonly string[];
   readonly isPublished: boolean;
   readonly markdownFile?: File;
   readonly removeMarkdown: boolean;

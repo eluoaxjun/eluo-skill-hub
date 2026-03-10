@@ -28,16 +28,14 @@ export class SupabaseDashboardRepository implements DashboardRepository {
     limit: number,
     offset: number = 0,
     search?: string,
-    categoryId?: string
+    categoryId?: string,
+    tag?: string
   ): Promise<DashboardSkillsResult> {
     const supabase = await createClient();
 
     let query = supabase
       .from('skills')
-      .select(
-        'id, title, description, icon, created_at, categories(name, icon)',
-        { count: 'exact' }
-      )
+      .select('id, title, description, version, created_at, updated_at, tags, categories(name, icon)', { count: 'exact' })
       .eq('status', 'published')
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
@@ -52,6 +50,10 @@ export class SupabaseDashboardRepository implements DashboardRepository {
       query = query.eq('category_id', categoryId);
     }
 
+    if (tag) {
+      query = query.contains('tags', [tag]);
+    }
+
     const { data, count } = await query;
 
     const totalCount = count ?? 0;
@@ -60,10 +62,12 @@ export class SupabaseDashboardRepository implements DashboardRepository {
       id: row.id as string,
       title: row.title as string,
       description: (row.description as string | null) ?? null,
-      icon: (row.icon as string) ?? '⚡',
       categoryName: extractCategoryName(row.categories as unknown as JoinedCategory),
       categoryIcon: extractCategoryIcon(row.categories as unknown as JoinedCategory),
+      version: (row.version as string) ?? '1.0.0',
+      tags: (row.tags as string[] | null) ?? [],
       createdAt: row.created_at as string,
+      updatedAt: row.updated_at as string,
     }));
 
     return {

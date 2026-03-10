@@ -12,7 +12,7 @@ interface DashboardSkillCardProps {
 export default function DashboardSkillCard({ skill, isBookmarked, userId, onTagClick }: DashboardSkillCardProps) {
   return (
     <div
-      className="relative h-full flex flex-col bg-[rgba(0,0,127,0.05)] p-5 md:p-8 rounded-2xl md:rounded-3xl border border-white/40 transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_25px_-5px_rgba(0,0,127,0.1),0_10px_10px_-5px_rgba(0,0,127,0.04)] hover:bg-white cursor-pointer"
+      className="relative h-full flex flex-col bg-[rgba(0,0,127,0.05)] p-5 pb-4 md:p-8 md:pb-5 rounded-2xl md:rounded-3xl border border-white/40 transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_25px_-5px_rgba(0,0,127,0.1),0_10px_10px_-5px_rgba(0,0,127,0.04)] hover:bg-white cursor-pointer"
     >
       <BookmarkButton skillId={skill.id} isBookmarked={isBookmarked ?? false} userId={userId} />
 

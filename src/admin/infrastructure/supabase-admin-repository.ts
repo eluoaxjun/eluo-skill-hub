@@ -119,7 +119,7 @@ export class SupabaseAdminRepository implements AdminRepository {
 
     const { data } = await supabase
       .from('skills')
-      .select('id, title, description, created_at, categories(name)')
+      .select('id, skill_code, title, description, created_at, categories(name)')
       .order('created_at', { ascending: false })
       .limit(limit);
 
@@ -127,6 +127,7 @@ export class SupabaseAdminRepository implements AdminRepository {
 
     return data.map((row) => ({
       id: row.id as string,
+      skillCode: row.skill_code as string,
       title: row.title as string,
       description: (row.description as string | null) ?? null,
       categoryName: extractName(row.categories as JoinedName),
@@ -205,11 +206,11 @@ export class SupabaseAdminRepository implements AdminRepository {
 
     let query = supabase
       .from('skills')
-      .select('id, title, description, version, status, created_at, updated_at, tags, categories(name, icon)', { count: 'exact' })
+      .select('id, skill_code, title, description, version, status, created_at, updated_at, tags, categories(name, icon)', { count: 'exact' })
       .order('created_at', { ascending: false });
 
     if (search) {
-      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
+      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,skill_code.ilike.%${search}%`);
     }
     if (status && status !== 'all') {
       query = query.eq('status', status);
@@ -223,6 +224,7 @@ export class SupabaseAdminRepository implements AdminRepository {
     const totalCount = count ?? 0;
     const rows: SkillRow[] = (data ?? []).map((row) => ({
       id: row.id as string,
+      skillCode: row.skill_code as string,
       title: row.title as string,
       description: (row.description as string | null) ?? null,
       categoryName: extractCategoryName(row.categories as JoinedCategory),
@@ -480,7 +482,7 @@ export class SupabaseAdminRepository implements AdminRepository {
     const [skillResult, templatesResult, versionHistoryResult] = await Promise.all([
       supabase
         .from('skills')
-        .select('id, title, description, version, category_id, status, markdown_file_path, markdown_content, created_at, tags, categories(id, name, icon)')
+        .select('id, skill_code, title, description, version, category_id, status, markdown_file_path, markdown_content, created_at, tags, categories(id, name, icon)')
         .eq('id', id)
         .single(),
       supabase
@@ -525,6 +527,7 @@ export class SupabaseAdminRepository implements AdminRepository {
       success: true,
       skill: {
         id: skill.id as string,
+        skillCode: skill.skill_code as string,
         title: skill.title as string,
         description: (skill.description as string) ?? '',
         categoryId: (skill.category_id as string) ?? '',

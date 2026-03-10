@@ -1,6 +1,7 @@
 // 팝업에 표시할 스킬 전체 정보
 export interface SkillDetailPopup {
   readonly id: string;
+  readonly skillCode: string;
   readonly title: string;
   readonly description: string | null;
   readonly categoryName: string;

@@ -115,6 +115,10 @@ export default function SkillDetailModal({
           </h5>
           <div className="space-y-4 text-[13px] text-[#1a1a1a]">
             <div className="flex justify-between items-center">
+              <span className="text-slate-500">스킬 코드</span>
+              <span className="font-bold ">{skill?.skillCode ?? '-'}</span>
+            </div>
+            <div className="flex justify-between items-center">
               <span className="text-slate-500">최초 등록일</span>
               <span className="font-bold">
                 {skill ? formatDate(skill.createdAt) : '-'}

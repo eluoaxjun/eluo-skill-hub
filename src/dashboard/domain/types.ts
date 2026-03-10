@@ -1,5 +1,6 @@
 export interface DashboardSkillCard {
   readonly id: string;
+  readonly skillCode: string;
   readonly title: string;
   readonly description: string | null;
   readonly categoryName: string;

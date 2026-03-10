@@ -6,6 +6,7 @@ export interface DashboardStats {
 
 export interface RecentSkill {
   readonly id: string;
+  readonly skillCode: string;
   readonly title: string;
   readonly description: string | null;
   readonly categoryName: string;
@@ -52,6 +53,7 @@ export type SkillStatusFilter = 'all' | 'published' | 'drafted';
 
 export interface SkillRow {
   readonly id: string;
+  readonly skillCode: string;
   readonly title: string;
   readonly description: string | null;
   readonly categoryName: string;
@@ -151,6 +153,7 @@ export interface VersionHistoryEntry {
 
 export interface SkillDetail {
   readonly id: string;
+  readonly skillCode: string;
   readonly title: string;
   readonly description: string;
   readonly categoryId: string;

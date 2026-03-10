@@ -45,6 +45,7 @@ export default function SkillCard({ skill }: SkillCardProps) {
           </span>
         )}
       </div>
+      <p className="text-[11px] font-mono text-slate-400 mb-1">{skill.skillCode}</p>
       <h3 className="text-lg font-bold text-slate-900 mb-1">{skill.title}</h3>
       <p className="text-sm text-slate-500 mb-4 line-clamp-2">{skill.description ?? ''}</p>
       <div className="mb-6 ">

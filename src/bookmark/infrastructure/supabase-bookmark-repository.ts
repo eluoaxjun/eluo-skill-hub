@@ -4,6 +4,7 @@ import type { DashboardSkillCard } from '@/dashboard/domain/types';
 
 interface JoinedSkill {
   id: string;
+  skill_code: string;
   title: string;
   description: string | null;
   version: string;
@@ -39,7 +40,7 @@ export class SupabaseBookmarkRepository implements BookmarkRepository {
     const { data } = await supabase
       .from('bookmarks')
       .select(
-        'skill_id, created_at, skills(id, title, description, version, created_at, updated_at, tags, categories(name, icon))'
+        'skill_id, created_at, skills(id, skill_code, title, description, version, created_at, updated_at, tags, categories(name, icon))'
       )
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
@@ -53,6 +54,7 @@ export class SupabaseBookmarkRepository implements BookmarkRepository {
         const cat = extractCategory(skill.categories);
         return {
           id: skill.id,
+          skillCode: skill.skill_code,
           title: skill.title,
           description: skill.description,
           categoryName: cat.name,

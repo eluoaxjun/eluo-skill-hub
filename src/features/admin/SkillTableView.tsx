@@ -46,6 +46,7 @@ export default function SkillTableView({ skills }: SkillTableViewProps) {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-slate-200 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+            <th className="pb-3 pr-4">코드</th>
             <th className="pb-3 pr-4">제목</th>
             <th className="pb-3 pr-4">카테고리</th>
             <th className="pb-3 pr-4">버전</th>
@@ -62,6 +63,7 @@ export default function SkillTableView({ skills }: SkillTableViewProps) {
               key={skill.id}
               className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors"
             >
+              <td className="py-4 pr-4 text-xs font-mono text-slate-500">{skill.skillCode}</td>
               <td className="py-4 pr-4 font-bold text-slate-900">{skill.title}</td>
               <td className="py-4 pr-4">
                 <span className="flex items-center gap-1.5 text-slate-500">

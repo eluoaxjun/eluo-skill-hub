@@ -35,14 +35,14 @@ export class SupabaseDashboardRepository implements DashboardRepository {
 
     let query = supabase
       .from('skills')
-      .select('id, title, description, version, created_at, updated_at, tags, categories(name, icon)', { count: 'exact' })
+      .select('id, skill_code, title, description, version, created_at, updated_at, tags, categories(name, icon)', { count: 'exact' })
       .eq('status', 'published')
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (search) {
       query = query.or(
-        `title.ilike.%${search}%,description.ilike.%${search}%`
+        `title.ilike.%${search}%,description.ilike.%${search}%,skill_code.ilike.%${search}%`
       );
     }
 
@@ -60,6 +60,7 @@ export class SupabaseDashboardRepository implements DashboardRepository {
 
     const skills: DashboardSkillCard[] = (data ?? []).map((row) => ({
       id: row.id as string,
+      skillCode: row.skill_code as string,
       title: row.title as string,
       description: (row.description as string | null) ?? null,
       categoryName: extractCategoryName(row.categories as unknown as JoinedCategory),

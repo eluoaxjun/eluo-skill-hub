@@ -43,7 +43,7 @@ export default function SkillSearch({ defaultValue = '' }: SkillSearchProps) {
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
       <input
         type="search"
-        placeholder="스킬명 또는 설명으로 검색"
+        placeholder="스킬명, 코드 또는 설명으로 검색"
         value={value}
         onChange={handleChange}
         aria-label="스킬 검색"

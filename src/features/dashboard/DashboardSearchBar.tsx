@@ -51,7 +51,7 @@ export default function DashboardSearchBar({
         </div>
         <input
           className="w-full pl-11 md:pl-14 pr-20 md:pr-36 py-3.5 md:py-5 bg-transparent border-none focus:ring-0 outline-none text-base md:text-lg placeholder:text-slate-400"
-          placeholder="스킬 검색 또는 #태그명으로 태그 검색 (예: #마케팅)"
+          placeholder="스킬명, 코드 또는 #태그명으로 검색 (예: 10000001, #마케팅)"
           type="text"
           value={query}
           onChange={(e) => {

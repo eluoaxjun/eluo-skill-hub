@@ -37,7 +37,7 @@ export default function DashboardSkillCard({ skill, isBookmarked, userId, onTagC
               e.stopPropagation();
               onTagClick?.(tag);
             }}
-            className="px-2.5 py-1 bg-slate-100 text-[10px] font-medium rounded-full text-slate-500 hover:bg-[#00007F]/10 hover:text-[#00007F] transition-colors"
+            className="px-3 py-2.5 md:px-2.5 md:py-1 bg-slate-100 text-[10px] font-medium rounded-full text-slate-500 hover:bg-[#00007F]/10 hover:text-[#00007F] transition-colors"
           >
             #{tag}
           </button>

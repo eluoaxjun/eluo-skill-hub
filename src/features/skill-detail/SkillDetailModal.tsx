@@ -57,6 +57,8 @@ export default function SkillDetailModal({
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
+
   // Track skill view event
   useEffect(() => {
     trackEvent('skill.view', { skill_id: skillId });
@@ -65,7 +67,13 @@ export default function SkillDetailModal({
   // ESC key + body overflow lock
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        if (bottomSheetOpen) {
+          setBottomSheetOpen(false);
+        } else {
+          onClose();
+        }
+      }
     };
     document.addEventListener('keydown', handleKeyDown);
     document.body.style.overflow = 'hidden';
@@ -74,9 +82,14 @@ export default function SkillDetailModal({
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = '';
     };
-  }, [onClose]);
+  }, [onClose, bottomSheetOpen]);
 
-  const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
+  // C1: 모달 닫힐 때 바텀시트 상태 초기화
+  useEffect(() => {
+    return () => {
+      setBottomSheetOpen(false);
+    };
+  }, []);
 
   const totalFileSize = skill?.templates.reduce((sum, t) => sum + t.fileSize, 0) ?? 0;
 

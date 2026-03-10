@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import type { UserProfile, CategoryItem, SidebarTab } from '@/dashboard/domain/types';
 import DashboardSidebar from './DashboardSidebar';
@@ -84,6 +84,34 @@ export default function DashboardLayoutClient({
   });
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // C2: 모바일 사이드바 열림 시 body 스크롤 잠금
+  useEffect(() => {
+    if (!sidebarOpen) return;
+
+    const isMobile = window.matchMedia('(max-width: 767px)').matches;
+    if (!isMobile) return;
+
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [sidebarOpen]);
+
+  // C3: ESC 키로 모바일 사이드바 닫기
+  useEffect(() => {
+    if (!sidebarOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSidebarOpen(false);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [sidebarOpen]);
 
   const toggleSidebar = useCallback(() => {
     setSidebarOpen((prev) => !prev);

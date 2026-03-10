@@ -12,15 +12,25 @@ interface DashboardSearchBarProps {
 export default function DashboardSearchBar({
   defaultValue = '',
 }: DashboardSearchBarProps) {
-  const { setSearchQuery } = useDashboardFilter();
+  const { setSearchQuery, setActiveTag } = useDashboardFilter();
   const trackEvent = useTrackEvent();
   const [query, setQuery] = useState(defaultValue);
 
   function handleSearch() {
     const trimmed = query.trim();
+    if (trimmed.startsWith('#')) {
+      const tag = trimmed.slice(1).trim();
+      if (tag) {
+        trackEvent('search.tag', { tag });
+        setSearchQuery(undefined);
+        setActiveTag(tag);
+        return;
+      }
+    }
     if (trimmed) {
       trackEvent('search.query', { query: trimmed });
     }
+    setActiveTag(undefined);
     setSearchQuery(trimmed || undefined);
   }
 
@@ -41,7 +51,7 @@ export default function DashboardSearchBar({
         </div>
         <input
           className="w-full pl-11 md:pl-14 pr-20 md:pr-36 py-3.5 md:py-5 bg-transparent border-none focus:ring-0 outline-none text-base md:text-lg placeholder:text-slate-400"
-          placeholder="업무 효율을 높여줄 AI 스킬을 검색하세요..."
+          placeholder="스킬 검색 또는 #태그명으로 태그 검색 (예: #마케팅)"
           type="text"
           value={query}
           onChange={(e) => {
@@ -49,6 +59,7 @@ export default function DashboardSearchBar({
             setQuery(value);
             if (value.trim() === '') {
               setSearchQuery(undefined);
+              setActiveTag(undefined);
             }
           }}
           onKeyDown={handleKeyDown}

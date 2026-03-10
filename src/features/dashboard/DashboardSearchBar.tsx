@@ -44,7 +44,13 @@ export default function DashboardSearchBar({
           placeholder="업무 효율을 높여줄 AI 스킬을 검색하세요..."
           type="text"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            const value = e.target.value;
+            setQuery(value);
+            if (value.trim() === '') {
+              setSearchQuery(undefined);
+            }
+          }}
           onKeyDown={handleKeyDown}
         />
         <button

@@ -1,5 +1,5 @@
 import { createClient } from '@/shared/infrastructure/supabase/server';
-import { uploadFile, deleteFile, sanitizeStoragePath } from '@/shared/infrastructure/supabase/storage';
+import { deleteFile } from '@/shared/infrastructure/supabase/storage';
 import type {
   AdminRepository,
   CategoryOption,
@@ -595,8 +595,7 @@ export class SupabaseAdminRepository implements AdminRepository {
       });
     }
 
-    // 마크다운 파일 처리 (existingMarkdownPath 는 이미 위에서 병렬로 조회함)
-    const fileErrors: string[] = [];
+    // 마크다운 파일 처리 — 파일은 클라이언트에서 이미 Supabase Storage에 업로드됨
     if (input.removeMarkdown) {
       if (existingMarkdownPath) {
         try {
@@ -606,20 +605,11 @@ export class SupabaseAdminRepository implements AdminRepository {
         }
       }
 
-      if (input.markdownFile) {
-        // 새 마크다운 업로드
-        const mdPath = sanitizeStoragePath(input.skillId, input.markdownFile.name);
-        try {
-          await uploadFile('skill-descriptions', mdPath, input.markdownFile);
-          const arrayBuffer = await input.markdownFile.arrayBuffer();
-          const content = new TextDecoder().decode(arrayBuffer);
-          await supabase
-            .from('skills')
-            .update({ markdown_file_path: mdPath, markdown_content: content })
-            .eq('id', input.skillId);
-        } catch (err) {
-          fileErrors.push(`마크다운 파일 업로드 실패: ${err instanceof Error ? err.message : String(err)}`);
-        }
+      if (input.markdownFileRef) {
+        await supabase
+          .from('skills')
+          .update({ markdown_file_path: input.markdownFileRef.path, markdown_content: input.markdownFileRef.content ?? '' })
+          .eq('id', input.skillId);
       } else {
         // 마크다운 완전 제거
         await supabase
@@ -627,20 +617,11 @@ export class SupabaseAdminRepository implements AdminRepository {
           .update({ markdown_file_path: '', markdown_content: '' })
           .eq('id', input.skillId);
       }
-    } else if (input.markdownFile) {
-      // removeMarkdown이 false지만 새 파일이 있는 경우 (기존 없이 새로 추가)
-      const mdPath = sanitizeStoragePath(input.skillId, input.markdownFile.name);
-      try {
-        await uploadFile('skill-descriptions', mdPath, input.markdownFile);
-        const arrayBuffer = await input.markdownFile.arrayBuffer();
-        const content = new TextDecoder().decode(arrayBuffer);
-        await supabase
-          .from('skills')
-          .update({ markdown_file_path: mdPath, markdown_content: content })
-          .eq('id', input.skillId);
-      } catch (err) {
-        fileErrors.push(`마크다운 파일 업로드 실패: ${err instanceof Error ? err.message : String(err)}`);
-      }
+    } else if (input.markdownFileRef) {
+      await supabase
+        .from('skills')
+        .update({ markdown_file_path: input.markdownFileRef.path, markdown_content: input.markdownFileRef.content ?? '' })
+        .eq('id', input.skillId);
     }
 
     // 삭제 대상 템플릿 파일 병렬 처리
@@ -664,30 +645,20 @@ export class SupabaseAdminRepository implements AdminRepository {
         .in('id', input.removedTemplateIds);
     }
 
-    // 신규 템플릿 파일 병렬 업로드
-    if (input.templateFiles && input.templateFiles.length > 0) {
+    // 신규 템플릿 — 파일은 이미 클라이언트에서 업로드됨, DB 메타데이터만 저장
+    if (input.templateFileRefs && input.templateFileRefs.length > 0) {
       await Promise.all(
-        input.templateFiles.map((file) => {
-          const filePath = sanitizeStoragePath(input.skillId, file.name);
-          const fileType = file.name.endsWith('.zip') ? '.zip' : '.md';
-          return (async () => {
-            await uploadFile('skill-templates', filePath, file);
-            await supabase.from('skill_templates').insert({
-              skill_id: input.skillId,
-              file_name: file.name,
-              file_path: filePath,
-              file_size: file.size,
-              file_type: fileType,
-            });
-          })().catch((err) => {
-            fileErrors.push(`템플릿 파일(${file.name}) 업로드 실패: ${err instanceof Error ? err.message : String(err)}`);
+        input.templateFileRefs.map((ref) => {
+          const fileType = ref.originalName.endsWith('.zip') ? '.zip' : '.md';
+          return supabase.from('skill_templates').insert({
+            skill_id: input.skillId,
+            file_name: ref.originalName,
+            file_path: ref.path,
+            file_size: ref.size,
+            file_type: fileType,
           });
         }),
       );
-    }
-
-    if (fileErrors.length > 0) {
-      return { success: false, error: `스킬은 수정되었으나 파일 업로드에 실패했습니다: ${fileErrors.join(', ')}` };
     }
 
     return { success: true, skillId: input.skillId };
@@ -730,54 +701,39 @@ export class SupabaseAdminRepository implements AdminRepository {
 
     const skillId = skill.id as string;
 
-    // 마크다운 + 템플릿 파일 병렬 업로드
-    const fileErrors: string[] = [];
-    const uploadTasks: Promise<void>[] = [];
+    // 클라이언트에서 이미 업로드된 파일 메타데이터를 DB에 반영
+    const dbTasks: Promise<void>[] = [];
 
-    if (input.markdownFile) {
-      const mdFile = input.markdownFile;
-      const mdPath = sanitizeStoragePath(skillId, mdFile.name);
-      uploadTasks.push(
+    if (input.markdownFileRef) {
+      const ref = input.markdownFileRef;
+      dbTasks.push(
         (async () => {
-          await uploadFile('skill-descriptions', mdPath, mdFile);
-          const arrayBuffer = await mdFile.arrayBuffer();
-          const content = new TextDecoder().decode(arrayBuffer);
           await supabase
             .from('skills')
-            .update({ markdown_file_path: mdPath, markdown_content: content })
+            .update({ markdown_file_path: ref.path, markdown_content: ref.content ?? '' })
             .eq('id', skillId);
-        })().catch((err) => {
-          fileErrors.push(`마크다운 파일 업로드 실패: ${err instanceof Error ? err.message : String(err)}`);
-        }),
+        })(),
       );
     }
 
-    if (input.templateFiles && input.templateFiles.length > 0) {
-      for (const file of input.templateFiles) {
-        const filePath = sanitizeStoragePath(skillId, file.name);
-        const fileType = file.name.endsWith('.zip') ? '.zip' : '.md';
-        uploadTasks.push(
+    if (input.templateFileRefs && input.templateFileRefs.length > 0) {
+      for (const ref of input.templateFileRefs) {
+        const fileType = ref.originalName.endsWith('.zip') ? '.zip' : '.md';
+        dbTasks.push(
           (async () => {
-            await uploadFile('skill-templates', filePath, file);
             await supabase.from('skill_templates').insert({
               skill_id: skillId,
-              file_name: file.name,
-              file_path: filePath,
-              file_size: file.size,
+              file_name: ref.originalName,
+              file_path: ref.path,
+              file_size: ref.size,
               file_type: fileType,
             });
-          })().catch((err) => {
-            fileErrors.push(`템플릿 파일(${file.name}) 업로드 실패: ${err instanceof Error ? err.message : String(err)}`);
-          }),
+          })(),
         );
       }
     }
 
-    await Promise.all(uploadTasks);
-
-    if (fileErrors.length > 0) {
-      return { success: false, error: `스킬은 생성되었으나 파일 업로드에 실패했습니다: ${fileErrors.join(', ')}` };
-    }
+    await Promise.all(dbTasks);
 
     return { success: true, skillId };
   }

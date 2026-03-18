@@ -71,6 +71,13 @@ export interface CategoryOption {
   readonly icon: string;
 }
 
+export interface UploadedFileRef {
+  readonly path: string;
+  readonly originalName: string;
+  readonly size: number;
+  readonly content?: string;
+}
+
 export interface CreateSkillInput {
   readonly categoryId: string;
   readonly title: string;
@@ -78,8 +85,8 @@ export interface CreateSkillInput {
   readonly version: string;
   readonly tags: readonly string[];
   readonly isPublished: boolean;
-  readonly markdownFile?: File;
-  readonly templateFiles?: File[];
+  readonly markdownFileRef?: UploadedFileRef;
+  readonly templateFileRefs?: UploadedFileRef[];
 }
 
 export type CreateSkillResult =
@@ -177,9 +184,9 @@ export interface UpdateSkillInput {
   readonly version: string;
   readonly tags: readonly string[];
   readonly isPublished: boolean;
-  readonly markdownFile?: File;
+  readonly markdownFileRef?: UploadedFileRef;
   readonly removeMarkdown: boolean;
-  readonly templateFiles?: File[];
+  readonly templateFileRefs?: UploadedFileRef[];
   readonly removedTemplateIds: string[];
 }
 

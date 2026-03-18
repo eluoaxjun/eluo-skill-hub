@@ -7,8 +7,9 @@ import { Textarea } from '@/shared/ui/textarea';
 import { Switch } from '@/shared/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
 import { Button } from '@/shared/ui/button';
-import type { CategoryOption, CreateSkillInput, SkillDetail, UpdateSkillInput, SkillTemplateRow } from '@/admin/domain/types';
+import type { CategoryOption, CreateSkillInput, SkillDetail, UpdateSkillInput, SkillTemplateRow, UploadedFileRef } from '@/admin/domain/types';
 import { createSkill, updateSkill as updateSkillAction, getCategories } from '@/app/admin/skills/actions';
+import { uploadMarkdownFile, uploadTemplateFile } from '@/shared/infrastructure/supabase/client-storage';
 import TemplateFileUpload from './TemplateFileUpload';
 import MarkdownFileUpload from './MarkdownFileUpload';
 import CategoryIcon from './CategoryIcon';
@@ -164,9 +165,7 @@ export default function SkillAddForm({ categories: initialCategories, onDirtyCha
         version: form.version,
         tags: form.tags,
         isPublished: overridePublished ?? form.isPublished,
-        markdownFile,
         removeMarkdown,
-        templateFiles: templateFiles.length > 0 ? templateFiles : undefined,
         removedTemplateIds,
       };
     }
@@ -177,8 +176,6 @@ export default function SkillAddForm({ categories: initialCategories, onDirtyCha
       version: form.version,
       tags: form.tags,
       isPublished: overridePublished ?? form.isPublished,
-      markdownFile,
-      templateFiles: templateFiles.length > 0 ? templateFiles : undefined,
     };
   };
 
@@ -186,22 +183,38 @@ export default function SkillAddForm({ categories: initialCategories, onDirtyCha
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.append('categoryId', form.categoryId);
-      formData.append('title', form.title);
-      formData.append('description', form.description);
-      formData.append('version', form.version);
-      formData.append('tags', JSON.stringify(form.tags));
-      formData.append('isPublished', String(form.isPublished));
-      if (markdownFile) formData.append('markdownFile', markdownFile);
-      for (const f of templateFiles) formData.append('templateFiles', f);
+      // 임시 디렉토리명 (신규: 임시 ID, 수정: 기존 skillId)
+      const uploadDir = isEditMode && skillId ? skillId : crypto.randomUUID();
 
+      // 1) 클라이언트에서 Supabase Storage로 직접 파일 업로드
+      let markdownFileRef: UploadedFileRef | undefined;
+      let templateFileRefs: UploadedFileRef[] | undefined;
+
+      if (markdownFile) {
+        markdownFileRef = await uploadMarkdownFile(uploadDir, markdownFile);
+      }
+
+      if (templateFiles.length > 0) {
+        templateFileRefs = await Promise.all(
+          templateFiles.map((f) => uploadTemplateFile(uploadDir, f)),
+        );
+      }
+
+      // 2) Server Action에는 메타데이터(경로)만 전달
       if (isEditMode && skillId) {
-        formData.append('skillId', skillId);
-        formData.append('removeMarkdown', String(removeMarkdown));
-        formData.append('removedTemplateIds', JSON.stringify(removedTemplateIds));
-
-        const result = await updateSkillAction(formData);
+        const result = await updateSkillAction({
+          skillId,
+          categoryId: form.categoryId,
+          title: form.title,
+          description: form.description,
+          version: form.version,
+          tags: [...form.tags],
+          isPublished: form.isPublished,
+          markdownFileRef,
+          removeMarkdown,
+          templateFileRefs,
+          removedTemplateIds,
+        });
         if (result.success) {
           toast.success('스킬이 수정되었습니다');
           router.back();
@@ -214,7 +227,16 @@ export default function SkillAddForm({ categories: initialCategories, onDirtyCha
           }
         }
       } else {
-        const result = await createSkill(formData);
+        const result = await createSkill({
+          categoryId: form.categoryId,
+          title: form.title,
+          description: form.description,
+          version: form.version,
+          tags: [...form.tags],
+          isPublished: form.isPublished,
+          markdownFileRef,
+          templateFileRefs,
+        });
         if (result.success) {
           toast.success('스킬이 저장되었습니다');
           router.back();
@@ -227,6 +249,8 @@ export default function SkillAddForm({ categories: initialCategories, onDirtyCha
           }
         }
       }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : '파일 업로드 중 오류가 발생했습니다');
     } finally {
       setIsSubmitting(false);
     }

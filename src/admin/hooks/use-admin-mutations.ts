@@ -9,7 +9,7 @@ export function useCreateSkill() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (formData: FormData) => createSkill(formData),
+    mutationFn: (payload: Parameters<typeof createSkill>[0]) => createSkill(payload),
     onSuccess: (result) => {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: queryKeys.admin.all });
@@ -23,7 +23,7 @@ export function useUpdateSkill() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (formData: FormData) => updateSkill(formData),
+    mutationFn: (payload: Parameters<typeof updateSkill>[0]) => updateSkill(payload),
     onSuccess: (result) => {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: queryKeys.admin.all });

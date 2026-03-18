@@ -6,26 +6,28 @@ import { CreateSkillUseCase } from '@/admin/application/create-skill-use-case';
 import { DeleteSkillUseCase } from '@/admin/application/delete-skill-use-case';
 import { GetSkillByIdUseCase } from '@/admin/application/get-skill-by-id-use-case';
 import { UpdateSkillUseCase } from '@/admin/application/update-skill-use-case';
-import type { CategoryOption, CreateSkillResult, DeleteSkillResult, GetSkillResult, UpdateSkillResult } from '@/admin/domain/types';
+import type { CategoryOption, CreateSkillResult, DeleteSkillResult, GetSkillResult, UpdateSkillResult, UploadedFileRef } from '@/admin/domain/types';
 import { revalidatePath } from 'next/cache';
 
-export async function createSkill(formData: FormData): Promise<CreateSkillResult> {
+interface CreateSkillPayload {
+  categoryId: string;
+  title: string;
+  description: string;
+  version: string;
+  tags: string[];
+  isPublished: boolean;
+  markdownFileRef?: UploadedFileRef;
+  templateFileRefs?: UploadedFileRef[];
+}
+
+export async function createSkill(payload: CreateSkillPayload): Promise<CreateSkillResult> {
   try {
     await requireAdmin();
   } catch {
     return { success: false, error: '권한이 없습니다' };
   }
 
-  const categoryId = (formData.get('categoryId') as string | null) ?? '';
-  const title = (formData.get('title') as string | null) ?? '';
-  const description = (formData.get('description') as string | null) ?? '';
-  const version = (formData.get('version') as string | null) ?? '1.0.0';
-  const tagsRaw = (formData.get('tags') as string | null) ?? '[]';
-  let tags: string[] = [];
-  try { tags = JSON.parse(tagsRaw) as string[]; } catch { tags = []; }
-  const isPublished = formData.get('isPublished') === 'true';
-  const markdownFileRaw = formData.get('markdownFile');
-  const markdownFile = markdownFileRaw instanceof File && markdownFileRaw.size > 0 ? markdownFileRaw : undefined;
+  const { categoryId, title, description, version, tags, isPublished, markdownFileRef, templateFileRefs } = payload;
 
   // 유효성 검사
   const fieldErrors: Record<string, string> = {};
@@ -39,31 +41,22 @@ export async function createSkill(formData: FormData): Promise<CreateSkillResult
     fieldErrors.categoryId = '카테고리를 선택해주세요';
   }
 
-  if (markdownFile) {
-    if (!markdownFile.name.endsWith('.md')) {
+  if (markdownFileRef) {
+    if (!markdownFileRef.originalName.endsWith('.md')) {
       fieldErrors.markdownFile = '.md 파일만 업로드 가능합니다';
-    } else if (markdownFile.size > 52428800) {
-      fieldErrors.markdownFile = '파일 용량이 50MB를 초과하여 업로드할 수 없습니다';
     }
   }
 
-  // 템플릿 파일 처리
-  const templateFiles: File[] = [];
-  const templateFileEntries = formData.getAll('templateFiles');
-  for (const entry of templateFileEntries) {
-    if (!(entry instanceof File) || entry.size === 0) continue;
-    if (!entry.name.endsWith('.zip') && !entry.name.endsWith('.md')) {
-      fieldErrors.templateFiles = '.zip 또는 .md 파일만 업로드 가능합니다';
-      break;
+  if (templateFileRefs) {
+    for (const ref of templateFileRefs) {
+      if (!ref.originalName.endsWith('.zip') && !ref.originalName.endsWith('.md')) {
+        fieldErrors.templateFiles = '.zip 또는 .md 파일만 업로드 가능합니다';
+        break;
+      }
     }
-    if (entry.size > 52428800) {
-      fieldErrors.templateFiles = '파일 용량이 50MB를 초과하여 업로드할 수 없습니다';
-      break;
+    if (templateFileRefs.length > 5) {
+      fieldErrors.templateFiles = '템플릿 파일은 최대 5개까지 업로드 가능합니다';
     }
-    templateFiles.push(entry);
-  }
-  if (templateFiles.length > 5) {
-    fieldErrors.templateFiles = '템플릿 파일은 최대 5개까지 업로드 가능합니다';
   }
 
   if (Object.keys(fieldErrors).length > 0) {
@@ -80,8 +73,8 @@ export async function createSkill(formData: FormData): Promise<CreateSkillResult
     version,
     tags,
     isPublished,
-    markdownFile,
-    templateFiles: templateFiles.length > 0 ? templateFiles : undefined,
+    markdownFileRef,
+    templateFileRefs: templateFileRefs && templateFileRefs.length > 0 ? templateFileRefs : undefined,
   });
 
   if (result.success) {
@@ -108,39 +101,37 @@ export async function getSkillById(id: string): Promise<GetSkillResult> {
   }
 }
 
-export async function updateSkill(formData: FormData): Promise<UpdateSkillResult> {
+interface UpdateSkillPayload {
+  skillId: string;
+  categoryId: string;
+  title: string;
+  description: string;
+  version: string;
+  tags: string[];
+  isPublished: boolean;
+  markdownFileRef?: UploadedFileRef;
+  removeMarkdown: boolean;
+  templateFileRefs?: UploadedFileRef[];
+  removedTemplateIds: string[];
+}
+
+export async function updateSkill(payload: UpdateSkillPayload): Promise<UpdateSkillResult> {
   try {
     await requireAdmin();
   } catch {
     return { success: false, error: '관리자 권한이 필요합니다.' };
   }
 
-  const skillId = (formData.get('skillId') as string | null) ?? '';
-  const categoryId = (formData.get('categoryId') as string | null) ?? '';
-  const title = (formData.get('title') as string | null) ?? '';
-  const description = (formData.get('description') as string | null) ?? '';
-  const version = (formData.get('version') as string | null) ?? '1.0.0';
-  const tagsRaw = (formData.get('tags') as string | null) ?? '[]';
-  let updateTags: string[] = [];
-  try { updateTags = JSON.parse(tagsRaw) as string[]; } catch { updateTags = []; }
-  const isPublished = formData.get('isPublished') === 'true';
-  const removeMarkdown = formData.get('removeMarkdown') === 'true';
-  const markdownFileRaw = formData.get('markdownFile');
-  const markdownFile = markdownFileRaw instanceof File && markdownFileRaw.size > 0 ? markdownFileRaw : undefined;
-  const removedTemplateIdsRaw = (formData.get('removedTemplateIds') as string | null) ?? '[]';
-
-  let removedTemplateIds: string[] = [];
-  try {
-    removedTemplateIds = JSON.parse(removedTemplateIdsRaw) as string[];
-  } catch {
-    removedTemplateIds = [];
-  }
+  const {
+    skillId, categoryId, title, description, version, tags,
+    isPublished, markdownFileRef, removeMarkdown, templateFileRefs, removedTemplateIds,
+  } = payload;
 
   if (!skillId) {
     return { success: false, error: '스킬 ID가 필요합니다.' };
   }
 
-  // 유효성 검사 (createSkill과 동일)
+  // 유효성 검사
   const fieldErrors: Record<string, string> = {};
   if (!title.trim() || title.length > 100) {
     fieldErrors.title = title.trim() ? '제목은 100자 이하여야 합니다' : '제목을 입력해주세요';
@@ -152,30 +143,22 @@ export async function updateSkill(formData: FormData): Promise<UpdateSkillResult
     fieldErrors.categoryId = '카테고리를 선택해주세요';
   }
 
-  if (markdownFile) {
-    if (!markdownFile.name.endsWith('.md')) {
+  if (markdownFileRef) {
+    if (!markdownFileRef.originalName.endsWith('.md')) {
       fieldErrors.markdownFile = '.md 파일만 업로드 가능합니다';
-    } else if (markdownFile.size > 52428800) {
-      fieldErrors.markdownFile = '파일 용량이 50MB를 초과하여 업로드할 수 없습니다';
     }
   }
 
-  const templateFiles: File[] = [];
-  const templateFileEntries = formData.getAll('templateFiles');
-  for (const entry of templateFileEntries) {
-    if (!(entry instanceof File) || entry.size === 0) continue;
-    if (!entry.name.endsWith('.zip') && !entry.name.endsWith('.md')) {
-      fieldErrors.templateFiles = '.zip 또는 .md 파일만 업로드 가능합니다';
-      break;
+  if (templateFileRefs) {
+    for (const ref of templateFileRefs) {
+      if (!ref.originalName.endsWith('.zip') && !ref.originalName.endsWith('.md')) {
+        fieldErrors.templateFiles = '.zip 또는 .md 파일만 업로드 가능합니다';
+        break;
+      }
     }
-    if (entry.size > 52428800) {
-      fieldErrors.templateFiles = '파일 용량이 50MB를 초과하여 업로드할 수 없습니다';
-      break;
+    if (templateFileRefs.length > 5) {
+      fieldErrors.templateFiles = '템플릿 파일은 최대 5개까지 업로드 가능합니다';
     }
-    templateFiles.push(entry);
-  }
-  if (templateFiles.length > 5) {
-    fieldErrors.templateFiles = '템플릿 파일은 최대 5개까지 업로드 가능합니다';
   }
 
   if (Object.keys(fieldErrors).length > 0) {
@@ -191,11 +174,11 @@ export async function updateSkill(formData: FormData): Promise<UpdateSkillResult
     title,
     description,
     version,
-    tags: updateTags,
+    tags,
     isPublished,
-    markdownFile,
+    markdownFileRef,
     removeMarkdown,
-    templateFiles: templateFiles.length > 0 ? templateFiles : undefined,
+    templateFileRefs: templateFileRefs && templateFileRefs.length > 0 ? templateFileRefs : undefined,
     removedTemplateIds,
   });
 

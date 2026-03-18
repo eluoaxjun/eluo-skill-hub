@@ -36,23 +36,21 @@ export default function DraftSaveDialog({ pendingInput, onClose, onSaved, mode =
 
     setIsSaving(true);
     try {
-      const formData = new FormData();
-      formData.append('categoryId', pendingInput.categoryId);
-      formData.append('title', pendingInput.title);
-      formData.append('description', pendingInput.description);
-      formData.append('version', pendingInput.version);
-      formData.append('tags', JSON.stringify(pendingInput.tags));
-      formData.append('isPublished', 'false');
-      if (pendingInput.markdownFile) formData.append('markdownFile', pendingInput.markdownFile);
-      for (const f of pendingInput.templateFiles ?? []) formData.append('templateFiles', f);
-
       if (mode === 'edit' && skillId) {
-        formData.append('skillId', skillId);
         const editInput = pendingInput as UpdateSkillInput;
-        formData.append('removeMarkdown', String(editInput.removeMarkdown));
-        formData.append('removedTemplateIds', JSON.stringify(editInput.removedTemplateIds));
-
-        const result = await updateSkill(formData);
+        const result = await updateSkill({
+          skillId,
+          categoryId: pendingInput.categoryId,
+          title: pendingInput.title,
+          description: pendingInput.description,
+          version: pendingInput.version,
+          tags: [...pendingInput.tags],
+          isPublished: false,
+          markdownFileRef: editInput.markdownFileRef,
+          removeMarkdown: editInput.removeMarkdown,
+          templateFileRefs: editInput.templateFileRefs,
+          removedTemplateIds: editInput.removedTemplateIds,
+        });
         if (result.success) {
           toast.success('임시저장되었습니다');
           onSaved?.();
@@ -63,7 +61,16 @@ export default function DraftSaveDialog({ pendingInput, onClose, onSaved, mode =
           onClose();
         }
       } else {
-        const result = await createSkill(formData);
+        const result = await createSkill({
+          categoryId: pendingInput.categoryId,
+          title: pendingInput.title,
+          description: pendingInput.description,
+          version: pendingInput.version,
+          tags: [...pendingInput.tags],
+          isPublished: false,
+          markdownFileRef: pendingInput.markdownFileRef,
+          templateFileRefs: pendingInput.templateFileRefs,
+        });
         if (result.success) {
           toast.success('임시저장되었습니다');
           onSaved?.();

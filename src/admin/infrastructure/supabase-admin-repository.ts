@@ -646,19 +646,27 @@ export class SupabaseAdminRepository implements AdminRepository {
     }
 
     // 신규 템플릿 — 파일은 이미 클라이언트에서 업로드됨, DB 메타데이터만 저장
+    const templateErrors: string[] = [];
     if (input.templateFileRefs && input.templateFileRefs.length > 0) {
       await Promise.all(
-        input.templateFileRefs.map((ref) => {
+        input.templateFileRefs.map(async (ref) => {
           const fileType = ref.originalName.endsWith('.zip') ? '.zip' : '.md';
-          return supabase.from('skill_templates').insert({
+          const { error: insertError } = await supabase.from('skill_templates').insert({
             skill_id: input.skillId,
             file_name: ref.originalName,
             file_path: ref.path,
             file_size: ref.size,
             file_type: fileType,
           });
+          if (insertError) {
+            templateErrors.push(`${ref.originalName}: ${insertError.message}`);
+          }
         }),
       );
+    }
+
+    if (templateErrors.length > 0) {
+      return { success: false, error: `템플릿 메타데이터 저장 실패: ${templateErrors.join(', ')}` };
     }
 
     return { success: true, skillId: input.skillId };
@@ -702,38 +710,36 @@ export class SupabaseAdminRepository implements AdminRepository {
     const skillId = skill.id as string;
 
     // 클라이언트에서 이미 업로드된 파일 메타데이터를 DB에 반영
-    const dbTasks: Promise<void>[] = [];
-
     if (input.markdownFileRef) {
       const ref = input.markdownFileRef;
-      dbTasks.push(
-        (async () => {
-          await supabase
-            .from('skills')
-            .update({ markdown_file_path: ref.path, markdown_content: ref.content ?? '' })
-            .eq('id', skillId);
-        })(),
+      await supabase
+        .from('skills')
+        .update({ markdown_file_path: ref.path, markdown_content: ref.content ?? '' })
+        .eq('id', skillId);
+    }
+
+    const templateErrors: string[] = [];
+    if (input.templateFileRefs && input.templateFileRefs.length > 0) {
+      await Promise.all(
+        input.templateFileRefs.map(async (ref) => {
+          const fileType = ref.originalName.endsWith('.zip') ? '.zip' : '.md';
+          const { error: tmplError } = await supabase.from('skill_templates').insert({
+            skill_id: skillId,
+            file_name: ref.originalName,
+            file_path: ref.path,
+            file_size: ref.size,
+            file_type: fileType,
+          });
+          if (tmplError) {
+            templateErrors.push(`${ref.originalName}: ${tmplError.message}`);
+          }
+        }),
       );
     }
 
-    if (input.templateFileRefs && input.templateFileRefs.length > 0) {
-      for (const ref of input.templateFileRefs) {
-        const fileType = ref.originalName.endsWith('.zip') ? '.zip' : '.md';
-        dbTasks.push(
-          (async () => {
-            await supabase.from('skill_templates').insert({
-              skill_id: skillId,
-              file_name: ref.originalName,
-              file_path: ref.path,
-              file_size: ref.size,
-              file_type: fileType,
-            });
-          })(),
-        );
-      }
+    if (templateErrors.length > 0) {
+      return { success: false, error: `스킬은 생성되었으나 템플릿 저장 실패: ${templateErrors.join(', ')}` };
     }
-
-    await Promise.all(dbTasks);
 
     return { success: true, skillId };
   }

@@ -38,9 +38,14 @@ export async function uploadFileFromClient(
   file: File,
 ): Promise<void> {
   const supabase = createClient();
+  const contentType = resolveContentType(file.name);
 
-  const { error } = await supabase.storage.from(bucket).upload(path, file, {
-    contentType: resolveContentType(file.name),
+  // Windows 등에서 zip 파일의 MIME이 application/x-zip-compressed로 전달되어
+  // Supabase 버킷 허용 목록에 걸리는 문제 방지: Blob으로 변환하여 MIME 강제 지정
+  const blob = new Blob([await file.arrayBuffer()], { type: contentType });
+
+  const { error } = await supabase.storage.from(bucket).upload(path, blob, {
+    contentType,
     upsert: true,
   });
 

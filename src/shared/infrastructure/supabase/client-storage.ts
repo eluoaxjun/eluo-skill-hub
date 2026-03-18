@@ -19,9 +19,8 @@ export function sanitizeStoragePath(directory: string, originalName: string): st
   const baseName = dotIdx >= 0 ? originalName.slice(0, dotIdx) : originalName;
 
   const safe = baseName.replace(/[^a-zA-Z0-9_-]/g, '');
-  const prefix = Date.now().toString(36);
-
-  const fileName = safe ? `${prefix}_${safe}${ext}` : `${prefix}${ext}`;
+  // 파일명이 전부 한글 등 비-ASCII인 경우만 타임스탬프 사용
+  const fileName = safe ? `${safe}${ext}` : `${Date.now().toString(36)}${ext}`;
   return `${directory}/${fileName}`;
 }
 

@@ -11,10 +11,9 @@ export function sanitizeStoragePath(directory: string, originalName: string): st
 
   // ASCII 문자·숫자·하이픈·언더스코어만 남기고 제거
   const safe = baseName.replace(/[^a-zA-Z0-9_-]/g, '');
-  const prefix = Date.now().toString(36);
 
-  // safe가 비어있으면(전부 한글인 경우) prefix만 사용
-  const fileName = safe ? `${prefix}_${safe}${ext}` : `${prefix}${ext}`;
+  // 파일명이 전부 한글 등 비-ASCII인 경우만 타임스탬프 사용
+  const fileName = safe ? `${safe}${ext}` : `${Date.now().toString(36)}${ext}`;
   return `${directory}/${fileName}`;
 }
 

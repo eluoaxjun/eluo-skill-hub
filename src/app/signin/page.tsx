@@ -22,7 +22,7 @@ export default function SigninPage() {
             priority
           />
           <h2 className="font-eluo text-slate-900 text-base lg:text-lg font-bold leading-tight tracking-tight">
-            ELUO AI SKILL HUB
+            ELUO XCIPE
           </h2>
         </Link>
         <button

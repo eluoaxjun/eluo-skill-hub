@@ -34,7 +34,7 @@ describe("SigninForm", () => {
   it("로그인 타이틀과 서브텍스트가 렌더링된다", () => {
     render(<SigninForm />);
     expect(screen.getByRole("heading", { name: "로그인" })).toBeInTheDocument();
-    expect(screen.getByText("ELUO AI Skill Hub에 접속하세요")).toBeInTheDocument();
+    expect(screen.getByText("ELUO XCIPE에 접속하세요")).toBeInTheDocument();
   });
 
   it("이메일 입력 필드가 존재한다", () => {

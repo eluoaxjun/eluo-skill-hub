@@ -164,8 +164,8 @@ test.describe('Desktop viewport (1280x800) — dashboard responsive layout', () 
     const sidebar = page.locator('aside');
     await expect(sidebar).toBeVisible();
 
-    // Verify the "ELUO HUB" logo text is visible inside the sidebar
-    await expect(sidebar.getByText('ELUO HUB')).toBeVisible();
+    // Verify the "ELUO XCIPE" logo text is visible inside the sidebar
+    await expect(sidebar.getByText('ELUO XCIPE')).toBeVisible();
   });
 
   // 2. Hamburger button is hidden on desktop (md:hidden)

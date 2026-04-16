@@ -7,7 +7,7 @@ import AdminLayoutClient from '@/features/admin/AdminLayoutClient';
 export const metadata: Metadata = {
   title: {
     default: '관리자',
-    template: '%s | 관리자 | ELUO HUB',
+    template: '%s | 관리자 | ELUO XCIPE',
   },
 };
 

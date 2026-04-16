@@ -15,6 +15,8 @@ export interface SkillDetailPopup {
   readonly templates: SkillTemplateInfo[];
   readonly downloadCount: number;
   readonly feedbackCount: number;
+  /** 다운로드 허용 최소 등급 (admin은 항상 허용, viewer는 항상 차단) */
+  readonly minTier: string;
 }
 
 export interface SkillTemplateInfo {
@@ -92,4 +94,4 @@ export type DeleteReplyResult =
 
 export type GetTemplateDownloadResult =
   | { success: true; signedUrl: string; fileName: string }
-  | { success: false; error: string; isViewerBlocked?: boolean };
+  | { success: false; error: string; blockedReason?: 'viewer' | 'insufficient_level' };

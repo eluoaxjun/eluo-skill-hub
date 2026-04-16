@@ -1,5 +1,5 @@
 import { createClient } from '@/shared/infrastructure/supabase/server';
-import type { ISkillDetailRepository } from '../application/ports';
+import type { ISkillDetailRepository, UserRoleAndTier } from '../application/ports';
 import type {
   SkillDetailPopup,
   SkillTemplateInfo,
@@ -9,14 +9,6 @@ import type {
   SubmitFeedbackInput,
   SubmitReplyInput,
 } from '../domain/types';
-
-type JoinedName = { name: string } | { name: string }[] | null;
-
-function extractName(joined: JoinedName): string | null {
-  if (!joined) return null;
-  if (Array.isArray(joined)) return joined[0]?.name ?? null;
-  return joined.name;
-}
 
 type JoinedCategory = { name: string; icon: string } | { name: string; icon: string }[] | null;
 
@@ -40,30 +32,34 @@ export class SupabaseSkillDetailRepository implements ISkillDetailRepository {
 
     if (error || !skill) return null;
 
-    // Parallelize independent queries: author profile, templates, feedback stats
+    // Parallelize independent queries: author profile, templates, feedback stats, permission
     const authorId = skill.author_id as string | null;
 
-    const [authorResult, templatesResult, feedbackCountResult] = await Promise.all([
-      // Author name (only if author_id exists)
+    const [authorResult, templatesResult, feedbackCountResult, permResult] = await Promise.all([
       authorId
         ? supabase.from('profiles').select('name').eq('id', authorId).single()
         : Promise.resolve({ data: null }),
-      // Templates
       supabase
         .from('skill_templates')
         .select('id, file_name, file_path, file_size, file_type')
         .eq('skill_id', skillId)
         .order('created_at', { ascending: true }),
-      // Feedback count
       supabase
         .from('skill_feedback_logs')
         .select('*', { count: 'exact', head: true })
         .eq('skill_id', skillId),
+      supabase
+        .from('skill_download_tiers')
+        .select('min_tier')
+        .eq('skill_id', skillId)
+        .maybeSingle(),
     ]);
 
     const authorName = (authorResult.data?.name as string | null) ?? null;
     const templates = templatesResult.data;
     const feedbackCount = feedbackCountResult.count ?? 0;
+
+    const minTier = (permResult.data?.min_tier as string) ?? 'general';
 
     const category = extractCategory(skill.categories as JoinedCategory);
 
@@ -91,6 +87,7 @@ export class SupabaseSkillDetailRepository implements ISkillDetailRepository {
       templates: templateInfos,
       downloadCount: (skill.download_count as number) ?? 0,
       feedbackCount,
+      minTier,
     };
   }
 
@@ -312,16 +309,39 @@ export class SupabaseSkillDetailRepository implements ISkillDetailRepository {
     return data.signedUrl;
   }
 
-  async getUserRole(userId: string): Promise<string | null> {
+  async getUserRoleAndTier(userId: string): Promise<UserRoleAndTier | null> {
     const supabase = await createClient();
 
     const { data } = await supabase
       .from('profiles')
-      .select('roles(name)')
+      .select('download_tier, roles(name)')
       .eq('id', userId)
       .single();
 
     if (!data) return null;
-    return extractName(data.roles as JoinedName);
+
+    const rolesRaw = data.roles as { name: string } | { name: string }[] | null;
+    const roleName = !rolesRaw
+      ? 'user'
+      : Array.isArray(rolesRaw)
+        ? (rolesRaw[0]?.name ?? 'user')
+        : rolesRaw.name;
+
+    return {
+      roleName,
+      downloadTier: (data.download_tier as string) ?? 'general',
+    };
+  }
+
+  async getSkillMinTier(skillId: string): Promise<string> {
+    const supabase = await createClient();
+
+    const { data } = await supabase
+      .from('skill_download_tiers')
+      .select('min_tier')
+      .eq('skill_id', skillId)
+      .maybeSingle();
+
+    return (data?.min_tier as string) ?? 'general';
   }
 }

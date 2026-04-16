@@ -265,6 +265,7 @@ export async function getTemplateDownloadUrlAction(
     const useCase = new GetTemplateDownloadUrlUseCase(repository);
     const result = await useCase.execute(
       user.id,
+      template.skill_id as string,
       template.file_path as string,
       template.file_name as string,
       'skill-templates'

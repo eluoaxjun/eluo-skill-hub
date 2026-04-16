@@ -3,7 +3,9 @@
 import { useEffect, useCallback, useState } from 'react';
 import { X, Info, FileDown } from 'lucide-react';
 import { useSkillDetail, useSkillFeedbacks } from '@/skill-detail/hooks/use-skill-detail-queries';
-import { useCurrentUserId, useIsAdmin } from '@/features/dashboard/DashboardLayoutClient';
+import { useCurrentUserId, useCurrentDownloadTier, useIsAdmin, useIsViewer } from '@/features/dashboard/DashboardLayoutClient';
+import { TIER_LABEL, TIER_LEVEL } from '@/admin/domain/types';
+import type { DownloadTier } from '@/admin/domain/types';
 import { useTrackEvent } from '@/event-log/hooks/use-track-event';
 import SkillDetailHeader from './SkillDetailHeader';
 import SkillDetailGuide from './SkillDetailGuide';
@@ -12,7 +14,6 @@ import TemplateDownloadButton from './TemplateDownloadButton';
 
 interface SkillDetailModalProps {
   skillId: string;
-  isViewer: boolean;
   onClose: () => void;
 }
 
@@ -33,13 +34,24 @@ function formatDate(dateString: string): string {
 
 export default function SkillDetailModal({
   skillId,
-  isViewer,
   onClose,
 }: SkillDetailModalProps) {
   const currentUserId = useCurrentUserId();
   const isAdmin = useIsAdmin();
+  const isViewer = useIsViewer();
+  const userTier = useCurrentDownloadTier() as DownloadTier;
   const trackEvent = useTrackEvent();
   const { data: skill, isLoading: skillLoading, error: skillError, refetch } = useSkillDetail(skillId);
+
+  const skillMinTier = (skill?.minTier ?? 'general') as DownloadTier;
+  const userTierLevel = TIER_LEVEL[userTier] ?? 1;
+  const skillTierLevel = TIER_LEVEL[skillMinTier] ?? 1;
+  const canDownload = isAdmin || (!isViewer && userTierLevel >= skillTierLevel);
+  const blockReason: 'viewer' | 'insufficient_level' | null = canDownload
+    ? null
+    : isViewer
+      ? 'viewer'
+      : 'insufficient_level';
   const {
     data: feedbacksData,
     fetchNextPage,
@@ -103,7 +115,8 @@ export default function SkillDetailModal({
           <TemplateDownloadButton
             skillId={skillId}
             templates={skill?.templates ?? []}
-            isViewer={isViewer}
+            canDownload={canDownload}
+            blockReason={blockReason}
           />
         </div>
       </div>
@@ -134,6 +147,14 @@ export default function SkillDetailModal({
               <span className="text-slate-500">파일 크기</span>
               <span className="font-bold">
                 {totalFileSize > 0 ? formatFileSize(totalFileSize) : '-'}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500">다운로드 권한</span>
+              <span className="font-bold">
+                {skill?.minTier
+                  ? `${TIER_LABEL[skill.minTier as DownloadTier] ?? skill.minTier} 이상`
+                  : '일반 이상'}
               </span>
             </div>
             <div className="flex justify-between items-center">

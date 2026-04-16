@@ -46,6 +46,7 @@ export default function DraftSaveDialog({ pendingInput, onClose, onSaved, mode =
           version: pendingInput.version,
           tags: [...pendingInput.tags],
           isPublished: false,
+          minTier: pendingInput.minTier,
           markdownFileRef: editInput.markdownFileRef,
           removeMarkdown: editInput.removeMarkdown,
           templateFileRefs: editInput.templateFileRefs,
@@ -68,6 +69,7 @@ export default function DraftSaveDialog({ pendingInput, onClose, onSaved, mode =
           version: pendingInput.version,
           tags: [...pendingInput.tags],
           isPublished: false,
+          minTier: pendingInput.minTier,
           markdownFileRef: pendingInput.markdownFileRef,
           templateFileRefs: pendingInput.templateFileRefs,
         });

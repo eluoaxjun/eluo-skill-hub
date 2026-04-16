@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { MemberRow, PaginatedResult, Role } from '@/admin/domain/types';
 import type { ReactNode } from 'react';
 import RoleSelect from './RoleSelect';
+import TierSelect from './TierSelect';
 
 interface MembersTableProps {
   result: PaginatedResult<MemberRow>;
@@ -45,6 +46,13 @@ function MemberRow({ member, roles, isCurrentUser, pinned = false }: {
           currentRoleName={member.roleName}
           roles={roles}
           isCurrentUser={isCurrentUser}
+        />
+      </td>
+      <td className="px-6 py-4">
+        <TierSelect
+          memberId={member.id}
+          currentTier={member.downloadTier}
+          disabled={member.roleName === 'admin' || member.roleName === 'viewer' || isCurrentUser}
         />
       </td>
       <td className="px-6 py-4 text-sm text-[#000080]/60">
@@ -99,6 +107,7 @@ export default function MembersTable({ result, roles, currentUserId, pinnedMembe
               <th className="px-6 py-3 text-xs font-bold text-[#000080]/50 uppercase tracking-wider">이름</th>
               <th className="px-6 py-3 text-xs font-bold text-[#000080]/50 uppercase tracking-wider">이메일</th>
               <th className="px-6 py-3 text-xs font-bold text-[#000080]/50 uppercase tracking-wider">역할</th>
+              <th className="px-6 py-3 text-xs font-bold text-[#000080]/50 uppercase tracking-wider">다운로드 등급</th>
               <th className="px-6 py-3 text-xs font-bold text-[#000080]/50 uppercase tracking-wider">가입일</th>
               <th className="px-6 py-3 text-xs font-bold text-[#000080]/50 uppercase tracking-wider">상태</th>
             </tr>

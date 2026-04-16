@@ -9,6 +9,7 @@ import DashboardHeader from './DashboardHeader';
 const IsViewerContext = createContext<boolean>(false);
 const IsAdminContext = createContext<boolean>(false);
 const UserIdContext = createContext<string>('');
+const DownloadTierContext = createContext<string>('general');
 
 export function useIsViewer(): boolean {
   return useContext(IsViewerContext);
@@ -20,6 +21,11 @@ export function useIsAdmin(): boolean {
 
 export function useCurrentUserId(): string {
   return useContext(UserIdContext);
+}
+
+/** 현재 로그인 사용자의 다운로드 등급 (general / senior / executive) */
+export function useCurrentDownloadTier(): string {
+  return useContext(DownloadTierContext);
 }
 
 interface DashboardFilterState {
@@ -49,6 +55,7 @@ interface DashboardLayoutClientProps {
   isViewer?: boolean;
   isAdmin?: boolean;
   userId?: string;
+  downloadTier?: string;
   initialCategoryId?: string;
   initialSearchQuery?: string;
   children: React.ReactNode;
@@ -60,6 +67,7 @@ export default function DashboardLayoutClient({
   isViewer = false,
   isAdmin = false,
   userId = '',
+  downloadTier = 'general',
   initialCategoryId,
   initialSearchQuery,
   children,
@@ -142,33 +150,35 @@ export default function DashboardLayoutClient({
     <IsViewerContext.Provider value={isViewer}>
       <IsAdminContext.Provider value={isAdmin}>
         <UserIdContext.Provider value={userId}>
-          <DashboardFilterContext.Provider value={{ filter, setActiveTab, setSearchQuery, setActiveTag }}>
-            <div className="flex h-screen overflow-hidden">
-              {sidebarOpen && (
-                <div
-                  className="fixed inset-0 bg-black/50 z-40 md:hidden"
-                  onClick={() => setSidebarOpen(false)}
+          <DownloadTierContext.Provider value={downloadTier}>
+            <DashboardFilterContext.Provider value={{ filter, setActiveTab, setSearchQuery, setActiveTag }}>
+              <div className="flex h-screen overflow-hidden">
+                {sidebarOpen && (
+                  <div
+                    className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                    onClick={() => setSidebarOpen(false)}
+                  />
+                )}
+                <DashboardSidebar
+                  categories={categories}
+                  activeTab={filter.activeTab}
+                  onTabChange={setActiveTab}
+                  isOpen={sidebarOpen}
+                  onClose={() => setSidebarOpen(false)}
                 />
-              )}
-              <DashboardSidebar
-                categories={categories}
-                activeTab={filter.activeTab}
-                onTabChange={setActiveTab}
-                isOpen={sidebarOpen}
-                onClose={() => setSidebarOpen(false)}
-              />
-              <main className="flex-1 flex flex-col min-w-0 bg-[#F0F0F0] overflow-hidden relative">
-                <DashboardHeader
-                  breadcrumb={breadcrumb}
-                  userProfile={userProfile}
-                  onMenuToggle={toggleSidebar}
-                />
-                <div className="flex-1 overflow-y-auto p-4 md:p-10" style={{ scrollbarWidth: 'none' }}>
-                  {children}
-                </div>
-              </main>
-            </div>
-          </DashboardFilterContext.Provider>
+                <main className="flex-1 flex flex-col min-w-0 bg-[#F0F0F0] overflow-hidden relative">
+                  <DashboardHeader
+                    breadcrumb={breadcrumb}
+                    userProfile={userProfile}
+                    onMenuToggle={toggleSidebar}
+                  />
+                  <div className="flex-1 overflow-y-auto p-4 md:p-10" style={{ scrollbarWidth: 'none' }}>
+                    {children}
+                  </div>
+                </main>
+              </div>
+            </DashboardFilterContext.Provider>
+          </DownloadTierContext.Provider>
         </UserIdContext.Provider>
       </IsAdminContext.Provider>
     </IsViewerContext.Provider>

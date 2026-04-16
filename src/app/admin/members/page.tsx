@@ -12,6 +12,7 @@ import { SupabaseAdminRepository } from '@/admin/infrastructure/supabase-admin-r
 import { GetMembersUseCase } from '@/admin/application/get-members-use-case';
 import MembersTable from '@/features/admin/MembersTable';
 import MemberSearch from '@/features/admin/MemberSearch';
+import AddMemberDialog from '@/features/admin/AddMemberDialog';
 
 interface MembersPageProps {
   searchParams: Promise<{ page?: string; q?: string }>;
@@ -47,7 +48,7 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
             <h2 className="text-3xl font-black text-slate-900 tracking-tight">회원 관리</h2>
             <p className="text-slate-500 mt-1">기업 내 등록된 모든 회원 현황입니다.</p>
           </div>
-
+          <AddMemberDialog roles={roles} />
         </div>
         <MembersTable
           result={result}

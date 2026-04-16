@@ -7,7 +7,8 @@ import { Textarea } from '@/shared/ui/textarea';
 import { Switch } from '@/shared/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
 import { Button } from '@/shared/ui/button';
-import type { CategoryOption, CreateSkillInput, SkillDetail, UpdateSkillInput, SkillTemplateRow, UploadedFileRef } from '@/admin/domain/types';
+import type { CategoryOption, CreateSkillInput, DownloadTier, SkillDetail, UpdateSkillInput, UploadedFileRef } from '@/admin/domain/types';
+import { DOWNLOAD_TIERS, TIER_LABEL } from '@/admin/domain/types';
 import { createSkill, updateSkill as updateSkillAction, getCategories } from '@/app/admin/skills/actions';
 import { uploadMarkdownFile, uploadTemplateFile } from '@/shared/infrastructure/supabase/client-storage';
 import TemplateFileUpload from './TemplateFileUpload';
@@ -32,6 +33,7 @@ interface FormState {
   version: string;
   tags: string[];
   isPublished: boolean;
+  minTier: DownloadTier;
 }
 
 const INITIAL_STATE: FormState = {
@@ -41,9 +43,10 @@ const INITIAL_STATE: FormState = {
   version: '1.0.0',
   tags: [],
   isPublished: false,
+  minTier: 'general',
 };
 
-function isDirtyStateAdd(state: FormState, markdownFile: File | undefined, templateFiles: File[]): boolean {
+function isDirtyStateAdd(state: FormState, initial: FormState, markdownFile: File | undefined, templateFiles: File[]): boolean {
   return (
     state.categoryId !== '' ||
     state.title !== '' ||
@@ -51,6 +54,7 @@ function isDirtyStateAdd(state: FormState, markdownFile: File | undefined, templ
     state.version !== '1.0.0' ||
     state.tags.length > 0 ||
     state.isPublished !== false ||
+    state.minTier !== initial.minTier ||
     markdownFile !== undefined ||
     templateFiles.length > 0
   );
@@ -71,6 +75,7 @@ function isDirtyStateEdit(
     state.version !== initial.version ||
     JSON.stringify(state.tags) !== JSON.stringify(initial.tags) ||
     state.isPublished !== initial.isPublished ||
+    state.minTier !== initial.minTier ||
     markdownFile !== undefined ||
     removeMarkdown ||
     templateFiles.length > 0 ||
@@ -98,6 +103,7 @@ export default function SkillAddForm({ categories: initialCategories, onDirtyCha
       version: initialData.version ?? '1.0.0',
       tags: [...(initialData.tags ?? [])],
       isPublished: initialData.status === 'published',
+      minTier: initialData.minTier || 'general',
     }
     : INITIAL_STATE;
 
@@ -122,7 +128,7 @@ export default function SkillAddForm({ categories: initialCategories, onDirtyCha
     if (isEditMode) {
       onDirtyChange?.(isDirtyStateEdit(newForm, editInitialState, md, tmpl, rmMd ?? removeMarkdown, rmTmplIds ?? removedTemplateIds));
     } else {
-      onDirtyChange?.(isDirtyStateAdd(newForm, md, tmpl));
+      onDirtyChange?.(isDirtyStateAdd(newForm, INITIAL_STATE, md, tmpl));
     }
   };
 
@@ -165,6 +171,7 @@ export default function SkillAddForm({ categories: initialCategories, onDirtyCha
         version: form.version,
         tags: form.tags,
         isPublished: overridePublished ?? form.isPublished,
+        minTier: form.minTier,
         removeMarkdown,
         removedTemplateIds,
       };
@@ -176,6 +183,7 @@ export default function SkillAddForm({ categories: initialCategories, onDirtyCha
       version: form.version,
       tags: form.tags,
       isPublished: overridePublished ?? form.isPublished,
+      minTier: form.minTier,
     };
   };
 
@@ -210,6 +218,7 @@ export default function SkillAddForm({ categories: initialCategories, onDirtyCha
           version: form.version,
           tags: [...form.tags],
           isPublished: form.isPublished,
+          minTier: form.minTier,
           markdownFileRef,
           removeMarkdown,
           templateFileRefs,
@@ -234,6 +243,7 @@ export default function SkillAddForm({ categories: initialCategories, onDirtyCha
           version: form.version,
           tags: [...form.tags],
           isPublished: form.isPublished,
+          minTier: form.minTier,
           markdownFileRef,
           templateFileRefs,
         });
@@ -381,6 +391,31 @@ export default function SkillAddForm({ categories: initialCategories, onDirtyCha
               />
             </div>
           </div>
+        </section>
+
+        {/* 다운로드 허용 최소 등급 */}
+        <section>
+          <label className="block text-[12px] font-extrabold uppercase tracking-[0.2em] text-slate-400 mb-5">
+            다운로드 허용 등급
+          </label>
+          <Select value={form.minTier} onValueChange={(v) => updateField('minTier', v as DownloadTier)}>
+            <SelectTrigger
+              id="minTier"
+              className="w-full bg-white border border-slate-200 rounded-xl py-3.5 px-5 text-sm font-bold"
+            >
+              <SelectValue placeholder="등급 선택" />
+            </SelectTrigger>
+            <SelectContent>
+              {DOWNLOAD_TIERS.map((tier) => (
+                <SelectItem key={tier} value={tier}>
+                  {TIER_LABEL[tier]} 이상
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="mt-2 text-[11px] text-slate-400 leading-relaxed">
+            선택한 등급 이상 사용자만 템플릿 파일을 다운로드할 수 있습니다. (관리자는 항상 허용, 뷰어는 항상 차단)
+          </p>
         </section>
 
         {/* 템플릿 파일 업로드 */}

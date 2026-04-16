@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createSkill, updateSkill, deleteSkill } from '@/app/admin/skills/actions';
-import { updateMemberRole } from '@/app/admin/members/actions';
+import { updateMemberRole, updateMemberTier } from '@/app/admin/members/actions';
 import { queryKeys } from '@/shared/infrastructure/tanstack-query/query-keys';
 
 export function useCreateSkill() {
@@ -55,6 +55,20 @@ export function useUpdateMemberRole() {
   return useMutation({
     mutationFn: ({ memberId, roleId }: { memberId: string; roleId: string }) =>
       updateMemberRole(memberId, roleId),
+    onSuccess: (result) => {
+      if (result.success) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.all });
+      }
+    },
+  });
+}
+
+export function useUpdateMemberTier() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ memberId, tier }: { memberId: string; tier: string }) =>
+      updateMemberTier(memberId, tier),
     onSuccess: (result) => {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: queryKeys.admin.all });

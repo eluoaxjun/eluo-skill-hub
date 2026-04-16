@@ -1,3 +1,4 @@
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/shared/infrastructure/supabase/server';
 import { deleteFile } from '@/shared/infrastructure/supabase/storage';
 import type {
@@ -5,6 +6,8 @@ import type {
   CategoryOption,
   CreateFeedbackReplyInput,
   CreateFeedbackReplyResult,
+  CreateMemberInput,
+  CreateMemberResult,
   CreateSkillInput,
   CreateSkillResult,
   DashboardStats,
@@ -82,6 +85,7 @@ type ProfileRow = {
   name: unknown;
   created_at: unknown;
   roles: unknown;
+  download_tier: unknown;
 };
 
 function mapToMemberRow(row: ProfileRow): MemberRow {
@@ -92,6 +96,7 @@ function mapToMemberRow(row: ProfileRow): MemberRow {
     name: (row.name as string | null) ?? null,
     roleName: extractName(roles as JoinedName),
     roleId: extractId(roles as JoinedId),
+    downloadTier: ((row.download_tier as string) ?? 'general') as 'general' | 'senior' | 'executive',
     createdAt: row.created_at as string,
     status: 'active' as const,
   };
@@ -162,7 +167,7 @@ export class SupabaseAdminRepository implements AdminRepository {
 
     let query = supabase
       .from('profiles')
-      .select('id, email, name, created_at, roles(id, name)', { count: 'exact' })
+      .select('id, email, name, created_at, download_tier, roles(id, name)', { count: 'exact' })
       .order('created_at', { ascending: false });
 
     if (search) {
@@ -191,7 +196,7 @@ export class SupabaseAdminRepository implements AdminRepository {
 
     const { data } = await supabase
       .from('profiles')
-      .select('id, email, name, created_at, roles(id, name)')
+      .select('id, email, name, created_at, download_tier, roles(id, name)')
       .eq('id', id)
       .single();
 
@@ -405,6 +410,66 @@ export class SupabaseAdminRepository implements AdminRepository {
     if (error) throw new Error('역할 변경에 실패했습니다');
   }
 
+  async updateMemberTier(memberId: string, tier: string): Promise<void> {
+    const supabase = await createClient();
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ download_tier: tier })
+      .eq('id', memberId);
+
+    if (error) throw new Error('등급 변경에 실패했습니다');
+  }
+
+  async createMember(input: CreateMemberInput): Promise<CreateMemberResult> {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !serviceRoleKey) {
+      return { success: false, error: 'Supabase service_role 환경변수가 설정되지 않았습니다' };
+    }
+
+    const admin = createSupabaseClient(supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
+    // 1) auth.users 생성 (이메일 확인 없이 즉시 활성화)
+    const { data: created, error: createErr } = await admin.auth.admin.createUser({
+      email: input.email,
+      password: input.password,
+      email_confirm: true,
+      user_metadata: { display_name: input.name },
+    });
+
+    if (createErr || !created.user) {
+      return { success: false, error: createErr?.message ?? '회원 생성에 실패했습니다' };
+    }
+
+    const userId = created.user.id;
+
+    // 2) profiles 레코드 생성 (handle_new_user 트리거가 있으면 upsert 방식으로 안전)
+    const dbClient = await createClient();
+    const { error: profileErr } = await dbClient
+      .from('profiles')
+      .upsert(
+        {
+          id: userId,
+          email: input.email,
+          name: input.name,
+          role_id: input.roleId,
+          download_tier: input.downloadTier,
+        },
+        { onConflict: 'id' },
+      );
+
+    if (profileErr) {
+      // auth.users는 생성됐지만 프로필 실패 → auth 삭제해서 롤백
+      await admin.auth.admin.deleteUser(userId).catch(() => {});
+      return { success: false, error: `프로필 생성 실패: ${profileErr.message}` };
+    }
+
+    return { success: true, memberId: userId };
+  }
+
   // T011: getAdminCount
   async getAdminCount(): Promise<number> {
     const supabase = await createClient();
@@ -478,8 +543,8 @@ export class SupabaseAdminRepository implements AdminRepository {
   async getSkillById(id: string): Promise<GetSkillResult> {
     const supabase = await createClient();
 
-    // skill 조회, templates 조회, 버전 이력 조회를 병렬 실행
-    const [skillResult, templatesResult, versionHistoryResult] = await Promise.all([
+    // skill, templates, 버전 이력, skill_download_tiers 조회를 병렬 실행
+    const [skillResult, templatesResult, versionHistoryResult, tierResult] = await Promise.all([
       supabase
         .from('skills')
         .select('id, skill_code, title, description, version, category_id, status, markdown_file_path, markdown_content, created_at, tags, categories(id, name, icon)')
@@ -495,6 +560,11 @@ export class SupabaseAdminRepository implements AdminRepository {
         .select('version, changed_at, note')
         .eq('skill_id', id)
         .order('changed_at', { ascending: false }),
+      supabase
+        .from('skill_download_tiers')
+        .select('min_tier')
+        .eq('skill_id', id)
+        .maybeSingle(),
     ]);
 
     const { data: skill, error } = skillResult;
@@ -523,6 +593,9 @@ export class SupabaseAdminRepository implements AdminRepository {
       note: (h.note as string | null) ?? null,
     }));
 
+    const tierRow = tierResult.data as { min_tier: string } | null;
+    const minTier = (tierRow?.min_tier ?? 'general') as 'general' | 'senior' | 'executive';
+
     return {
       success: true,
       skill: {
@@ -541,6 +614,7 @@ export class SupabaseAdminRepository implements AdminRepository {
         templates: templateRows,
         versionHistory,
         createdAt: skill.created_at as string,
+        minTier,
       },
     };
   }
@@ -669,6 +743,18 @@ export class SupabaseAdminRepository implements AdminRepository {
       return { success: false, error: `템플릿 메타데이터 저장 실패: ${templateErrors.join(', ')}` };
     }
 
+    // 다운로드 허용 최소 등급 upsert
+    const { error: permError } = await supabase
+      .from('skill_download_tiers')
+      .upsert(
+        { skill_id: input.skillId, min_tier: input.minTier },
+        { onConflict: 'skill_id' },
+      );
+
+    if (permError) {
+      return { success: false, error: `다운로드 권한 설정 실패: ${permError.message}` };
+    }
+
     return { success: true, skillId: input.skillId };
   }
 
@@ -739,6 +825,18 @@ export class SupabaseAdminRepository implements AdminRepository {
 
     if (templateErrors.length > 0) {
       return { success: false, error: `스킬은 생성되었으나 템플릿 저장 실패: ${templateErrors.join(', ')}` };
+    }
+
+    // 다운로드 허용 최소 등급 저장
+    const { error: permError } = await supabase
+      .from('skill_download_tiers')
+      .insert({ skill_id: skillId, min_tier: input.minTier });
+
+    if (permError) {
+      return {
+        success: false,
+        error: `스킬은 생성되었으나 다운로드 권한 설정 실패: ${permError.message}`,
+      };
     }
 
     return { success: true, skillId };

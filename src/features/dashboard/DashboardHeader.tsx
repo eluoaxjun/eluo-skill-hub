@@ -26,7 +26,7 @@ export default function DashboardHeader({
         >
           <Menu size={22} />
         </button>
-        <span className="text-sm font-medium">ELUO HUB</span>
+        <span className="text-sm font-medium">ELUO XCIPE</span>
         <ChevronRight size={12} />
         <span className="text-sm font-bold text-[#00007F] bg-[#00007F]/5 px-3 py-1 rounded-full">
           {breadcrumb}

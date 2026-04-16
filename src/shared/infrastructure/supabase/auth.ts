@@ -19,20 +19,21 @@ export const getCurrentUser = cache(async (): Promise<UserResult> => {
 
 type RoleResult = {
   roleName: string;
+  downloadTier: string;
   email: string | null;
 };
 
 /**
- * 현재 사용자의 역할을 반환합니다. 요청 단위 캐시됩니다.
+ * 현재 사용자의 역할과 다운로드 등급을 반환합니다. 요청 단위 캐시됩니다.
  */
 export const getCurrentUserRole = cache(async (): Promise<RoleResult> => {
   const { user } = await getCurrentUser();
-  if (!user) return { roleName: 'anonymous', email: null };
+  if (!user) return { roleName: 'anonymous', downloadTier: 'general', email: null };
 
   const supabase = await createClient();
   const { data: profile } = await supabase
     .from('profiles')
-    .select('email, roles(name)')
+    .select('email, download_tier, roles(name)')
     .eq('id', user.id)
     .single();
 
@@ -44,7 +45,9 @@ export const getCurrentUserRole = cache(async (): Promise<RoleResult> => {
       ? (rolesTyped[0]?.name ?? 'user')
       : rolesTyped.name;
 
-  return { roleName, email: (profile?.email as string) ?? null };
+  const downloadTier = (profile?.download_tier as string) ?? 'general';
+
+  return { roleName, downloadTier, email: (profile?.email as string) ?? null };
 });
 
 /**

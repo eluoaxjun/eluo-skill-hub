@@ -241,7 +241,7 @@ export default function HelpGuideContent() {
                     color: 'var(--color-text-secondary)',
                   }}
                 >
-                  엘루오 허브에서 다운로드 받은 ZIP 파일을 압축 해제합니다.
+                  ELUO XCIPE에서 다운로드 받은 ZIP 파일을 압축 해제합니다.
                 </p>
               </div>
             </div>

@@ -43,7 +43,7 @@ export default function AdminSidebar({ userName, userRole }: AdminSidebarProps) 
             />
           </div>
           <div>
-            <h1 className="text-[#000080] font-bold text-lg leading-none">ELUO HUB</h1>
+            <h1 className="text-[#000080] font-bold text-lg leading-none">ELUO XCIPE</h1>
             <p className="text-[10px] text-[#000080]/60 uppercase tracking-widest font-semibold">
               Admin
             </p>

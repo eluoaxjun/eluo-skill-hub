@@ -27,6 +27,7 @@ export interface MemberRow {
   readonly name: string | null;
   readonly roleName: string;
   readonly roleId: string;
+  readonly downloadTier: DownloadTier;
   readonly createdAt: string;
   readonly status: 'active' | 'pending';
 }
@@ -36,6 +37,46 @@ export interface Role {
   readonly name: string;
   readonly description: string | null;
 }
+
+/** 역할 영문 → 한글 표시명 */
+export const ROLE_LABEL: Record<string, string> = {
+  admin: '관리자',
+  user: '사용자',
+  viewer: '뷰어',
+};
+
+/** 다운로드 등급 (역할과 별도) */
+export type DownloadTier = 'general' | 'senior' | 'executive';
+
+export const DOWNLOAD_TIERS: readonly DownloadTier[] = [
+  'general',
+  'senior',
+  'executive',
+] as const;
+
+export const TIER_LABEL: Record<DownloadTier, string> = {
+  general: '일반',
+  senior: '시니어',
+  executive: '의사결정권자',
+};
+
+export const TIER_LEVEL: Record<DownloadTier, number> = {
+  general: 1,
+  senior: 2,
+  executive: 3,
+};
+
+export interface CreateMemberInput {
+  readonly email: string;
+  readonly password: string;
+  readonly name: string;
+  readonly roleId: string;
+  readonly downloadTier: DownloadTier;
+}
+
+export type CreateMemberResult =
+  | { success: true; memberId: string }
+  | { success: false; error: string };
 
 export interface Permission {
   readonly id: string;
@@ -85,6 +126,7 @@ export interface CreateSkillInput {
   readonly version: string;
   readonly tags: readonly string[];
   readonly isPublished: boolean;
+  readonly minTier: DownloadTier;
   readonly markdownFileRef?: UploadedFileRef;
   readonly templateFileRefs?: UploadedFileRef[];
 }
@@ -174,6 +216,7 @@ export interface SkillDetail {
   readonly templates: SkillTemplateRow[];
   readonly versionHistory: VersionHistoryEntry[];
   readonly createdAt: string;
+  readonly minTier: DownloadTier;
 }
 
 export interface UpdateSkillInput {
@@ -184,6 +227,7 @@ export interface UpdateSkillInput {
   readonly version: string;
   readonly tags: readonly string[];
   readonly isPublished: boolean;
+  readonly minTier: DownloadTier;
   readonly markdownFileRef?: UploadedFileRef;
   readonly removeMarkdown: boolean;
   readonly templateFileRefs?: UploadedFileRef[];
@@ -225,4 +269,6 @@ export interface AdminRepository {
   updateSkill(input: UpdateSkillInput): Promise<UpdateSkillResult>;
   getCategories(): Promise<CategoryOption[]>;
   deleteSkill(skillId: string): Promise<DeleteSkillResult>;
+  updateMemberTier(memberId: string, tier: string): Promise<void>;
+  createMember(input: CreateMemberInput): Promise<CreateMemberResult>;
 }

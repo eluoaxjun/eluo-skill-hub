@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { createClient } from '@/shared/infrastructure/supabase/client';
 
-const LOGOUT_CHANNEL = 'eluo-hub-logout';
+const LOGOUT_CHANNEL = 'ELUO-XCIPE-LOGOUT';
 
 /**
  * 다른 탭에서 로그아웃 시 현재 탭도 로그인 페이지로 이동시키는 리스너.

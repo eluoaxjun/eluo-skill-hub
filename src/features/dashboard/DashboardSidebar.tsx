@@ -89,7 +89,7 @@ export default function DashboardSidebar({
           </div>
           <div className="text-left">
             <h1 className="text-base font-bold leading-none text-white tracking-tight">
-              ELUO HUB
+              ELUO XCIPE
             </h1>
             <p className="text-[10px] text-[#FEFE01]/70 font-bold uppercase tracking-[0.2em] mt-1.5">
               ENTERPRISE PORTAL

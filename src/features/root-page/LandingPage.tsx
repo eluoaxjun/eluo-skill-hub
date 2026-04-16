@@ -9,7 +9,7 @@ export function LandingPage() {
           {/* 좌측: 텍스트 + CTA */}
           <div className="flex-1 flex flex-col justify-center gap-6 text-center lg:text-left">
             <h1 className="text-6xl font-bold tracking-tight font-eluo">
-              <span className="text-[#FEFE01]">ELUO</span> AI SKILL HUB
+              <span className="text-[#FEFE01]">ELUO</span> XCIPE
             </h1>
             <p className="text-lg text-white/80 max-w-xl">
               웹 에이전시의 기획·디자인·퍼블리싱·개발·QA 워크플로우를<br className="hidden lg:block" /> 자동화하는 스킬을 검색하고 설치하세요.
@@ -64,7 +64,7 @@ export function LandingPage() {
 
       {/* Footer */}
       <footer className="bg-[#00007F] border-t border-white/10 py-6 px-6 text-center text-white/40 text-sm">
-        © 2026 Eluo. All rights reserved.
+        © 2026 ELUOCNC INC.
       </footer>
     </main>
   );

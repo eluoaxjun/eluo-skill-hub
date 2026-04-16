@@ -8,13 +8,20 @@ import type { SkillTemplateInfo } from '@/skill-detail/domain/types';
 interface TemplateDownloadButtonProps {
   skillId: string;
   templates: SkillTemplateInfo[];
-  isViewer: boolean;
+  canDownload: boolean;
+  blockReason: 'viewer' | 'insufficient_level' | null;
 }
+
+const BLOCK_MESSAGE: Record<NonNullable<TemplateDownloadButtonProps['blockReason']>, string> = {
+  viewer: '템플릿 다운로드는 뷰어 역할에서 사용할 수 없습니다. 관리자에게 권한 변경을 요청하세요.',
+  insufficient_level: '해당 스킬을 다운로드할 권한이 없습니다. 관리자에게 권한 상향을 요청하세요.',
+};
 
 export default function TemplateDownloadButton({
   skillId,
   templates,
-  isViewer,
+  canDownload,
+  blockReason,
 }: TemplateDownloadButtonProps) {
   const { mutate: download, isPending: downloading } = useTemplateDownload(skillId);
   const hasTemplates = templates.length > 0;
@@ -22,10 +29,9 @@ export default function TemplateDownloadButton({
   function handleDownload() {
     if (!hasTemplates) return;
 
-    if (isViewer) {
-      toast.warning(
-        '템플릿 다운로드는 뷰어 역할에서 사용할 수 없습니다. 관리자에게 권한 변경을 요청하세요.'
-      );
+    if (!canDownload) {
+      const reason = blockReason ?? 'insufficient_level';
+      toast.warning(BLOCK_MESSAGE[reason]);
       return;
     }
 

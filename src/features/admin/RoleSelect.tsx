@@ -10,6 +10,7 @@ import {
 } from '@/shared/ui/select';
 import { useUpdateMemberRole } from '@/admin/hooks/use-admin-mutations';
 import type { Role } from '@/admin/domain/types';
+import { ROLE_LABEL } from '@/admin/domain/types';
 
 interface RoleSelectProps {
   memberId: string;
@@ -52,7 +53,7 @@ export default function RoleSelect({
   if (isCurrentUser) {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-sm text-[#000080]/70">{currentRoleName}</span>
+        <span className="text-sm text-[#000080]/70">{ROLE_LABEL[currentRoleName] ?? currentRoleName}</span>
         <span className="text-[10px] text-[#000080]/30">(본인)</span>
       </div>
     );
@@ -71,7 +72,7 @@ export default function RoleSelect({
         <SelectContent>
           {roles.map((role) => (
             <SelectItem key={role.id} value={role.id} className="text-xs">
-              {role.name}
+              {ROLE_LABEL[role.name] ?? role.name}
             </SelectItem>
           ))}
         </SelectContent>

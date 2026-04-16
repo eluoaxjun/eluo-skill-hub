@@ -38,7 +38,7 @@ export default async function DashboardLayout({
   const getCategoriesUseCase = new GetCategoriesUseCase(dashboardRepo);
   const getSkillsUseCase = new GetDashboardSkillsUseCase(dashboardRepo);
 
-  const [categories, { roleName }, skillsResult, bookmarkedSkillIds] = await Promise.all([
+  const [categories, { roleName, downloadTier }, skillsResult, bookmarkedSkillIds] = await Promise.all([
     getCategoriesUseCase.execute(),
     getCurrentUserRole(),
     getSkillsUseCase.execute(DEFAULT_LIMIT),
@@ -71,6 +71,7 @@ export default async function DashboardLayout({
         isViewer={isViewer}
         isAdmin={isAdmin}
         userId={user.id}
+        downloadTier={downloadTier}
       >
         {children}
         {modal}

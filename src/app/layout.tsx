@@ -20,8 +20,8 @@ const eluo = localFont({
 
 export const metadata: Metadata = {
   title: {
-    default: "ELUO HUB",
-    template: "%s | ELUO HUB",
+    default: "ELUO XCIPE",
+    template: "%s | ELUO XCIPE",
   },
   description: "웹 에이전시의 워크플로우를 자동화하는 AI 스킬 마켓플레이스",
 };

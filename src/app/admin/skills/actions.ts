@@ -6,7 +6,7 @@ import { CreateSkillUseCase } from '@/admin/application/create-skill-use-case';
 import { DeleteSkillUseCase } from '@/admin/application/delete-skill-use-case';
 import { GetSkillByIdUseCase } from '@/admin/application/get-skill-by-id-use-case';
 import { UpdateSkillUseCase } from '@/admin/application/update-skill-use-case';
-import type { CategoryOption, CreateSkillResult, DeleteSkillResult, GetSkillResult, UpdateSkillResult, UploadedFileRef } from '@/admin/domain/types';
+import type { CategoryOption, CreateSkillResult, DeleteSkillResult, DownloadTier, GetSkillResult, UpdateSkillResult, UploadedFileRef } from '@/admin/domain/types';
 import { revalidatePath } from 'next/cache';
 
 interface CreateSkillPayload {
@@ -16,6 +16,7 @@ interface CreateSkillPayload {
   version: string;
   tags: string[];
   isPublished: boolean;
+  minTier: string;
   markdownFileRef?: UploadedFileRef;
   templateFileRefs?: UploadedFileRef[];
 }
@@ -27,7 +28,7 @@ export async function createSkill(payload: CreateSkillPayload): Promise<CreateSk
     return { success: false, error: '권한이 없습니다' };
   }
 
-  const { categoryId, title, description, version, tags, isPublished, markdownFileRef, templateFileRefs } = payload;
+  const { categoryId, title, description, version, tags, isPublished, minTier, markdownFileRef, templateFileRefs } = payload;
 
   // 유효성 검사
   const fieldErrors: Record<string, string> = {};
@@ -39,6 +40,9 @@ export async function createSkill(payload: CreateSkillPayload): Promise<CreateSk
   }
   if (!categoryId) {
     fieldErrors.categoryId = '카테고리를 선택해주세요';
+  }
+  if (!minTier) {
+    fieldErrors.minTier = '다운로드 허용 등급을 선택해주세요';
   }
 
   if (markdownFileRef) {
@@ -73,6 +77,7 @@ export async function createSkill(payload: CreateSkillPayload): Promise<CreateSk
     version,
     tags,
     isPublished,
+    minTier: minTier as DownloadTier,
     markdownFileRef,
     templateFileRefs: templateFileRefs && templateFileRefs.length > 0 ? templateFileRefs : undefined,
   });
@@ -109,6 +114,7 @@ interface UpdateSkillPayload {
   version: string;
   tags: string[];
   isPublished: boolean;
+  minTier: string;
   markdownFileRef?: UploadedFileRef;
   removeMarkdown: boolean;
   templateFileRefs?: UploadedFileRef[];
@@ -124,7 +130,7 @@ export async function updateSkill(payload: UpdateSkillPayload): Promise<UpdateSk
 
   const {
     skillId, categoryId, title, description, version, tags,
-    isPublished, markdownFileRef, removeMarkdown, templateFileRefs, removedTemplateIds,
+    isPublished, minTier, markdownFileRef, removeMarkdown, templateFileRefs, removedTemplateIds,
   } = payload;
 
   if (!skillId) {
@@ -141,6 +147,9 @@ export async function updateSkill(payload: UpdateSkillPayload): Promise<UpdateSk
   }
   if (!categoryId) {
     fieldErrors.categoryId = '카테고리를 선택해주세요';
+  }
+  if (!minTier) {
+    fieldErrors.minTier = '다운로드 허용 등급을 선택해주세요';
   }
 
   if (markdownFileRef) {
@@ -176,6 +185,7 @@ export async function updateSkill(payload: UpdateSkillPayload): Promise<UpdateSk
     version,
     tags,
     isPublished,
+    minTier: minTier as DownloadTier,
     markdownFileRef,
     removeMarkdown,
     templateFileRefs: templateFileRefs && templateFileRefs.length > 0 ? templateFileRefs : undefined,
